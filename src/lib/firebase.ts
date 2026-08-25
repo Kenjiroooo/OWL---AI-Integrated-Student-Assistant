@@ -5,7 +5,7 @@ import { getDatabase } from 'firebase/database';
 import { getAnalytics } from 'firebase/analytics';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD9cLXCdRtWhsuvgn2nVvtWgnDlDqvzA0E",
+  apiKey: "TAKE A GUESS",
   authDomain: "owl-udd.firebaseapp.com",
   databaseURL: "https://owl-udd-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "owl-udd",
