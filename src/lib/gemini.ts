@@ -130,7 +130,7 @@ ${UDD_WEBSITE_CONTEXT}`;
 
 // ── DeepSeek Client ────────────────────────────────────────────────────────────
 
-const API_KEY = process.env.DEEPSEEK_API_KEY || '';
+const API_KEY = YOUR API KEY;
 
 // ── Main Chat Function ──────────────────────────────────────────────────────
 
