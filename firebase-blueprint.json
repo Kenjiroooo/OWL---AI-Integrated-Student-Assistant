@@ -1,0 +1,211 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Student or Admin profile",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "studentId": { "type": "string" },
+        "email": { "type": "string" },
+        "fullName": { "type": "string" },
+        "role": { "type": "string", "enum": ["student", "admin"] },
+        "yearLevel": { "type": "integer" },
+        "program": { "type": "string" },
+        "enrollmentStatus": { "type": "string" },
+        "balance": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role", "fullName"]
+    },
+    "Announcement": {
+      "title": "Announcement",
+      "description": "Notice board item",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "type": { "type": "string", "enum": ["news", "event", "emergency"] },
+        "targetDate": { "type": "string", "format": "date-time", "description": "For countdowns" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "content", "type", "createdAt"]
+    },
+    "QueueTicket": {
+      "title": "Queue Ticket",
+      "description": "E-queue ticket",
+      "type": "object",
+      "properties": {
+        "ticketNumber": { "type": "string" },
+        "studentId": { "type": "string" },
+        "serviceType": { "type": "string" },
+        "status": { "type": "string", "enum": ["waiting", "serving", "completed", "cancelled"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ticketNumber", "studentId", "serviceType", "status", "createdAt"]
+    },
+    "LostAndFound": {
+      "title": "Lost and Found",
+      "description": "Reported lost or found items",
+      "type": "object",
+      "properties": {
+        "itemName": { "type": "string" },
+        "description": { "type": "string" },
+        "type": { "type": "string", "enum": ["lost", "found"] },
+        "location": { "type": "string" },
+        "reportedBy": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "resolved"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["itemName", "type", "status", "createdAt"]
+    },
+    "Feedback": {
+      "title": "Feedback",
+      "description": "Student suggestions",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "category": { "type": "string" },
+        "content": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["category", "content", "createdAt"]
+    },
+    "Building": {
+      "title": "Building",
+      "description": "Campus building information",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "mapImageUrl": { "type": "string" },
+        "description": { "type": "string" },
+        "rooms": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["name", "mapImageUrl"]
+    },
+    "Faculty": {
+      "title": "Faculty",
+      "description": "Faculty member or office info",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "department": { "type": "string" },
+        "officeLocation": { "type": "string" },
+        "email": { "type": "string" }
+      },
+      "required": ["name", "department", "officeLocation"]
+    },
+    "EJeepSchedule": {
+      "title": "E-Jeep Schedule",
+      "description": "Transport timetable",
+      "type": "object",
+      "properties": {
+        "route": { "type": "string" },
+        "arrivalTime": { "type": "string" },
+        "departureTime": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "required": ["route", "arrivalTime"]
+    },
+    "FAQ": {
+      "title": "FAQ",
+      "description": "Inquiry knowledge base",
+      "type": "object",
+      "properties": {
+        "question": { "type": "string" },
+        "answer": { "type": "string" },
+        "category": { "type": "string" }
+      },
+      "required": ["question", "answer"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Dummy financial transaction",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "amount": { "type": "number" },
+        "description": { "type": "string" },
+        "qrUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["studentId", "amount", "createdAt"]
+    },
+    "DocRequest": {
+      "title": "Document Request",
+      "description": "Virtual registrar requests",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "documentType": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "processing", "ready", "claimed"] },
+        "details": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["studentId", "documentType", "status", "createdAt"]
+    },
+    "ExamSchedule": {
+      "title": "Exam Schedule",
+      "description": "Examination timetable",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "subject": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "room": { "type": "string" },
+        "proctor": { "type": "string" }
+      },
+      "required": ["subject", "date"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "announcements/{announcementId}": {
+      "schema": "Announcement",
+      "description": "Campus announcements"
+    },
+    "queueTickets/{ticketId}": {
+      "schema": "QueueTicket",
+      "description": "Queue system tickets"
+    },
+    "lostAndFound/{itemId}": {
+      "schema": "LostAndFound",
+      "description": "Lost and found items"
+    },
+    "feedback/{feedbackId}": {
+      "schema": "Feedback",
+      "description": "Student feedback"
+    },
+    "campusBuildings/{buildingId}": {
+      "schema": "Building",
+      "description": "Campus navigation data"
+    },
+    "facultyOffices/{facultyId}": {
+      "schema": "Faculty",
+      "description": "Faculty and office locators"
+    },
+    "ejeepSchedule/{scheduleId}": {
+      "schema": "EJeepSchedule",
+      "description": "E-jeep timetable"
+    },
+    "inquiryBase/{faqId}": {
+      "schema": "FAQ",
+      "description": "FAQ data"
+    },
+    "paymentTransactions/{txId}": {
+      "schema": "Transaction",
+      "description": "Payment records"
+    },
+    "docRequests/{requestId}": {
+      "schema": "DocRequest",
+      "description": "Document requests"
+    },
+    "examSchedules/{examId}": {
+      "schema": "ExamSchedule",
+      "description": "Student exam schedules"
+    }
+  }
+}

@@ -1,0 +1,47 @@
+/* Custom overrides for Leaflet popups and markers to match our university theme */
+
+/* Remove default padding from popup wrapper */
+.udd-popup .leaflet-popup-content-wrapper {
+  padding: 0;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #E2E8F0;
+}
+
+.udd-popup .leaflet-popup-content {
+  margin: 12px 14px;
+  line-height: normal;
+}
+
+/* Customise the tip (arrow) */
+.udd-popup .leaflet-popup-tip {
+  background: white;
+  border-top: 1px solid #E2E8F0;
+  border-left: 1px solid #E2E8F0;
+  box-shadow: -2px -2px 5px rgba(0,0,0,0.02);
+}
+
+/* Close button */
+.udd-popup .leaflet-popup-close-button {
+  top: 8px !important;
+  right: 8px !important;
+  color: #94A3B8 !important;
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 6px;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.udd-popup .leaflet-popup-close-button:hover {
+  background-color: #F1F5F9;
+  color: #334155 !important;
+}
+
+/* Ensure the custom marker container takes up the exact size without overflow hidden */
+.custom-udd-marker {
+  background: none;
+  border: none;
+}

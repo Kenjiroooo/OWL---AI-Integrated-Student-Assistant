@@ -1,0 +1,139 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedStudent() {
+      return isSignedIn() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'student';
+    }
+
+    function isAdmin() {
+      return isSignedIn() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Entity Validations ---
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'role', 'fullName']) &&
+             data.uid == request.auth.uid &&
+             data.role in ['student', 'admin'] &&
+             data.email is string && data.fullName is string &&
+             data.fullName.size() <= 100;
+    }
+
+    function isValidFeedback(data) {
+      return data.keys().hasAll(['category', 'content', 'createdAt']) &&
+             data.category is string && data.content is string &&
+             data.content.size() <= 1000 &&
+             data.createdAt == request.time;
+    }
+
+    function isValidQueueTicket(data) {
+      return data.keys().hasAll(['ticketNumber', 'studentId', 'serviceType', 'status', 'createdAt']) &&
+             data.status in ['waiting', 'serving', 'completed', 'cancelled'] &&
+             data.createdAt == request.time;
+    }
+
+    function isValidDocRequest(data) {
+      return data.keys().hasAll(['studentId', 'documentType', 'status', 'createdAt']) &&
+             data.status in ['pending', 'processing', 'ready', 'claimed'] &&
+             data.createdAt == request.time;
+    }
+
+    // --- Collection Matches ---
+
+    // Users
+    match /users/{userId} {
+      allow get: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isSignedIn() && isOwner(userId) && isValidUser(incoming());
+      allow update: if isSignedIn() && isOwner(userId) && 
+                      incoming().diff(existing()).affectedKeys().hasOnly(['fullName', 'yearLevel', 'program', 'enrollmentStatus', 'balance']) &&
+                      isValidUser(incoming());
+    }
+
+    // Announcement (Public Read, Admin Write)
+    match /announcement/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Queue Tickets
+    match /queueTickets/{id} {
+      allow list: if isAdmin() || (isSignedIn() && resource.data.studentId == request.auth.uid);
+      allow get: if isSignedIn() && (isAdmin() || resource.data.studentId == request.auth.uid);
+      allow create: if isSignedIn() && isValidQueueTicket(incoming());
+      allow update: if isAdmin() || (isSignedIn() && existing().studentId == request.auth.uid && incoming().status == 'cancelled');
+    }
+
+    // Lost and Found
+    match /lostAndFound/{id} {
+      allow read, create, update, delete: if true;
+    }
+
+    // Lost and Found Claims
+    match /lostAndFoundClaims/{id} {
+      allow create: if true;
+      allow read: if isAdmin();
+    }
+
+    // Feedback
+    match /feedback/{id} {
+      allow create: if isSignedIn() && isValidFeedback(incoming());
+      allow read: if isAdmin();
+    }
+
+    // Campus Data (Public Read)
+    match /campusBuildings/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /facultyOffices/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /ejeepSchedule/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /inquiryBase/{id} { allow read: if true; allow write: if isAdmin(); }
+
+    // Payment Transactions
+    match /paymentTransactions/{id} {
+      allow list: if isAdmin() || (isSignedIn() && resource.data.studentId == request.auth.uid);
+      allow get: if isSignedIn() && (isAdmin() || resource.data.studentId == request.auth.uid);
+      allow create: if isAdmin(); // Only system/admin initiates real tx
+    }
+
+    // Document Requests
+    match /docRequests/{id} {
+      allow list: if isAdmin() || (isSignedIn() && resource.data.studentId == request.auth.uid);
+      allow get: if isSignedIn() && (isAdmin() || resource.data.studentId == request.auth.uid);
+      allow create: if isSignedIn() && isValidDocRequest(incoming());
+      allow update: if isAdmin();
+    }
+
+    // Exam Schedules
+    match /examSchedules/{id} {
+      allow list: if isAdmin() || (isSignedIn() && resource.data.studentId == request.auth.uid);
+      allow get: if isSignedIn() && (isAdmin() || resource.data.studentId == request.auth.uid);
+      allow write: if isAdmin();
+    }
+  }
+}
