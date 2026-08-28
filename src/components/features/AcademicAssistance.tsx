@@ -44,38 +44,6 @@ export default function AcademicAssistance() {
 
   return (
     <div className="space-y-8">
-      {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex items-center gap-6">
-          <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center">
-            <CheckCircle2 className="w-8 h-8" />
-          </div>
-          <div>
-            <p className="text-slate-500 font-bold uppercase text-xs tracking-widest">Status</p>
-            <h3 className="text-2xl font-black text-slate-800">{profile.enrollmentStatus || 'Enrolled'}</h3>
-          </div>
-        </div>
-
-        <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex items-center gap-6">
-          <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center">
-            <BookOpen className="w-8 h-8" />
-          </div>
-          <div>
-            <p className="text-slate-500 font-bold uppercase text-xs tracking-widest">Year Level</p>
-            <h3 className="text-2xl font-black text-slate-800">{profile.yearLevel}th Year</h3>
-          </div>
-        </div>
-
-        <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex items-center gap-6">
-          <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center">
-            <AlertCircle className="w-8 h-8" />
-          </div>
-          <div>
-            <p className="text-slate-500 font-bold uppercase text-xs tracking-widest">Balance</p>
-            <h3 className="text-2xl font-black text-slate-800">₱{profile.balance?.toLocaleString() || '0.00'}</h3>
-          </div>
-        </div>
-      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Requirements Section */}

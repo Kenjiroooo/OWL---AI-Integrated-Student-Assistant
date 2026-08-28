@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, Home } from 'lucide-react';
@@ -16,11 +16,19 @@ import InquiryCenter from '../components/features/InquiryCenter';
 import LostFound from '../components/features/LostFound';
 import RegistrarHub from '../components/features/RegistrarHub';
 
+export const FeatureContext = React.createContext<{
+  setCustomBack: (handler: (() => void) | null) => void;
+}>({
+  setCustomBack: () => {},
+});
+
 export default function FeaturePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
   const { profile } = useAuth();
+  
+  const [customBack, setCustomBack] = useState<(() => void) | null>(null);
 
   if (!profile) return null;
 
@@ -40,36 +48,46 @@ export default function FeaturePage() {
     }
   };
 
+  const handleBack = () => {
+    if (customBack) {
+      customBack();
+    } else {
+      navigate('/home');
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
-      <header className="bg-white border-b border-slate-200 px-8 py-6 flex items-center justify-between sticky top-0 z-50">
-        <div className="flex items-center gap-4">
+    <FeatureContext.Provider value={{ setCustomBack }}>
+      <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
+        <header className="bg-white border-b border-slate-200 px-8 py-6 flex items-center justify-between sticky top-0 z-50">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={handleBack}
+              className="p-3 bg-slate-100 text-slate-600 rounded-2xl hover:bg-slate-200 active:scale-95 transition-all"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+            <div>
+              <h1 className="text-xl font-bold text-slate-800 capitalize">{id?.replace('-', ' ')}</h1>
+              <p className="text-slate-500 text-sm font-medium">OWL Kiosk Service</p>
+            </div>
+          </div>
+
           <button 
             onClick={() => navigate('/home')}
-            className="p-3 bg-slate-100 text-slate-600 rounded-2xl hover:bg-slate-200 active:scale-95 transition-all"
+            className="px-6 py-3 bg-blue-600 text-white rounded-2xl flex items-center gap-3 font-bold shadow-lg shadow-blue-100 active:scale-95 transition-all"
           >
-            <ChevronLeft className="w-6 h-6" />
+            <Home className="w-5 h-5" />
+            Return Home
           </button>
-          <div>
-            <h1 className="text-xl font-bold text-slate-800 capitalize">{id?.replace('-', ' ')}</h1>
-            <p className="text-slate-500 text-sm font-medium">OWL Kiosk Service</p>
+        </header>
+
+        <main className="flex-1 p-8">
+          <div className="w-full max-w-7xl mx-auto h-full">
+            {renderFeature()}
           </div>
-        </div>
-
-        <button 
-          onClick={() => navigate('/home')}
-          className="px-6 py-3 bg-blue-600 text-white rounded-2xl flex items-center gap-3 font-bold shadow-lg shadow-blue-100 active:scale-95 transition-all"
-        >
-          <Home className="w-5 h-5" />
-          Return Home
-        </button>
-      </header>
-
-      <main className="flex-1 p-8">
-        <div className="w-full max-w-7xl mx-auto h-full">
-          {renderFeature()}
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </FeatureContext.Provider>
   );
 }

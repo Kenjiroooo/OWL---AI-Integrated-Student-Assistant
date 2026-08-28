@@ -8,6 +8,7 @@ interface Props {
   title: string;
   subtitle: string;
   description: string;
+  onExplore?: () => void;
 }
 
 // Custom icon using L.divIcon to allow custom HTML/Tailwind styling
@@ -26,7 +27,7 @@ const uddIcon = L.divIcon({
   popupAnchor: [0, -24]
 });
 
-export default function UniversityMarker({ position, title, subtitle, description }: Props) {
+export default function UniversityMarker({ position, title, subtitle, description, onExplore }: Props) {
   return (
     <Marker position={position} icon={uddIcon}>
       <Popup className="udd-popup" minWidth={240}>
@@ -45,7 +46,10 @@ export default function UniversityMarker({ position, title, subtitle, descriptio
             {description}
           </p>
           
-          <button className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm hover:shadow active:scale-95">
+          <button 
+            onClick={onExplore}
+            className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm hover:shadow active:scale-95"
+          >
             Explore Campus
           </button>
         </div>

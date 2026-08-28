@@ -1,6 +1,7 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import type { Map as LeafletMap, LatLngBoundsExpression } from 'leaflet';
+import { useNavigate } from 'react-router-dom';
 import UniversityMarker from './UniversityMarker';
 import MapControls from './MapControls';
 import SearchBar from './SearchBar';
@@ -20,10 +21,20 @@ const DAGUPAN_BOUNDS: LatLngBoundsExpression = [
 
 export default function DagupanMap() {
   const mapRef = useRef<LeafletMap>(null);
+  const navigate = useNavigate();
 
   const handleLocateUDD = () => {
     if (mapRef.current) {
       mapRef.current.flyTo(UDD_MAIN_LOCATION, 17, { duration: 1.5 });
+    }
+  };
+
+  const handleExplore = (position: [number, number]) => {
+    if (mapRef.current) {
+      mapRef.current.flyTo(position, 18, { duration: 1.5 });
+      setTimeout(() => {
+        navigate('maincampus');
+      }, 1500);
     }
   };
 
@@ -53,6 +64,7 @@ export default function DagupanMap() {
             title="Universidad de Dagupan"
             subtitle="Main Campus • Dagupan City"
             description="Formerly known as Colegio de Dagupan. A premier institution of higher learning in North Luzon, providing quality education and modern facilities."
+            onExplore={() => handleExplore(UDD_MAIN_LOCATION)}
           />
           <UniversityMarker 
             position={UDD_FAME_LOCATION}
