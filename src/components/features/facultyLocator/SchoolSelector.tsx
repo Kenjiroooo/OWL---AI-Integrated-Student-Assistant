@@ -2,6 +2,29 @@ import React from 'react';
 import { SCHOOLS, getSchoolFacultyCount, searchFaculty, type Faculty } from './facultyData';
 import FacultySearch from './FacultySearch';
 
+// School logo imports
+import sitLogo from '../../../assets/site-logo.png';
+import soeLogo from '../../../assets/soe-logo.png';
+import steLogo from '../../../assets/sote-logo.png';
+import sbaLogo from '../../../assets/soba-logo.png';
+import sihmLogo from '../../../assets/hospitality-logo.png';
+import shLogo from '../../../assets/soh-logo.png';
+import shsLogo from '../../../assets/sohs-logo.png';
+import scLogo from '../../../assets/crim-logo.png';
+import spsLogo from '../../../assets/sops-logo.png';
+
+const SCHOOL_LOGOS: Record<string, string> = {
+  sit: sitLogo,
+  soe: soeLogo,
+  ste: steLogo,
+  sba: sbaLogo,
+  sihm: sihmLogo,
+  sh: shLogo,
+  shs: shsLogo,
+  sc: scLogo,
+  sps: spsLogo,
+};
+
 interface Props {
   searchQuery: string;
   onSearchChange: (value: string) => void;
@@ -152,14 +175,22 @@ export default function SchoolSelector({
                   onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = '#001e40'; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = '#c3c6d1'; }}
                 >
-                  {/* Icon */}
+                  {/* School Logo */}
                   <div
-                    className="w-16 h-16 rounded-full flex items-center justify-center"
-                    style={{ background: '#d5e3ff', color: '#001e40' }}
+                    className="w-16 h-16 rounded-full flex items-center justify-center overflow-hidden"
+                    style={{ background: '#edf1f8' }}
                   >
-                    <span className="material-symbols-outlined" style={{ fontSize: 32 }}>
-                      {school.icon}
-                    </span>
+                    {SCHOOL_LOGOS[school.id] ? (
+                      <img
+                        src={SCHOOL_LOGOS[school.id]}
+                        alt={`${school.name} logo`}
+                        className="w-14 h-14 object-contain"
+                      />
+                    ) : (
+                      <span className="material-symbols-outlined" style={{ fontSize: 32, color: '#001e40' }}>
+                        {school.icon}
+                      </span>
+                    )}
                   </div>
 
                   {/* Text */}

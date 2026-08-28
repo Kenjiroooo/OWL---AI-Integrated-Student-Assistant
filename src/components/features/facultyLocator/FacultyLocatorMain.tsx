@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { getFacultyById } from './facultyData';
 import SchoolSelector from './SchoolSelector';
 import SchoolFacultyPage from './SchoolFacultyPage';
 import FacultyProfile from './FacultyProfile';
+import { FeatureContext } from '../../../pages/FeaturePage';
 
 /**
  * FacultyLocatorMain — top-level orchestrator for the Faculty Locator feature.
@@ -19,6 +20,8 @@ export default function FacultyLocatorMain() {
   const [selectedSchool, setSelectedSchool] = useState<string | null>(null);
   const [selectedFacultyId, setSelectedFacultyId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  const { setCustomBack } = useContext(FeatureContext);
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 
@@ -50,6 +53,20 @@ export default function FacultyLocatorMain() {
     setSelectedSchool(null);
     setSelectedFacultyId(null);
   };
+
+  // Register the custom back handler with FeaturePage header based on current state
+  useEffect(() => {
+    if (selectedFacultyId) {
+      setCustomBack(() => handleBackFromProfile);
+    } else if (selectedSchool) {
+      setCustomBack(() => handleBackFromSchool);
+    } else {
+      setCustomBack(null);
+    }
+    
+    // Cleanup on unmount
+    return () => setCustomBack(null);
+  }, [selectedFacultyId, selectedSchool, setCustomBack]);
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
