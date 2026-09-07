@@ -1,6 +1,7 @@
 import React from 'react';
 import { SCHOOLS, getSchoolFacultyCount, searchFaculty, type Faculty } from './facultyData';
 import FacultySearch from './FacultySearch';
+import { ArrowRight } from 'lucide-react';
 
 // School logo imports
 import sitLogo from '../../../assets/site-logo.webp';
@@ -121,9 +122,7 @@ export default function SchoolSelector({
                     </p>
                     <p className="truncate" style={{ fontSize: 13, fontWeight: 500, color: '#5d5f5f' }}>{f.school}</p>
                   </div>
-                  <span className="material-symbols-outlined flex-shrink-0" style={{ color: '#001e40', fontSize: 20 }}>
-                    arrow_forward
-                  </span>
+                  <ArrowRight className="flex-shrink-0" size={20} color="#001e40" />
                 </div>
               ))}
             </div>
@@ -248,9 +247,7 @@ export default function SchoolSelector({
                       }}
                     >
                       View Faculty{' '}
-                      <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
-                        arrow_forward
-                      </span>
+                      <ArrowRight size={20} />
                     </div>
                   </div>
                 </div>

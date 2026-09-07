@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Faculty } from './facultyData';
 import { getInitials } from './facultyData';
+import { ArrowRight } from 'lucide-react';
 
 interface Props {
   faculty: Faculty;
@@ -243,9 +244,7 @@ export default function FacultyCard({ faculty, onClick, variant = 'directory' }:
       </div>
 
       {/* Chevron */}
-      <span className="material-symbols-outlined flex-shrink-0" style={{ color: '#001e40', fontSize: 20 }}>
-        arrow_forward
-      </span>
+      <ArrowRight className="flex-shrink-0" size={20} color="#001e40" />
     </div>
   );
 }
