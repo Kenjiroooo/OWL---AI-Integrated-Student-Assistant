@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
-import { HelpCircle, ChevronDown, Search, BookOpen, Quote } from 'lucide-react';
+import { HelpCircle, ChevronDown, Search, BookOpen, Quote, BrainCircuit, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useOwlAssistant } from '../../context/OwlAssistantContext';
 
 export default function InquiryCenter() {
   const [faqs, setFaqs] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const { openDrawer } = useOwlAssistant();
 
   useEffect(() => {
     const fetchFaqs = async () => {
@@ -83,11 +85,24 @@ export default function InquiryCenter() {
         ))}
 
         {filteredFaqs.length === 0 && (
-          <div className="py-20 text-center text-slate-400 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200">
-             <BookOpen className="w-16 h-16 mx-auto mb-4 opacity-10" />
-             <p className="text-xl font-bold tracking-tight">We couldn't find an answer to that.</p>
-             <p className="font-medium mt-1">Try a different search or visit the Guidance office.</p>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="py-16 text-center bg-white rounded-[3rem] border-2 border-dashed border-slate-200 px-8"
+          >
+            <BookOpen className="w-14 h-14 mx-auto mb-4 text-slate-200" />
+            <p className="text-xl font-bold text-slate-700 tracking-tight">No FAQ found for that.</p>
+            <p className="font-medium text-slate-400 mt-2 mb-8">
+              But OWL AI might know the answer! Let me ask on your behalf.
+            </p>
+            <button
+              onClick={() => openDrawer(searchTerm || 'I have a question about campus services at UdD.')}
+              className="inline-flex items-center gap-3 bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-bold px-8 py-4 rounded-2xl shadow-xl shadow-blue-200 hover:shadow-blue-300 transition-all active:scale-95"
+            >
+              <BrainCircuit className="w-5 h-5" />
+              Ask OWL AI Instead
+            </button>
+          </motion.div>
         )}
       </div>
     </div>

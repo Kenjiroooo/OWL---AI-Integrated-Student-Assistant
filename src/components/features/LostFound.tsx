@@ -3,9 +3,11 @@ import { collection, query, orderBy, getDocs, addDoc, deleteDoc, doc } from 'fir
 import { db } from '../../lib/firebase';
 import {
   PackageSearch, Plus, MapPin, Tag, Clock,
-  CheckCircle2, ImagePlus, Loader2, HandshakeIcon, X, User, Hash, Phone, ShieldCheck
+  CheckCircle2, ImagePlus, Loader2, HandshakeIcon, X, User, Hash, Phone, ShieldCheck,
+  ShieldAlert, Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { moderateLostFoundReport } from '../../lib/moderation';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface LostFoundItem {
@@ -16,6 +18,7 @@ interface LostFoundItem {
   type: 'lost' | 'found';
   imageUrl?: string | null;
   status: string;
+  isAiVerified?: boolean;
   createdAt?: { seconds: number } | null;
 }
 
@@ -40,6 +43,8 @@ export default function LostFound() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [isAiChecking, setIsAiChecking] = useState(false);
+  const [moderationReason, setModerationReason] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
@@ -65,35 +70,56 @@ export default function LostFound() {
 
   useEffect(() => { fetchItems(); }, []);
 
-  // ── Report Submit ──────────────────────────────────────────────────────────
+  // ── Report Submit with AI Moderation ──────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setUploading(true);
     setSubmitError(null);
+    setModerationReason(null);
     setSubmitSuccess(false);
+    setIsAiChecking(true);
+
     try {
-      // Image upload — non-blocking: if it fails we submit without the image
+      // 1. AI Safety & Auto-Moderation Guardrail
+      const modResult = await moderateLostFoundReport({
+        itemName,
+        location,
+        description,
+        type,
+      });
+
+      if (!modResult.passed) {
+        setModerationReason(modResult.reason || 'This report does not meet campus lost & found guidelines.');
+        setIsAiChecking(false);
+        return;
+      }
+
+      setIsAiChecking(false);
+      setUploading(true);
+
+      // 2. Image upload — non-blocking: if it fails we submit without the image
       let imageUrl: string | null = null;
       if (imageFile) {
         try {
-          const IMGBB_API_KEY = process.env.IMGBB_API_KEY || '';
-          const formData = new FormData();
-          formData.append('image', imageFile);
-          const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-            method: 'POST',
-            body: formData,
-          });
-          const data = await response.json();
-          if (data.success && data.data) {
-            imageUrl = data.data.url;
-          } else {
-            console.warn('Image upload failed, submitting without image:', data);
+          const base64Data = imagePreview?.split(',')[1];
+          if (base64Data) {
+            const response = await fetch('/api/uploadImage', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ imageBase64: base64Data }),
+            });
+            const data = await response.json();
+            if (response.ok && data.url) {
+              imageUrl = data.url;
+            } else {
+              console.warn('Image upload failed, submitting without image:', data);
+            }
           }
         } catch (imgErr) {
           console.warn('Image upload error, submitting without image:', imgErr);
         }
       }
 
+      // 3. Save report with AI-Verified flag
       await addDoc(collection(db, 'lostAndFound'), {
         itemName,
         location,
@@ -101,6 +127,7 @@ export default function LostFound() {
         type,
         imageUrl,
         status: 'active',
+        isAiVerified: true,
         createdAt: new Date(),
       });
 
@@ -117,6 +144,7 @@ export default function LostFound() {
       console.error('Lost/Found submit error:', err);
       setSubmitError(err?.message || 'Failed to submit report. Please try again.');
     } finally {
+      setIsAiChecking(false);
       setUploading(false);
     }
   };
@@ -426,8 +454,32 @@ export default function LostFound() {
                   </div>
                 </div>
 
+                {/* OWL AI Safety Guardrail Warning Banner */}
+                {moderationReason && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-5 bg-amber-50 border-2 border-amber-300 rounded-3xl text-amber-900 flex items-start gap-4 shadow-sm"
+                  >
+                    <div className="w-10 h-10 rounded-2xl bg-amber-200/80 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <ShieldAlert className="w-5 h-5 text-amber-800" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-widest bg-amber-200 text-amber-900 px-2.5 py-0.5 rounded-full inline-block">
+                        OWL AI Safety Guardrail
+                      </span>
+                      <p className="font-bold text-sm mt-1.5 leading-snug">
+                        {moderationReason}
+                      </p>
+                      <p className="text-xs text-amber-700/80 font-medium mt-1">
+                        Please ensure your report describes a genuine physical item and avoid jokes, profanity, or spam.
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+
                 {/* Error banner */}
-                {submitError && (
+                {submitError && !moderationReason && (
                   <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-700">
                     <X className="w-5 h-5 mt-0.5 flex-shrink-0" />
                     <p className="font-bold text-sm">{submitError}</p>
@@ -444,15 +496,30 @@ export default function LostFound() {
 
                 <button
                   type="submit"
-                  disabled={uploading || submitSuccess}
-                  className="w-full bg-slate-900 disabled:opacity-50 text-white font-black py-5 rounded-2xl shadow-xl hover:bg-black transition-all text-xl uppercase tracking-widest flex justify-center items-center gap-2"
+                  disabled={uploading || isAiChecking || submitSuccess}
+                  className="w-full py-5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-black text-lg rounded-2xl shadow-xl shadow-amber-200 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-60"
                 >
-                  {uploading
-                    ? <><Loader2 className="w-6 h-6 animate-spin" /> Submitting…</>
-                    : submitSuccess
-                      ? <><CheckCircle2 className="w-6 h-6" /> Submitted!</>
-                      : 'Submit Report'
-                  }
+                  {isAiChecking ? (
+                    <>
+                      <Sparkles className="w-6 h-6 animate-spin text-amber-200" />
+                      OWL AI Verifying Item…
+                    </>
+                  ) : uploading ? (
+                    <>
+                      <Loader2 className="w-6 h-6 animate-spin" />
+                      Publishing Report…
+                    </>
+                  ) : submitSuccess ? (
+                    <>
+                      <CheckCircle2 className="w-6 h-6" />
+                      Report Published!
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck className="w-5 h-5" />
+                      Verify &amp; Submit Report
+                    </>
+                  )}
                 </button>
               </form>
 
@@ -476,8 +543,16 @@ export default function LostFound() {
               <div className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest ${item.type === 'lost' ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>
                 {item.type}
               </div>
-              <div className="text-slate-300">
-                <Clock className="w-5 h-5" />
+              <div className="flex items-center gap-2">
+                {item.isAiVerified !== false && (
+                  <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full border border-blue-200">
+                    <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
+                    AI Verified
+                  </span>
+                )}
+                <div className="text-slate-300">
+                  <Clock className="w-5 h-5" />
+                </div>
               </div>
             </div>
 

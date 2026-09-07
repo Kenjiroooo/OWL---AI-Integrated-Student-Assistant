@@ -75,8 +75,8 @@ export default function DagupanMap() {
           <UniversityMarker 
             position={LCR_ARZADON_LOCATION}
             title="LCR Arzadon Gymnasium"
-            subtitle="Indoor Facility • Universidad de Dagupan"
-            description="A major indoor university facility at Universidad de Dagupan used for large-scale academic, athletic, ceremonial, and student activities, including presentations, institutional events, and commencement-related programs."
+            subtitle="Indoor Facility • Bonuan Binloc, Dagupan City"
+            description="A major indoor university facility at Universidad de Dagupan used for large-scale academic, athletic, ceremonial, and student activities, including presentations, institutional events, and commencement-related programs. Located in Bonuan Binloc, Dagupan City."
           />
           <UniversityMarker 
             position={UDD_SHS_LOCATION}

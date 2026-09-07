@@ -1,0 +1,1078 @@
+<!-- Faculty Locator - Home -->
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Faculty Locator - Universidad de Dagupan</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-high": "#e7e8e9",
+                      "secondary-fixed": "#e2e2e2",
+                      "on-tertiary-container": "#4f3e00",
+                      "outline-variant": "#c3c6d1",
+                      "on-error": "#ffffff",
+                      "background": "#f8f9fa",
+                      "secondary": "#5d5f5f",
+                      "inverse-surface": "#2e3132",
+                      "tertiary-container": "#cca830",
+                      "on-primary": "#ffffff",
+                      "surface-tint": "#3a5f94",
+                      "on-secondary-fixed": "#1a1c1c",
+                      "on-primary-fixed": "#001b3c",
+                      "surface": "#f8f9fa",
+                      "tertiary-fixed-dim": "#e9c349",
+                      "surface-container-low": "#f3f4f5",
+                      "on-error-container": "#93000a",
+                      "inverse-primary": "#a7c8ff",
+                      "primary-fixed": "#d5e3ff",
+                      "on-secondary-fixed-variant": "#454747",
+                      "on-tertiary-fixed": "#241a00",
+                      "error": "#ba1a1a",
+                      "error-container": "#ffdad6",
+                      "on-tertiary": "#ffffff",
+                      "surface-container-highest": "#e1e3e4",
+                      "secondary-fixed-dim": "#c6c6c7",
+                      "surface-bright": "#f8f9fa",
+                      "surface-container-lowest": "#ffffff",
+                      "primary-container": "#003366",
+                      "surface-container": "#edeeef",
+                      "on-background": "#191c1d",
+                      "tertiary": "#735c00",
+                      "on-primary-fixed-variant": "#1f477b",
+                      "on-primary-container": "#799dd6",
+                      "on-secondary-container": "#616363",
+                      "secondary-container": "#dfe0e0",
+                      "inverse-on-surface": "#f0f1f2",
+                      "surface-dim": "#d9dadb",
+                      "primary-fixed-dim": "#a7c8ff",
+                      "on-surface-variant": "#43474f",
+                      "on-surface": "#191c1d",
+                      "on-secondary": "#ffffff",
+                      "surface-variant": "#e1e3e4",
+                      "tertiary-fixed": "#ffe088",
+                      "on-tertiary-fixed-variant": "#574500",
+                      "outline": "#737780",
+                      "primary": "#001e40"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "stack-sm": "8px",
+                      "gutter": "24px",
+                      "stack-lg": "32px",
+                      "touch-target-min": "56px",
+                      "stack-md": "16px",
+                      "margin-edge": "40px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Inter", "sans-serif"
+                      ],
+                      "label-lg": [
+                              "Inter", "sans-serif"
+                      ],
+                      "headline-lg": [
+                              "Inter", "sans-serif"
+                      ],
+                      "headline-xl": [
+                              "Inter", "sans-serif"
+                      ],
+                      "label-md": [
+                              "Inter", "sans-serif"
+                      ],
+                      "headline-md": [
+                              "Inter", "sans-serif"
+                      ],
+                      "body-lg": [
+                              "Inter", "sans-serif"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-xl": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "20px",
+                              {
+                                      "lineHeight": "30px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1;
+        }
+        
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        
+        .pressed-effect:active {
+            transform: scale(0.98);
+            transition: transform 0.1s ease-in-out;
+        }
+      </style>
+</head>
+<body class="bg-background text-on-background h-full overflow-hidden flex flex-col">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-edge h-touch-target-min bg-surface dark:bg-surface-dim border-b border-outline-variant dark:border-outline">
+<div class="text-headline-md font-headline-md font-bold text-primary dark:text-primary-fixed">
+            Universidad de Dagupan
+        </div>
+<div class="flex items-center gap-4">
+<button aria-label="Home" class="w-touch-target-min h-touch-target-min flex items-center justify-center rounded-full text-on-surface-variant dark:text-on-surface-variant active:bg-secondary-container dark:active:bg-secondary pressed-effect">
+<span class="material-symbols-outlined">home</span>
+</button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 mt-touch-target-min flex flex-col items-center px-margin-edge pt-stack-lg pb-[100px] overflow-y-auto no-scrollbar">
+<div class="w-full max-w-7xl mx-auto flex flex-col gap-stack-lg">
+<!-- Header Section -->
+<section class="text-center flex flex-col gap-stack-sm mt-stack-lg">
+<h1 class="text-headline-xl font-headline-xl text-primary">Faculty Locator</h1>
+<p class="text-body-lg font-body-lg text-on-surface-variant max-w-3xl mx-auto">
+                    Find faculty members, departments, offices, and schedules across Universidad de Dagupan.
+                </p>
+</section>
+<!-- Search Bar -->
+<section class="w-full max-w-4xl mx-auto mt-stack-md">
+<div class="relative w-full shadow-[0_4px_12px_rgba(0,30,64,0.12)] rounded-xl bg-surface-container-lowest border border-outline-variant focus-within:border-primary focus-within:ring-2 focus-within:ring-primary-fixed transition-all">
+<div class="absolute inset-y-0 left-0 flex items-center pl-6 pointer-events-none text-on-surface-variant">
+<span class="material-symbols-outlined filled text-[32px]">search</span>
+</div>
+<input autocomplete="off" class="block w-full h-[80px] pl-20 pr-16 bg-transparent border-none text-headline-md font-headline-md text-on-surface placeholder-on-surface-variant focus:ring-0 rounded-xl" placeholder="Search faculty name, department, position..." type="text"/>
+<button aria-label="Clear search" class="absolute inset-y-0 right-0 flex items-center pr-6 text-on-surface-variant hover:text-primary pressed-effect">
+<span class="material-symbols-outlined text-[28px]">close</span>
+</button>
+</div>
+<p class="text-label-md font-label-md text-on-surface-variant text-center mt-4">
+                    Try searching by name (e.g., "Juan Dela Cruz"), position (e.g., "Dean"), or department.
+                </p>
+</section>
+<!-- Schools Grid -->
+<section class="w-full mt-stack-lg">
+<h2 class="text-headline-md font-headline-md text-primary mb-stack-md">Colleges &amp; Schools</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-gutter pb-margin-edge">
+<!-- School 1 -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-[0_4px_12px_rgba(0,30,64,0.12)] border border-outline-variant flex flex-col gap-4 pressed-effect cursor-pointer group hover:border-primary transition-colors">
+<div class="w-16 h-16 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[32px]">computer</span>
+</div>
+<div class="flex-1">
+<h3 class="text-headline-md font-headline-md text-on-surface mb-2 leading-tight">School of Information Technology</h3>
+<p class="text-body-md font-body-md text-on-surface-variant mb-4">View faculty members and organizational structure.</p>
+</div>
+<div class="flex items-center justify-between mt-auto pt-4 border-t border-outline-variant">
+<span class="text-label-md font-label-md text-secondary">38 Faculty Members</span>
+<div class="text-primary font-label-lg text-label-lg group-hover:text-primary-container flex items-center gap-1">
+                                View Faculty <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</div>
+</div>
+</div>
+<!-- School 2 -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-[0_4px_12px_rgba(0,30,64,0.12)] border border-outline-variant flex flex-col gap-4 pressed-effect cursor-pointer group hover:border-primary transition-colors">
+<div class="w-16 h-16 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[32px]">architecture</span>
+</div>
+<div class="flex-1">
+<h3 class="text-headline-md font-headline-md text-on-surface mb-2 leading-tight">School of Engineering</h3>
+<p class="text-body-md font-body-md text-on-surface-variant mb-4">View faculty members and organizational structure.</p>
+</div>
+<div class="flex items-center justify-between mt-auto pt-4 border-t border-outline-variant">
+<span class="text-label-md font-label-md text-secondary">42 Faculty Members</span>
+<div class="text-primary font-label-lg text-label-lg group-hover:text-primary-container flex items-center gap-1">
+                                View Faculty <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</div>
+</div>
+</div>
+<!-- School 3 -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-[0_4px_12px_rgba(0,30,64,0.12)] border border-outline-variant flex flex-col gap-4 pressed-effect cursor-pointer group hover:border-primary transition-colors">
+<div class="w-16 h-16 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[32px]">menu_book</span>
+</div>
+<div class="flex-1">
+<h3 class="text-headline-md font-headline-md text-on-surface mb-2 leading-tight">School of Teacher Education</h3>
+<p class="text-body-md font-body-md text-on-surface-variant mb-4">View faculty members and organizational structure.</p>
+</div>
+<div class="flex items-center justify-between mt-auto pt-4 border-t border-outline-variant">
+<span class="text-label-md font-label-md text-secondary">55 Faculty Members</span>
+<div class="text-primary font-label-lg text-label-lg group-hover:text-primary-container flex items-center gap-1">
+                                View Faculty <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</div>
+</div>
+</div>
+<!-- School 4 -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-[0_4px_12px_rgba(0,30,64,0.12)] border border-outline-variant flex flex-col gap-4 pressed-effect cursor-pointer group hover:border-primary transition-colors">
+<div class="w-16 h-16 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[32px]">account_balance</span>
+</div>
+<div class="flex-1">
+<h3 class="text-headline-md font-headline-md text-on-surface mb-2 leading-tight">School of Business and Accountancy</h3>
+<p class="text-body-md font-body-md text-on-surface-variant mb-4">View faculty members and organizational structure.</p>
+</div>
+<div class="flex items-center justify-between mt-auto pt-4 border-t border-outline-variant">
+<span class="text-label-md font-label-md text-secondary">48 Faculty Members</span>
+<div class="text-primary font-label-lg text-label-lg group-hover:text-primary-container flex items-center gap-1">
+                                View Faculty <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</div>
+</div>
+</div>
+<!-- School 5 -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-[0_4px_12px_rgba(0,30,64,0.12)] border border-outline-variant flex flex-col gap-4 pressed-effect cursor-pointer group hover:border-primary transition-colors">
+<div class="w-16 h-16 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[32px]">restaurant</span>
+</div>
+<div class="flex-1">
+<h3 class="text-headline-md font-headline-md text-on-surface mb-2 leading-tight">School of International Hospitality Mgt</h3>
+<p class="text-body-md font-body-md text-on-surface-variant mb-4">View faculty members and organizational structure.</p>
+</div>
+<div class="flex items-center justify-between mt-auto pt-4 border-t border-outline-variant">
+<span class="text-label-md font-label-md text-secondary">32 Faculty Members</span>
+<div class="text-primary font-label-lg text-label-lg group-hover:text-primary-container flex items-center gap-1">
+                                View Faculty <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</div>
+</div>
+</div>
+<!-- School 6 -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-[0_4px_12px_rgba(0,30,64,0.12)] border border-outline-variant flex flex-col gap-4 pressed-effect cursor-pointer group hover:border-primary transition-colors">
+<div class="w-16 h-16 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[32px]">history_edu</span>
+</div>
+<div class="flex-1">
+<h3 class="text-headline-md font-headline-md text-on-surface mb-2 leading-tight">School of Humanities</h3>
+<p class="text-body-md font-body-md text-on-surface-variant mb-4">View faculty members and organizational structure.</p>
+</div>
+<div class="flex items-center justify-between mt-auto pt-4 border-t border-outline-variant">
+<span class="text-label-md font-label-md text-secondary">28 Faculty Members</span>
+<div class="text-primary font-label-lg text-label-lg group-hover:text-primary-container flex items-center gap-1">
+                                View Faculty <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</div>
+</div>
+</div>
+<!-- School 7 -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-[0_4px_12px_rgba(0,30,64,0.12)] border border-outline-variant flex flex-col gap-4 pressed-effect cursor-pointer group hover:border-primary transition-colors">
+<div class="w-16 h-16 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[32px]">medical_services</span>
+</div>
+<div class="flex-1">
+<h3 class="text-headline-md font-headline-md text-on-surface mb-2 leading-tight">School of Health and Sciences</h3>
+<p class="text-body-md font-body-md text-on-surface-variant mb-4">View faculty members and organizational structure.</p>
+</div>
+<div class="flex items-center justify-between mt-auto pt-4 border-t border-outline-variant">
+<span class="text-label-md font-label-md text-secondary">64 Faculty Members</span>
+<div class="text-primary font-label-lg text-label-lg group-hover:text-primary-container flex items-center gap-1">
+                                View Faculty <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</div>
+</div>
+</div>
+<!-- School 8 -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-[0_4px_12px_rgba(0,30,64,0.12)] border border-outline-variant flex flex-col gap-4 pressed-effect cursor-pointer group hover:border-primary transition-colors">
+<div class="w-16 h-16 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[32px]">school</span>
+</div>
+<div class="flex-1">
+<h3 class="text-headline-md font-headline-md text-on-surface mb-2 leading-tight">School of Basic Education</h3>
+<p class="text-body-md font-body-md text-on-surface-variant mb-4">View faculty members and organizational structure.</p>
+</div>
+<div class="flex items-center justify-between mt-auto pt-4 border-t border-outline-variant">
+<span class="text-label-md font-label-md text-secondary">82 Faculty Members</span>
+<div class="text-primary font-label-lg text-label-lg group-hover:text-primary-container flex items-center gap-1">
+                                View Faculty <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</div>
+</div>
+</div>
+<!-- School 9 -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-[0_4px_12px_rgba(0,30,64,0.12)] border border-outline-variant flex flex-col gap-4 pressed-effect cursor-pointer group hover:border-primary transition-colors">
+<div class="w-16 h-16 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[32px]">local_police</span>
+</div>
+<div class="flex-1">
+<h3 class="text-headline-md font-headline-md text-on-surface mb-2 leading-tight">School of Criminology</h3>
+<p class="text-body-md font-body-md text-on-surface-variant mb-4">View faculty members and organizational structure.</p>
+</div>
+<div class="flex items-center justify-between mt-auto pt-4 border-t border-outline-variant">
+<span class="text-label-md font-label-md text-secondary">35 Faculty Members</span>
+<div class="text-primary font-label-lg text-label-lg group-hover:text-primary-container flex items-center gap-1">
+                                View Faculty <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</div>
+</div>
+</div>
+<!-- School 10 -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-[0_4px_12px_rgba(0,30,64,0.12)] border border-outline-variant flex flex-col gap-4 pressed-effect cursor-pointer group hover:border-primary transition-colors">
+<div class="w-16 h-16 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[32px]">work</span>
+</div>
+<div class="flex-1">
+<h3 class="text-headline-md font-headline-md text-on-surface mb-2 leading-tight">School of Professional Studies</h3>
+<p class="text-body-md font-body-md text-on-surface-variant mb-4">View faculty members and organizational structure.</p>
+</div>
+<div class="flex items-center justify-between mt-auto pt-4 border-t border-outline-variant">
+<span class="text-label-md font-label-md text-secondary">24 Faculty Members</span>
+<div class="text-primary font-label-lg text-label-lg group-hover:text-primary-container flex items-center gap-1">
+                                View Faculty <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Footer -->
+<footer class="fixed bottom-0 left-0 w-full z-50 flex justify-between items-center px-margin-edge py-stack-md bg-surface-container-high dark:bg-surface-container-highest">
+<div class="text-label-md font-label-md text-secondary">
+            © 2024 Universidad de Dagupan | Tap anywhere to return home
+        </div>
+<div class="flex gap-stack-lg">
+<a class="text-body-md font-body-md text-secondary active:opacity-70 pressed-effect" href="#">Accessibility</a>
+<a class="text-body-md font-body-md text-secondary active:opacity-70 pressed-effect" href="#">Contact Admin</a>
+</div>
+</footer>
+</body></html>
+
+<!-- Engineering - Organization Chart -->
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>School of Engineering - Faculty Locator</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-high": "#e7e8e9",
+                      "secondary-fixed": "#e2e2e2",
+                      "on-tertiary-container": "#4f3e00",
+                      "outline-variant": "#c3c6d1",
+                      "on-error": "#ffffff",
+                      "background": "#f8f9fa",
+                      "secondary": "#5d5f5f",
+                      "inverse-surface": "#2e3132",
+                      "tertiary-container": "#cca830",
+                      "on-primary": "#ffffff",
+                      "surface-tint": "#3a5f94",
+                      "on-secondary-fixed": "#1a1c1c",
+                      "on-primary-fixed": "#001b3c",
+                      "surface": "#f8f9fa",
+                      "tertiary-fixed-dim": "#e9c349",
+                      "surface-container-low": "#f3f4f5",
+                      "on-error-container": "#93000a",
+                      "inverse-primary": "#a7c8ff",
+                      "primary-fixed": "#d5e3ff",
+                      "on-secondary-fixed-variant": "#454747",
+                      "on-tertiary-fixed": "#241a00",
+                      "error": "#ba1a1a",
+                      "error-container": "#ffdad6",
+                      "on-tertiary": "#ffffff",
+                      "surface-container-highest": "#e1e3e4",
+                      "secondary-fixed-dim": "#c6c6c7",
+                      "surface-bright": "#f8f9fa",
+                      "surface-container-lowest": "#ffffff",
+                      "primary-container": "#003366",
+                      "surface-container": "#edeeef",
+                      "on-background": "#191c1d",
+                      "tertiary": "#735c00",
+                      "on-primary-fixed-variant": "#1f477b",
+                      "on-primary-container": "#799dd6",
+                      "on-secondary-container": "#616363",
+                      "secondary-container": "#dfe0e0",
+                      "inverse-on-surface": "#f0f1f2",
+                      "surface-dim": "#d9dadb",
+                      "primary-fixed-dim": "#a7c8ff",
+                      "on-surface-variant": "#43474f",
+                      "on-surface": "#191c1d",
+                      "on-secondary": "#ffffff",
+                      "surface-variant": "#e1e3e4",
+                      "tertiary-fixed": "#ffe088",
+                      "on-tertiary-fixed-variant": "#574500",
+                      "outline": "#737780",
+                      "primary": "#001e40"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "stack-sm": "8px",
+                      "gutter": "24px",
+                      "stack-lg": "32px",
+                      "touch-target-min": "56px",
+                      "stack-md": "16px",
+                      "margin-edge": "40px"
+              },
+              "fontFamily": {
+                      "body-md": ["Inter"],
+                      "label-lg": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "headline-xl": ["Inter"],
+                      "label-md": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "body-lg": ["Inter"]
+              },
+              "fontSize": {
+                      "body-md": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "label-lg": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                      "headline-xl": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "label-md": ["16px", {"lineHeight": "20px", "fontWeight": "500"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "body-lg": ["20px", {"lineHeight": "30px", "fontWeight": "400"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+          font-family: 'Material Symbols Outlined';
+          font-weight: normal;
+          font-style: normal;
+          font-size: 24px;
+          line-height: 1;
+          letter-spacing: normal;
+          text-transform: none;
+          display: inline-block;
+          white-space: nowrap;
+          word-wrap: normal;
+          direction: ltr;
+          -webkit-font-feature-settings: 'liga';
+          -webkit-font-smoothing: antialiased;
+        }
+        
+        /* Interactive touch styles */
+        .touch-active:active {
+            transform: scale(0.98);
+            transition: transform 0.1s;
+        }
+        
+        .org-connector {
+            position: absolute;
+            background-color: theme('colors.outline-variant');
+            z-index: 0;
+        }
+        
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md h-screen w-screen overflow-hidden flex flex-col">
+<!-- Top App Bar (From Shared Components JSON) -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-edge h-touch-target-min border-b border-outline-variant bg-surface">
+<div class="flex items-center gap-stack-md">
+<!-- Back Button Context -->
+<button class="flex items-center justify-center w-12 h-12 rounded-full hover:bg-surface-container active:bg-secondary-container transition-colors touch-active text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<div class="text-headline-md font-headline-md font-bold text-primary">Universidad de Dagupan</div>
+</div>
+<div class="flex items-center">
+<button class="w-12 h-12 flex items-center justify-center rounded-full hover:bg-surface-container active:bg-secondary-container transition-colors touch-active text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+</button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 mt-[56px] flex flex-col relative overflow-hidden bg-background">
+<!-- Header Section -->
+<section class="px-margin-edge py-stack-lg bg-surface flex flex-col gap-stack-md border-b border-outline-variant z-10 relative">
+<div class="flex flex-col gap-stack-sm">
+<h1 class="text-headline-xl font-headline-xl text-on-surface">School of Engineering</h1>
+<p class="text-body-lg font-body-lg text-on-surface-variant max-w-3xl">Providing excellence in technical education and research.</p>
+</div>
+<div class="flex gap-gutter mt-stack-sm">
+<div class="flex items-center gap-stack-sm bg-surface-container-low px-4 py-2 rounded-lg border border-outline-variant">
+<span class="material-symbols-outlined text-primary" data-icon="school">school</span>
+<div class="flex flex-col">
+<span class="text-label-md font-label-md text-on-surface-variant">Dean / School Head</span>
+<span class="text-body-md font-body-md text-on-surface font-semibold">Dr. Juan Dela Cruz</span>
+</div>
+</div>
+<div class="flex items-center gap-stack-sm bg-surface-container-low px-4 py-2 rounded-lg border border-outline-variant">
+<span class="material-symbols-outlined text-primary" data-icon="groups">groups</span>
+<div class="flex flex-col">
+<span class="text-label-md font-label-md text-on-surface-variant">Faculty Count</span>
+<span class="text-body-md font-body-md text-on-surface font-semibold">24 Members</span>
+</div>
+</div>
+</div>
+<!-- View Toggles -->
+<div class="flex bg-surface-container-low rounded-lg p-1 w-fit mt-stack-md border border-outline-variant">
+<button class="px-8 py-3 rounded-md text-label-lg font-label-lg bg-primary-container text-on-primary-container shadow-sm flex items-center gap-2 touch-active">
+<span class="material-symbols-outlined" data-icon="account_tree">account_tree</span>
+                    Organization Chart
+                </button>
+<button class="px-8 py-3 rounded-md text-label-lg font-label-lg text-on-surface-variant hover:bg-surface-container-highest transition-colors flex items-center gap-2 touch-active">
+<span class="material-symbols-outlined" data-icon="person_search">person_search</span>
+                    Faculty Directory
+                </button>
+</div>
+</section>
+<!-- Organization Chart Canvas -->
+<section class="flex-1 relative overflow-auto hide-scrollbar bg-surface-container-lowest cursor-grab active:cursor-grabbing p-margin-edge flex flex-col items-center" id="orgChartContainer">
+<!-- Zoom Controls (Floating) -->
+<div class="fixed bottom-margin-edge right-margin-edge flex flex-col gap-stack-sm z-30 bg-surface shadow-md rounded-xl border border-outline-variant p-1">
+<button class="w-14 h-14 flex items-center justify-center rounded-lg hover:bg-surface-container-highest active:bg-secondary-container touch-active text-on-surface transition-colors" title="Zoom In">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+<div class="w-full h-px bg-outline-variant"></div>
+<button class="w-14 h-14 flex items-center justify-center rounded-lg hover:bg-surface-container-highest active:bg-secondary-container touch-active text-on-surface transition-colors" title="Zoom Out">
+<span class="material-symbols-outlined" data-icon="remove">remove</span>
+</button>
+<div class="w-full h-px bg-outline-variant"></div>
+<button class="w-14 h-14 flex items-center justify-center rounded-lg hover:bg-surface-container-highest active:bg-secondary-container touch-active text-on-surface transition-colors" title="Center View">
+<span class="material-symbols-outlined" data-icon="center_focus_strong">center_focus_strong</span>
+</button>
+</div>
+<!-- The Chart Content -->
+<div class="min-w-max pb-32 flex flex-col items-center relative transform origin-top pt-8" id="orgChartInner">
+<!-- Level 1: Dean -->
+<div class="relative z-10 bg-surface border border-outline-variant rounded-xl shadow-md p-4 w-72 flex flex-col items-center gap-4 touch-active cursor-pointer">
+<img class="w-24 h-24 rounded-full object-cover border-4 border-surface shadow-sm" data-alt="A professional headshot of a senior academic male, wearing a dark blue suit and tie, smiling warmly against a bright, modern university office background with soft natural lighting and a corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB-SVKVkRjQIL7cPWwqiYOJdgo3g37SC4IXQ1D3u5Cx-97nQZ1VYbPCj9zF5-DjxeBjAAZWNx2K8gafyajaRFIkxsM6mL-420m-jKoHh2Buib1sGgklXoM3lpTu_pluc4DetLzazzClj5GnNwum7pULIEwU4WRujx05dLSRHgITOgLmuppqum84s2bqDE4qgclQmdFw-5OLCylSTFEY3LY6sbiSsh9OkOjiHa9otWXXy3O0n4JTU8LU"/>
+<div class="text-center">
+<h3 class="text-headline-md font-headline-md text-on-surface">Dr. Juan Dela Cruz</h3>
+<p class="text-label-lg font-label-lg text-primary">Dean, School of Engineering</p>
+</div>
+</div>
+<!-- Connectors Level 1 to 2 -->
+<div class="w-px h-8 bg-outline-variant mt-0"></div>
+<div class="w-[800px] h-px bg-outline-variant relative">
+<!-- Vertical drops -->
+<div class="absolute left-0 top-0 w-px h-8 bg-outline-variant"></div>
+<div class="absolute left-1/2 top-0 w-px h-8 bg-outline-variant transform -translate-x-1/2"></div>
+<div class="absolute right-0 top-0 w-px h-8 bg-outline-variant"></div>
+</div>
+<!-- Level 2: Program Heads -->
+<div class="flex gap-[80px] mt-8 relative z-10 w-full justify-center">
+<!-- Program Head 1 -->
+<div class="flex flex-col items-center">
+<div class="bg-surface border border-outline-variant rounded-xl shadow-md p-4 w-64 flex flex-col items-center gap-3 touch-active cursor-pointer">
+<img class="w-20 h-20 rounded-full object-cover border-2 border-outline-variant" data-alt="A professional headshot of a female academic, wearing business casual attire, smiling gently against a minimalist, bright white background with a modern corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBrfBKnWhWQrDa9WXun0cNpIGnZ5OCjgn1nbLr6TL98l-SlgzrNGSM0n7Kuw8eIPYpvOZ-krjmV4Nv5pMOz2XfpZ26ghbye1tFH77ITMRvA_UP_I68pjA0xFudduz0Zjk6vVMNQ5gIXiipeNsNdsf1qJSnXQ3D6SvPG_NBnMSg6xUDu7ImBmyWCY1Dofj8XpWO11f84Op7kRDiY64HI1sF2syPYqCjrnqyCANd8zQdUsxjAiq7CpT70"/>
+<div class="text-center">
+<h3 class="text-label-lg font-label-lg text-on-surface">Engr. Maria Santos</h3>
+<p class="text-label-md font-label-md text-on-surface-variant">Program Chair</p>
+<p class="text-label-md font-label-md text-secondary mt-1">Civil Engineering</p>
+</div>
+</div>
+<div class="w-px h-8 bg-outline-variant"></div>
+<!-- Level 3: Faculty CE -->
+<div class="flex flex-col gap-4 relative">
+<!-- Left bracket -->
+<div class="absolute left-[-20px] top-0 w-[20px] h-px bg-outline-variant"></div>
+<!-- Faculty item 1 -->
+<div class="flex items-center gap-4 relative">
+<div class="absolute left-[-20px] top-1/2 w-[20px] h-px bg-outline-variant"></div>
+<div class="w-px h-full bg-outline-variant absolute left-[-20px] top-[-20px] bottom-0" style="height: calc(100% + 20px);"></div>
+<div class="bg-surface border border-outline-variant rounded-lg p-3 w-64 flex items-center gap-3 touch-active cursor-pointer hover:bg-surface-container-low transition-colors shadow-sm">
+<div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-on-surface-variant text-label-lg font-label-lg">AB</div>
+<div class="flex flex-col">
+<span class="text-label-lg font-label-lg text-on-surface">Arch. Alex Bautista</span>
+<span class="text-label-md font-label-md text-on-surface-variant">Instructor I</span>
+</div>
+</div>
+</div>
+<!-- Faculty item 2 -->
+<div class="flex items-center gap-4 relative">
+<div class="absolute left-[-20px] top-1/2 w-[20px] h-px bg-outline-variant"></div>
+<div class="bg-surface border border-outline-variant rounded-lg p-3 w-64 flex items-center gap-3 touch-active cursor-pointer hover:bg-surface-container-low transition-colors shadow-sm">
+<div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-on-surface-variant text-label-lg font-label-lg">CD</div>
+<div class="flex flex-col">
+<span class="text-label-lg font-label-lg text-on-surface">Engr. Carlo Dizon</span>
+<span class="text-label-md font-label-md text-on-surface-variant">Instructor II</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Program Head 2 -->
+<div class="flex flex-col items-center">
+<div class="bg-surface border border-outline-variant rounded-xl shadow-md p-4 w-64 flex flex-col items-center gap-3 touch-active cursor-pointer">
+<img class="w-20 h-20 rounded-full object-cover border-2 border-outline-variant" data-alt="A professional headshot of a male academic, wearing a light blue polo shirt, looking confident against a clean, light grey background with a corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoJIa_Pffr1eeBKZclCZQi5-y7LHWn811jRyHdxhmrfS93yNZbcnPG5nR52lT5enAx_dCmXQCnuRrAtVF1_j8kOVvKE_HFXyf0eq8tfJ-0JIN1cc0YJ1GOMrVUSNDHb5Eh6hKdIFgcte3piihx_dY5fD_fCO663lH5KykqFXhLapqQD8H4w6ojV-DfabN-8TsswQg6rvzLpaST8p7vW-8z2dqeacosFM5PQ7_JY8xSwoMSxsNuH2tT"/>
+<div class="text-center">
+<h3 class="text-label-lg font-label-lg text-on-surface">Engr. Robert Lim</h3>
+<p class="text-label-md font-label-md text-on-surface-variant">Program Chair</p>
+<p class="text-label-md font-label-md text-secondary mt-1">Computer Engineering</p>
+</div>
+</div>
+<div class="w-px h-8 bg-outline-variant"></div>
+<!-- Level 3: Faculty CpE -->
+<div class="flex flex-col gap-4 relative">
+<!-- Faculty item 1 -->
+<div class="flex items-center gap-4 relative">
+<div class="absolute left-[-20px] top-1/2 w-[20px] h-px bg-outline-variant"></div>
+<div class="w-px h-full bg-outline-variant absolute left-[-20px] top-[-20px] bottom-0" style="height: calc(100% + 20px);"></div>
+<div class="bg-surface border border-outline-variant rounded-lg p-3 w-64 flex items-center gap-3 touch-active cursor-pointer hover:bg-surface-container-low transition-colors shadow-sm">
+<img class="w-12 h-12 rounded-full object-cover border border-outline-variant" data-alt="A small professional headshot of a young female instructor, smiling warmly in business casual attire against a clean, light background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDifquq7ipGud7U0cgEKM774sRGPZ2v5jtcxn-qh-BmZoCY4zrUi1sBeT8ornxakcqLdhraVMdXn0RFRDUsRofMCDy1ZYGHq3kvLbEFXqP-9r5SJUAqdB_DnrTRuESJXIfjovs3einK6sLVtpzDybxkbsFHRC-y01C3M4yLm_Ck4E4s_0weClgoe3qGCmrrxYPdCl69l0SgeOCadOJfGZwM0rgbtTWMShJViqmL3SuO_VGkbyb7dwVB"/>
+<div class="flex flex-col">
+<span class="text-label-lg font-label-lg text-on-surface">Engr. Diana Reyes</span>
+<span class="text-label-md font-label-md text-on-surface-variant">Asst. Professor</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Program Head 3 -->
+<div class="flex flex-col items-center">
+<div class="bg-surface border border-outline-variant rounded-xl shadow-md p-4 w-64 flex flex-col items-center gap-3 touch-active cursor-pointer">
+<div class="w-20 h-20 rounded-full bg-secondary-container flex items-center justify-center text-on-surface-variant text-headline-md font-headline-md border-2 border-outline-variant">EG</div>
+<div class="text-center">
+<h3 class="text-label-lg font-label-lg text-on-surface">Engr. Eduardo Garcia</h3>
+<p class="text-label-md font-label-md text-on-surface-variant">Program Chair</p>
+<p class="text-label-md font-label-md text-secondary mt-1">Electrical Engineering</p>
+</div>
+</div>
+<div class="w-px h-8 bg-outline-variant"></div>
+<!-- Level 3: Faculty EE -->
+<div class="flex flex-col gap-4 relative">
+<!-- Faculty item 1 -->
+<div class="flex items-center gap-4 relative">
+<div class="absolute left-[-20px] top-1/2 w-[20px] h-px bg-outline-variant"></div>
+<div class="w-px h-full bg-outline-variant absolute left-[-20px] top-[-20px] bottom-0" style="height: calc(100% + 20px);"></div>
+<div class="bg-surface border border-outline-variant rounded-lg p-3 w-64 flex items-center gap-3 touch-active cursor-pointer hover:bg-surface-container-low transition-colors shadow-sm">
+<div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-on-surface-variant text-label-lg font-label-lg">FM</div>
+<div class="flex flex-col">
+<span class="text-label-lg font-label-lg text-on-surface">Engr. Fred Manalo</span>
+<span class="text-label-md font-label-md text-on-surface-variant">Instructor I</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer (From Shared Components JSON) -->
+<footer class="fixed bottom-0 left-0 w-full z-50 flex justify-between items-center px-margin-edge py-stack-md bg-surface-container-high border-t border-outline-variant shadow-sm h-touch-target-min">
+<span class="text-label-md font-label-md text-secondary">© 2024 Universidad de Dagupan | Tap anywhere to return home</span>
+<div class="flex gap-gutter">
+<a class="text-body-md font-body-md text-secondary hover:text-primary active:opacity-70 transition-colors" href="#">Accessibility</a>
+<a class="text-body-md font-body-md text-secondary hover:text-primary active:opacity-70 transition-colors" href="#">Contact Admin</a>
+</div>
+</footer>
+<script>
+        // Simple drag to pan functionality for the organization chart
+        const container = document.getElementById('orgChartContainer');
+        let isDown = false;
+        let startX;
+        let startY;
+        let scrollLeft;
+        let scrollTop;
+
+        container.addEventListener('mousedown', (e) => {
+            isDown = true;
+            container.classList.add('cursor-grabbing');
+            container.classList.remove('cursor-grab');
+            startX = e.pageX - container.offsetLeft;
+            startY = e.pageY - container.offsetTop;
+            scrollLeft = container.scrollLeft;
+            scrollTop = container.scrollTop;
+        });
+        
+        container.addEventListener('mouseleave', () => {
+            isDown = false;
+            container.classList.remove('cursor-grabbing');
+            container.classList.add('cursor-grab');
+        });
+        
+        container.addEventListener('mouseup', () => {
+            isDown = false;
+            container.classList.remove('cursor-grabbing');
+            container.classList.add('cursor-grab');
+        });
+        
+        container.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - container.offsetLeft;
+            const y = e.pageY - container.offsetTop;
+            const walkX = (x - startX) * 2; // Scroll-fast
+            const walkY = (y - startY) * 2; // Scroll-fast
+            container.scrollLeft = scrollLeft - walkX;
+            container.scrollTop = scrollTop - walkY;
+        });
+    </script>
+</body></html>
+
+<!-- Faculty Profile - Juan Dela Cruz -->
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Faculty Locator - Engr. Juan Dela Cruz</title>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Inter Font -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-high": "#e7e8e9",
+                      "secondary-fixed": "#e2e2e2",
+                      "on-tertiary-container": "#4f3e00",
+                      "outline-variant": "#c3c6d1",
+                      "on-error": "#ffffff",
+                      "background": "#f8f9fa",
+                      "secondary": "#5d5f5f",
+                      "inverse-surface": "#2e3132",
+                      "tertiary-container": "#cca830",
+                      "on-primary": "#ffffff",
+                      "surface-tint": "#3a5f94",
+                      "on-secondary-fixed": "#1a1c1c",
+                      "on-primary-fixed": "#001b3c",
+                      "surface": "#f8f9fa",
+                      "tertiary-fixed-dim": "#e9c349",
+                      "surface-container-low": "#f3f4f5",
+                      "on-error-container": "#93000a",
+                      "inverse-primary": "#a7c8ff",
+                      "primary-fixed": "#d5e3ff",
+                      "on-secondary-fixed-variant": "#454747",
+                      "on-tertiary-fixed": "#241a00",
+                      "error": "#ba1a1a",
+                      "error-container": "#ffdad6",
+                      "on-tertiary": "#ffffff",
+                      "surface-container-highest": "#e1e3e4",
+                      "secondary-fixed-dim": "#c6c6c7",
+                      "surface-bright": "#f8f9fa",
+                      "surface-container-lowest": "#ffffff",
+                      "primary-container": "#003366",
+                      "surface-container": "#edeeef",
+                      "on-background": "#191c1d",
+                      "tertiary": "#735c00",
+                      "on-primary-fixed-variant": "#1f477b",
+                      "on-primary-container": "#799dd6",
+                      "on-secondary-container": "#616363",
+                      "secondary-container": "#dfe0e0",
+                      "inverse-on-surface": "#f0f1f2",
+                      "surface-dim": "#d9dadb",
+                      "primary-fixed-dim": "#a7c8ff",
+                      "on-surface-variant": "#43474f",
+                      "on-surface": "#191c1d",
+                      "on-secondary": "#ffffff",
+                      "surface-variant": "#e1e3e4",
+                      "tertiary-fixed": "#ffe088",
+                      "on-tertiary-fixed-variant": "#574500",
+                      "outline": "#737780",
+                      "primary": "#001e40"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "stack-sm": "8px",
+                      "gutter": "24px",
+                      "stack-lg": "32px",
+                      "touch-target-min": "56px",
+                      "stack-md": "16px",
+                      "margin-edge": "40px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "label-lg": [
+                              "Inter"
+                      ],
+                      "headline-lg": [
+                              "Inter"
+                      ],
+                      "headline-xl": [
+                              "Inter"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-xl": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "20px",
+                              {
+                                      "lineHeight": "30px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .pressed-state:active {
+            transform: scale(0.98);
+            transition: transform 0.1s ease-in-out;
+            background-color: var(--color-surface-container-highest);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background h-full font-body-md overflow-hidden antialiased">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-edge h-touch-target-min bg-surface border-b border-outline-variant">
+<div class="flex items-center gap-stack-md">
+<span class="text-headline-md font-headline-md font-bold text-primary">Universidad de Dagupan</span>
+</div>
+<!-- Hide Top Nav Links / Shell because this is a sub-page with a Back action -->
+<nav class="hidden md:flex gap-stack-lg items-center text-on-surface-variant font-label-lg text-label-lg">
+<!-- Navigation items suppressed due to focused sub-page state -->
+</nav>
+<div class="flex items-center gap-stack-md">
+<!-- Navigation items suppressed -->
+</div>
+</header>
+<!-- SideNavBar (Suppressed for Sub-page context) -->
+<!-- Navigation shell is excluded as this is a focused, task-oriented sub-page with a "Back" action. Prioritizing content canvas. -->
+<!-- Main Content Canvas -->
+<main class="h-full pt-[calc(var(--spacing-touch-target-min)+var(--spacing-margin-edge))] pb-margin-edge px-margin-edge overflow-y-auto">
+<div class="max-w-[1400px] mx-auto h-full flex flex-col">
+<!-- Contextual Action Bar -->
+<div class="mb-gutter flex justify-between items-center">
+<button class="flex items-center gap-stack-sm h-touch-target-min px-4 rounded-lg text-primary font-label-lg text-label-lg pressed-state" onclick="window.history.back()">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">arrow_back</span>
+                    Back to Directory
+                </button>
+</div>
+<!-- Profile Bento Grid -->
+<div class="flex-1 grid grid-cols-12 gap-gutter grid-rows-[auto_1fr] h-full pb-[100px]">
+<!-- Main Profile Identity Card (Spans 4 cols on large screens, full on mobile) -->
+<section class="col-span-12 lg:col-span-4 bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(0,30,64,0.12)] border border-outline-variant p-gutter flex flex-col items-center text-center">
+<div class="w-[240px] h-[240px] rounded-full overflow-hidden mb-stack-lg shadow-sm border-4 border-surface-container">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of an Asian male engineering professor in his 40s. He is wearing a formal suit and smiling warmly. The background is a slightly blurred modern university office with bright, soft white lighting. High-key light-mode aesthetic, emphasizing trustworthiness and academic authority." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBICEITlI88Cl8PMwJOJc3OQoYcUr9kNT2u7BXXj2jcw79cYbp1I1eKOZdWfZVModGCqjNzi2tz2OuFM4UYn-FM4poOQiuikC-371306TLKQdaEzm2flY725_VyB_cMRoWnha0g5O80G9ixVhlnCrTGRvOTtfizRmw7RZuXQLxYIB60xCFMX93OQJb4AeGqnepT4J_kwTuYULEOF7U6OFSMmHzI5S2o7H1VCHbhrQpPnhl6rBFjg6aj"/>
+</div>
+<h1 class="font-headline-xl text-headline-xl text-primary mb-stack-sm">ENGR. JUAN DELA CRUZ</h1>
+<h2 class="font-headline-md text-headline-md text-on-surface-variant mb-stack-sm">Department Head</h2>
+<div class="mt-stack-md inline-flex items-center gap-2 bg-primary-fixed text-on-primary-fixed px-4 py-2 rounded-full font-label-lg text-label-lg shadow-sm">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        Available for Consultation
+                    </div>
+</section>
+<!-- Details Cards Container (Spans 8 cols) -->
+<div class="col-span-12 lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-gutter content-start">
+<!-- Academic Information Box -->
+<section class="bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(0,30,64,0.12)] border border-outline-variant p-gutter">
+<div class="flex items-center gap-stack-md mb-stack-md pb-stack-sm border-b border-outline-variant/30">
+<span class="material-symbols-outlined text-primary text-[32px]" style="font-variation-settings: 'FILL' 0;">school</span>
+<h3 class="font-headline-lg text-headline-lg text-primary">Academic Affiliation</h3>
+</div>
+<ul class="space-y-stack-md mt-stack-md">
+<li>
+<span class="block font-label-md text-label-md text-secondary">School</span>
+<span class="block font-body-lg text-body-lg text-on-surface">School of Engineering</span>
+</li>
+<li>
+<span class="block font-label-md text-label-md text-secondary">Program</span>
+<span class="block font-body-lg text-body-lg text-on-surface">Computer Engineering</span>
+</li>
+<li>
+<span class="block font-label-md text-label-md text-secondary">Specialization</span>
+<span class="block font-body-lg text-body-lg text-on-surface">Embedded Systems</span>
+</li>
+</ul>
+</section>
+<!-- Contact & Location Box -->
+<section class="bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(0,30,64,0.12)] border border-outline-variant p-gutter">
+<div class="flex items-center gap-stack-md mb-stack-md pb-stack-sm border-b border-outline-variant/30">
+<span class="material-symbols-outlined text-primary text-[32px]" style="font-variation-settings: 'FILL' 0;">contact_mail</span>
+<h3 class="font-headline-lg text-headline-lg text-primary">Contact &amp; Location</h3>
+</div>
+<ul class="space-y-stack-md mt-stack-md">
+<li>
+<span class="block font-label-md text-label-md text-secondary">Office Location</span>
+<span class="block font-body-lg text-body-lg text-on-surface">Engineering Building - Room E-204</span>
+</li>
+<li>
+<span class="block font-label-md text-label-md text-secondary">Official Email</span>
+<span class="block font-body-lg text-body-lg text-primary">j.delacruz@udd.edu.ph</span>
+</li>
+</ul>
+<div class="mt-stack-lg w-full h-[120px] rounded-lg overflow-hidden border border-outline-variant relative">
+<!-- Visual mapping context placeholder -->
+<div class="bg-cover bg-center w-full h-full opacity-80 mix-blend-multiply" data-alt="A clean, modern, high-contrast flat map design of a university campus. The style is minimalist with a light grey background and crisp blue lines indicating paths and buildings. A prominent red pin marker indicates 'Engineering Building'. High-key light-mode aesthetic, corporate and structured." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCpU5KkKzVnJDIpA188uSVT2VdsZrxJLOmDF4_DSVjKU7yN6DXXhLYsC6AblrXI6V-XqTPn6UxOMAcERWkGvwC9ipsQIuZ7r2oWP1-QPh2NzEHxVbPNLFhxUYRnr4SZ9GqTfVSTF0s8R1WyiTOqUY25SqN_Db7AytBZ9q9QOpTAuB6NMF0ApZyL6TBL-_WMSqqaliuOz9jOVHsWQkcUESmCcmy7rYBqemTsy8FUzEJhsAlEEN2w9QCP')"></div>
+<button class="absolute inset-0 w-full h-full flex items-center justify-center bg-primary-container/20 hover:bg-primary-container/30 transition-colors">
+<span class="bg-primary text-on-primary px-4 py-2 rounded-full font-label-md text-label-md shadow-md flex items-center gap-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">map</span>
+                                    View on Map
+                                </span>
+</button>
+</div>
+</section>
+<!-- Schedule Box (Spans full width of the details container) -->
+<section class="col-span-1 md:col-span-2 bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(0,30,64,0.12)] border border-outline-variant p-gutter">
+<div class="flex items-center gap-stack-md mb-stack-md pb-stack-sm border-b border-outline-variant/30">
+<span class="material-symbols-outlined text-primary text-[32px]" style="font-variation-settings: 'FILL' 0;">schedule</span>
+<h3 class="font-headline-lg text-headline-lg text-primary">Schedule</h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter mt-stack-md">
+<div class="p-stack-sm rounded-lg bg-surface-container-low border border-outline-variant/50">
+<span class="block font-label-md text-label-md text-secondary mb-1">Office Schedule</span>
+<span class="block font-body-lg text-body-lg text-on-surface font-medium">Mon-Fri, 8:00 AM – 5:00 PM</span>
+</div>
+<div class="p-stack-sm rounded-lg bg-surface-container-low border border-outline-variant/50 border-l-4 border-l-primary">
+<span class="block font-label-md text-label-md text-secondary mb-1">Consultation Hours</span>
+<span class="block font-body-lg text-body-lg text-primary font-bold">Mon – Wed, 2:00 PM – 4:00 PM</span>
+</div>
+</div>
+</section>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="fixed bottom-0 left-0 w-full z-50 flex justify-between items-center px-margin-edge py-stack-md bg-surface-container-high">
+<span class="text-label-md font-label-md text-secondary">© 2024 Universidad de Dagupan | Tap anywhere to return home</span>
+<div class="flex gap-stack-lg">
+<a class="text-body-md font-body-md text-secondary active:opacity-70 pressed-state" href="#">Accessibility</a>
+<a class="text-body-md font-body-md text-secondary active:opacity-70 pressed-state" href="#">Contact Admin</a>
+</div>
+</footer>
+<!-- Overlay script to return home on idle or background tap (simulated for kiosk) -->
+<script>
+        document.addEventListener('click', function(e) {
+            // Very basic simulation of "Tap anywhere to return home" on the footer area
+            // In a real kiosk, this might be a full-screen idle timer or specific area.
+            if(e.target.tagName.toLowerCase() === 'footer' || e.target.closest('footer')) {
+                if(!e.target.closest('a')) {
+                    console.log('Return to home triggered');
+                }
+            }
+        });
+    </script>
+</body></html>

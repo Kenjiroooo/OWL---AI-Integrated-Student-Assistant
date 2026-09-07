@@ -93,13 +93,15 @@ service cloud.firestore {
 
     // Lost and Found
     match /lostAndFound/{id} {
-      allow read, create, update, delete: if true;
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
     }
 
     // Lost and Found Claims
     match /lostAndFoundClaims/{id} {
-      allow create: if true;
-      allow read: if isAdmin();
+      allow create: if isSignedIn();
+      allow read, update, delete: if isAdmin();
     }
 
     // Feedback

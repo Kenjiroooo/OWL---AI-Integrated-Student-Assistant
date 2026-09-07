@@ -8,8 +8,6 @@ export default defineConfig(({mode}) => {
   return {
     plugins: [react(), tailwindcss()],
     define: {
-      'process.env.DEEPSEEK_API_KEY': JSON.stringify(env.DEEPSEEK_API_KEY),
-      'process.env.IMGBB_API_KEY': JSON.stringify(env.IMGBB_API_KEY),
       'process.env.FIREBASE_API_KEY': JSON.stringify(env.FIREBASE_API_KEY),
       'process.env.FIREBASE_AUTH_DOMAIN': JSON.stringify(env.FIREBASE_AUTH_DOMAIN),
       'process.env.FIREBASE_DATABASE_URL': JSON.stringify(env.FIREBASE_DATABASE_URL),

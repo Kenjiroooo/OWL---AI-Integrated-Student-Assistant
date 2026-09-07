@@ -316,6 +316,25 @@ export default function StartPage() {
     // Phase 3: Start greeting after eyes open
     setTimeout(() => {
       setPhase('greeting');
+      
+      // Speak the greeting
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(greetingText.current);
+        const voices = window.speechSynthesis.getVoices();
+        const preferredVoice = voices.find(v => 
+            v.name.includes('Google UK English Male') || 
+            v.name.includes('Google US English') || 
+            (v.name.includes('Male') && v.lang.startsWith('en'))
+        ) || voices.find(v => v.lang.startsWith('en'));
+
+        if (preferredVoice) utterance.voice = preferredVoice;
+        
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        
+        window.speechSynthesis.speak(utterance);
+      }
     }, 900);
   }, [phase]);
 

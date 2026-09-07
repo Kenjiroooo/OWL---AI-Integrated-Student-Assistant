@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { useAuth } from '../../context/AuthContext';
-import { MessageSquare, Send, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
+import { MessageSquare, Send, CheckCircle2, AlertCircle, Sparkles, BrainCircuit } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useOwlAssistant } from '../../context/OwlAssistantContext';
 
 export default function FeedbackCenter() {
   const { profile } = useAuth();
@@ -11,6 +12,7 @@ export default function FeedbackCenter() {
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const { openDrawer } = useOwlAssistant();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,13 +59,30 @@ export default function FeedbackCenter() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-12 py-10">
+    <div className="max-w-4xl mx-auto space-y-8 py-10">
       <div className="text-center space-y-4">
         <div className="inline-flex p-4 bg-violet-100 text-violet-600 rounded-[2rem] mb-4">
            <MessageSquare className="w-10 h-10" />
         </div>
         <h2 className="text-5xl font-black text-slate-800 tracking-tight">Suggestion Box</h2>
         <p className="text-xl text-slate-500 font-medium">Have something in mind? Share your thoughts with us.</p>
+      </div>
+
+      {/* AI Help Banner */}
+      <div className="flex items-center gap-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-3xl p-6">
+        <div className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center flex-shrink-0">
+          <BrainCircuit className="w-6 h-6 text-blue-600" />
+        </div>
+        <div className="flex-1">
+          <p className="font-bold text-slate-800">Not sure how to word your feedback?</p>
+          <p className="text-slate-500 text-sm font-medium">OWL AI can help you articulate it clearly.</p>
+        </div>
+        <button
+          onClick={() => openDrawer(`I want to give feedback about ${category} at UdD but need help wording it. Can you help me write it?`)}
+          className="flex-shrink-0 px-5 py-3 bg-blue-600 text-white font-bold rounded-2xl text-sm hover:bg-blue-700 transition-colors"
+        >
+          Ask OWL
+        </button>
       </div>
 
       <div className="bg-white p-12 rounded-[3.5rem] border border-slate-100 shadow-xl shadow-slate-200/50">

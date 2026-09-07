@@ -40,7 +40,7 @@ export async function seedDummyData() {
 
   // 4. FAQ
   const faqs = [
-    { question: "How to request a transcript?", answer: "Go to the Registrar Hub in this kiosk, select 'Document Request', and choose 'Transcript of Records'.", category: "Registrar" },
+    { question: "How to request a transcript?", answer: "Please visit the physical Registrar's Office located at the Main Building, Room 101 to request your Transcript of Records.", category: "Registrar" },
     { question: "Where is the library?", answer: "The library is located on the 3rd floor of the Main Building.", category: "Campus" }
   ];
 

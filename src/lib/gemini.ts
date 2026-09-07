@@ -9,6 +9,18 @@ export interface ChatMessage {
   content: string;
 }
 
+// ── Hardcoded Map Locations ──────────────────────────────────────────────────
+// These locations are hardcoded in the frontend map components and must be provided
+// to the AI so it knows about them regardless of Firestore data.
+const HARDCODED_MAP_LOCATIONS = `
+• Universidad de Dagupan Main Campus (Dagupan City): Formerly known as Colegio de Dagupan. A premier institution of higher learning in North Luzon, providing quality education and modern facilities.
+• Universidad de Dagupan Fame Building: The Fame Building campus of Universidad de Dagupan.
+• LCR Arzadon Gymnasium: A major indoor university facility at Universidad de Dagupan used for large-scale academic, athletic, ceremonial, and student activities, including presentations, institutional events, and commencement-related programs. Located in Bonuan Binloc, Dagupan City.
+• UdD School of Health Sciences: Dedicated to developing competent, compassionate, and skilled healthcare professionals.
+• UdD Engineering Building (E-Building): Serves as a dedicated academic facility for engineering students, providing classrooms, laboratories, and learning spaces.
+• Administration Building (A Building): The central administration and academic building of the Main Campus.
+`;
+
 // ── Firestore Context Fetcher ────────────────────────────────────────────────
 
 interface CampusContext {
@@ -114,6 +126,9 @@ STRICT RULES:
 ### 🏢 Buildings & Rooms
 ${ctx.buildings || 'No building data available at the moment.'}
 
+### 🗺️ Additional Campus Map Landmarks
+${HARDCODED_MAP_LOCATIONS}
+
 ### 👩‍🏫 Faculty Directory
 ${ctx.faculty || 'No faculty data available at the moment.'}
 
@@ -128,9 +143,7 @@ The following is information extracted directly from the official Universidad de
 ${UDD_WEBSITE_CONTEXT}`;
 }
 
-// ── DeepSeek Client ────────────────────────────────────────────────────────────
-
-const API_KEY = YOUR API KEY;
+// Removed direct API_KEY since we proxy via Vercel backend
 
 // ── Main Chat Function ──────────────────────────────────────────────────────
 
@@ -144,9 +157,6 @@ export async function askOwl(
   signal?: AbortSignal
 ): Promise<string> {
   try {
-    if (!API_KEY) {
-      throw new Error('API key is not configured.');
-    }
 
     const campusContext = await fetchCampusContext();
     const systemPrompt = buildSystemPrompt(campusContext);
@@ -163,18 +173,14 @@ export async function askOwl(
       { role: 'user', content: userMessage }
     ];
 
-    const response = await fetch("https://api.deepseek.com/chat/completions", {
+    const response = await fetch("/api/askOwlChat", {
       method: "POST",
       signal,
       headers: {
-        "Authorization": `Bearer ${API_KEY}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "deepseek-chat",
-        messages: messages,
-        temperature: 0.7,
-        top_p: 0.9,
+        messages: messages
       })
     });
 

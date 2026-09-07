@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, Home } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useOwlAssistant } from '../context/OwlAssistantContext';
 
 // Import Feature Modules (To be created)
 import AcademicAssistance from '../components/features/AcademicAssistance';
@@ -14,7 +15,7 @@ import FacultyLocator from '../components/features/FacultyLocator';
 import FeedbackCenter from '../components/features/FeedbackCenter';
 import InquiryCenter from '../components/features/InquiryCenter';
 import LostFound from '../components/features/LostFound';
-import RegistrarHub from '../components/features/RegistrarHub';
+
 
 export const FeatureContext = React.createContext<{
   setCustomBack: (handler: (() => void) | null) => void;
@@ -27,8 +28,20 @@ export default function FeaturePage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { profile } = useAuth();
+  const { setFeatureContext, closeDrawer } = useOwlAssistant();
   
   const [customBack, setCustomBack] = useState<(() => void) | null>(null);
+
+  // Inform the OWL AI drawer which feature the user is currently viewing
+  useEffect(() => {
+    setFeatureContext(id ?? null);
+    // Close any open drawer when navigating to a new feature
+    closeDrawer();
+    return () => {
+      // Clear feature context when leaving the feature page
+      setFeatureContext(null);
+    };
+  }, [id]);
 
   if (!profile) return null;
 
@@ -43,7 +56,7 @@ export default function FeaturePage() {
       case 'feedback': return <FeedbackCenter />;
       case 'inquiry': return <InquiryCenter />;
       case 'lost-found': return <LostFound />;
-      case 'registrar': return <RegistrarHub />;
+
       default: return <div>Feature not found</div>;
     }
   };

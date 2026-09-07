@@ -38,7 +38,7 @@ const features = [
   { id: 'feedback', title: 'Feedback Center', icon: MessageSquare, color: 'from-violet-500 to-purple-600', glow: 'rgba(139,92,246,0.25)', description: 'Suggestions & Reports' },
   { id: 'inquiry', title: 'Inquiry Center', icon: HelpCircle, color: 'from-sky-400 to-indigo-600', glow: 'rgba(56,189,248,0.25)', description: 'FAQs & General Help' },
   { id: 'lost-found', title: 'Lost & Found', icon: PackageSearch, color: 'from-amber-400 to-orange-600', glow: 'rgba(251,191,36,0.25)', description: 'Report or Claim Items' },
-  { id: 'registrar', title: 'Registrar Hub', icon: FileText, color: 'from-purple-500 to-indigo-600', glow: 'rgba(168,85,247,0.25)', description: 'Docs & E-Queue' },
+
 ];
 
 // Live animated clock

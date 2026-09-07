@@ -1,6 +1,10 @@
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
+import { OwlAssistantProvider } from './context/OwlAssistantContext';
+import OwlAIFab from './components/OwlAIFab';
+import OwlChatDrawer from './components/OwlChatDrawer';
+import { AuthProvider } from './context/AuthContext';
 
 // Helper to handle dynamic import failures (stale chunk caching)
 const lazyWithRetry = (componentImport: () => Promise<any>) => {
@@ -30,28 +34,36 @@ const LoadingScreen = () => (
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Suspense fallback={<LoadingScreen />}>
-        <Routes>
-          {/* Start / Splash page — guest mode, no login */}
-          <Route path="/" element={<StartPage />} />
+    <AuthProvider>
+      <BrowserRouter>
+        <OwlAssistantProvider>
+          <Suspense fallback={<LoadingScreen />}>
+            <Routes>
+              {/* Start / Splash page — guest mode, no login */}
+              <Route path="/" element={<StartPage />} />
 
-          {/* Main student dashboard */}
-          <Route path="/home" element={<StudentHome />} />
+              {/* Main student dashboard */}
+              <Route path="/home" element={<StudentHome />} />
 
-          {/* Feature sub-pages */}
-          <Route path="/feature/:id/*" element={<FeaturePage />} />
+              {/* Feature sub-pages */}
+              <Route path="/feature/:id/*" element={<FeaturePage />} />
 
-          {/* OWL AI Chat */}
-          <Route path="/owl-chat" element={<OwlChatPage />} />
+              {/* OWL AI Chat */}
+              <Route path="/owl-chat" element={<OwlChatPage />} />
 
-          {/* Admin panel */}
-          <Route path="/admin" element={<AdminHome />} />
+              {/* Admin panel */}
+              <Route path="/admin" element={<AdminHome />} />
 
-          {/* Catch-all → start page */}
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </Suspense>
-    </BrowserRouter>
+              {/* Catch-all → start page */}
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
+          </Suspense>
+
+          {/* Global OWL AI Floating Button + Drawer (visible on all pages) */}
+          <OwlAIFab />
+          <OwlChatDrawer />
+        </OwlAssistantProvider>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
