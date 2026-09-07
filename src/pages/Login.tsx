@@ -6,8 +6,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { Lock, User, AlertCircle, Loader2, ArrowRight, UserCircle2, ChevronLeft, CheckCircle2 } from 'lucide-react';
-import appLogo from '../assets/app-logo.png';
-import schoolLogo from '../assets/university-logo.png';
+import appLogo from '../assets/app-logo.webp';
+import schoolLogo from '../assets/university-logo.webp';
 
 export default function Login() {
   const [email, setEmail] = useState('');

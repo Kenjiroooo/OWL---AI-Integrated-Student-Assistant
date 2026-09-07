@@ -24,8 +24,8 @@ import {
 import { auth } from '../lib/firebase';
 import { signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
-import appLogo from '../assets/app-logo.png';
-import schoolLogo from '../assets/university-logo.png';
+import appLogo from '../assets/app-logo.webp';
+import schoolLogo from '../assets/university-logo.webp';
 import { OwlCharacter } from '../components/OwlCharacter';
 
 const features = [

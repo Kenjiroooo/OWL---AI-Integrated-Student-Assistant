@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Info, X } from 'lucide-react';
-import mainCampusImg from '../../../assets/maincampus.jpg';
+import mainCampusImg from '../../../assets/maincampus.webp';
 
 // Coordinates traced for a 1024x576 image to exactly match the building layout
 const hotspots = [

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
-import universityLogo from '../../../assets/university-logo.png';
+import universityLogo from '../../../assets/university-logo.webp';
 
 interface Props {
   position: [number, number];

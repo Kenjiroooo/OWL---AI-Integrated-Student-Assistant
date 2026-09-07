@@ -3,15 +3,15 @@ import { SCHOOLS, getSchoolFacultyCount, searchFaculty, type Faculty } from './f
 import FacultySearch from './FacultySearch';
 
 // School logo imports
-import sitLogo from '../../../assets/site-logo.png';
-import soeLogo from '../../../assets/soe-logo.png';
-import steLogo from '../../../assets/sote-logo.png';
-import sbaLogo from '../../../assets/soba-logo.png';
-import sihmLogo from '../../../assets/hospitality-logo.png';
-import shLogo from '../../../assets/soh-logo.png';
-import shsLogo from '../../../assets/sohs-logo.png';
-import scLogo from '../../../assets/crim-logo.png';
-import spsLogo from '../../../assets/sops-logo.png';
+import sitLogo from '../../../assets/site-logo.webp';
+import soeLogo from '../../../assets/soe-logo.webp';
+import steLogo from '../../../assets/sote-logo.webp';
+import sbaLogo from '../../../assets/soba-logo.webp';
+import sihmLogo from '../../../assets/hospitality-logo.webp';
+import shLogo from '../../../assets/soh-logo.webp';
+import shsLogo from '../../../assets/sohs-logo.webp';
+import scLogo from '../../../assets/crim-logo.webp';
+import spsLogo from '../../../assets/sops-logo.webp';
 
 const SCHOOL_LOGOS: Record<string, string> = {
   sit: sitLogo,
