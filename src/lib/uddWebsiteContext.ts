@@ -774,6 +774,8 @@ Universidad de Dagupan (UdD) is a private, non-sectarian higher education instit
 - Ranked among private higher education institutions in the 2026 uniRank.
 - First ISO 21001:2018 Certified University in Region 1.
 - Region I's First FoodSHAP Authorized Course Provider (June 2026).
+- 2nd Place (1st Runner-Up) in DICT HackForGov 2026 regional cybersecurity competition by UdD team "CyberOwls Beta" (August 19, 2026). Team "CyberOwls Alpha" secured a Top 5 finish, and Cyrah Manongdo was named Top Scorer.
+- UdD's Bachelor of Science in Information Technology (BSIT) program received PICAB Accreditation under the Seoul Accord framework (September 5, 2026), marking international recognition for computing and IT education.
 
 ## SCHOLARSHIP PROGRAM
 
