@@ -300,6 +300,8 @@ export default function StartPage() {
   const navigate = useNavigate();
   const { time, date } = useLiveClock();
   const [phase, setPhase] = useState<Phase>('sleeping');
+  // isTalking is now driven by actual speech events, not the typewriter
+  const [isTalking, setIsTalking] = useState(false);
   const greetingText = useRef(`${getGreeting()} Welcome to OWL Kiosk`);
   const { displayed, done: typingDone } = useTypewriter(
     greetingText.current,
@@ -316,37 +318,53 @@ export default function StartPage() {
     // Phase 3: Start greeting after eyes open
     setTimeout(() => {
       setPhase('greeting');
-      
-      // Speak the greeting
+
+      // Speak the greeting — lips sync to actual audio start/end
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(greetingText.current);
-        const voices = window.speechSynthesis.getVoices();
-        const preferredVoice = voices.find(v => 
-            v.name.includes('Google UK English Male') || 
-            v.name.includes('Google US English') || 
-            (v.name.includes('Male') && v.lang.startsWith('en'))
-        ) || voices.find(v => v.lang.startsWith('en'));
 
+        // Load voices (some browsers populate lazily)
+        const pickVoice = () => {
+          const voices = window.speechSynthesis.getVoices();
+          return (
+            voices.find(
+              (v) =>
+                v.name.includes('Google UK English Male') ||
+                v.name.includes('Google US English') ||
+                (v.name.includes('Male') && v.lang.startsWith('en'))
+            ) || voices.find((v) => v.lang.startsWith('en'))
+          );
+        };
+
+        const preferredVoice = pickVoice();
         if (preferredVoice) utterance.voice = preferredVoice;
-        
+
         utterance.rate = 1.0;
         utterance.pitch = 1.0;
-        
+
+        // ── Key fix: drive isTalking from real speech events ──
+        // onstart fires when the browser actually begins playing audio
+        utterance.onstart = () => setIsTalking(true);
+
+        // onend / onerror stop the lip animation
+        utterance.onend = () => setIsTalking(false);
+        utterance.onerror = () => setIsTalking(false);
+
         window.speechSynthesis.speak(utterance);
       }
     }, 900);
   }, [phase]);
 
-  // When typing finishes, wait a beat then transition
+  // When typing finishes AND speech has ended, wait a beat then transition
   useEffect(() => {
-    if (phase === 'greeting' && typingDone) {
+    if (phase === 'greeting' && typingDone && !isTalking) {
       const timer = setTimeout(() => {
         setPhase('transitioning');
       }, 1200);
       return () => clearTimeout(timer);
     }
-  }, [phase, typingDone]);
+  }, [phase, typingDone, isTalking]);
 
   // Navigate after transition animation
   useEffect(() => {
@@ -357,8 +375,6 @@ export default function StartPage() {
       return () => clearTimeout(timer);
     }
   }, [phase, navigate]);
-
-  const isTalking = phase === 'greeting' && !typingDone;
 
   // Background color transitions
   const bgGradient =
