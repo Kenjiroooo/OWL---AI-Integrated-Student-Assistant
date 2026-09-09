@@ -27,9 +27,10 @@ const PROFANITY_REGEX = /\b(tangina|putangina|tarantado|gago|ulol|bobo|kupal|put
 const TROLL_ITEMS = [
   'girlfriend', 'boyfriend', 'jowa', 'sanity', 'buhay', 'life', 'grades', 'diploma',
   'virginity', 'kaluluwa', 'soul', 'heart', 'alien', 'ufo', 'ghost', 'dignity', 'will to live',
-  '1000000', 'million', 'billion', 'trillion', 'drugs', 'weed', 'shabu'
+  '1000000', 'million', 'billion', 'trillion', 'drugs', 'weed', 'shabu',
+  'puso', 'feelings', 'crush', 'pag-ibig', 'utak', 'brain'
 ];
-const GIBBERISH_REGEX = /(.)\1{4,}|(asdf|qwerty|zxcv|123456)/i;
+const GIBBERISH_REGEX = /(.)\1{3,}|(asdf|qwerty|zxcv|1234|qwer|zxas|sdas|kdk)/i;
 
 function clientSideHeuristic(report: LostFoundSubmission): ModerationResult {
   const combined = `${report.itemName} ${report.location} ${report.description}`.toLowerCase();
