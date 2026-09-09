@@ -3,7 +3,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const { text } = req.body;
+  const { itemName, location, description, type } = req.body;
   const apiKey = process.env.DEEPSEEK_API_KEY;
 
   if (!apiKey) {
@@ -22,20 +22,31 @@ export default async function handler(req, res) {
         messages: [
           {
             role: "system",
-            content: `You are an AI safety moderator for a university kiosk.
-Analyze the following text for:
-1. Profanity, hate speech, or harassment
-2. Spam or gibberish (e.g., "asdasdasd")
-3. Jokes or obviously fake reports (e.g., "I lost my mind")
-4. Inappropriate or non-academic content
+            content: `You are a STRICT AI safety moderator for a university kiosk's "Lost and Found" system.
+Your ONLY job is to filter out troll posts, jokes, and non-genuine reports.
+
+A genuine report MUST describe a physical, tangible object that can actually be lost or found on a campus (e.g., ID, water bottle, keys, laptop, bag).
+Any report claiming to lose or find abstract concepts, people, relationships, emotions, or joke items MUST be rejected.
+
+Rules for REJECTION:
+1. Not a Physical Object: Reject if the item is abstract, a person, or impossible to physically lose/find (e.g., "girlfriend", "boyfriend", "sanity", "will to live", "grades", "soul", "crush", "pride", "dignity").
+2. Profanity or Harassment: Reject any inappropriate language, hate speech, or harassment.
+3. Spam or Gibberish: Reject random letters (e.g., "asdasdasd") or nonsensical descriptions.
+4. Jokes or Memes: Reject obvious jokes or fake reports (e.g., "I lost my mind in the library").
 
 Respond EXACTLY in this JSON format:
 {
   "passed": boolean,
-  "reason": "String explaining why it failed, or null if it passed"
+  "reason": "If passed is false, explain why clearly and concisely. If true, set to null."
 }`
           },
-          { role: "user", content: `Moderate this text: "${text}"` }
+          { 
+            role: "user", 
+            content: `Please moderate this ${type} report:
+Item Name: "${itemName}"
+Location: "${location}"
+Description: "${description}"` 
+          }
         ],
         temperature: 0.1,
         response_format: { type: "json_object" }

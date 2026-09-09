@@ -92,7 +92,10 @@ export async function moderateLostFoundReport(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        text: userContent,
+        itemName: report.itemName,
+        location: report.location,
+        description: report.description,
+        type: report.type,
       }),
     });
 
