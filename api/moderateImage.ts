@@ -5,7 +5,7 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const { imageBase64, itemName, description } = req.body;
+  const { imageBase64, mimeType, itemName, description } = req.body;
   const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
@@ -47,7 +47,7 @@ Respond EXACTLY in this JSON format:
             {
               inlineData: {
                 data: imageBase64,
-                mimeType: "image/jpeg"
+                mimeType: mimeType || "image/jpeg"
               }
             }
           ]
@@ -66,9 +66,12 @@ Respond EXACTLY in this JSON format:
       passed: result.passed ?? true,
       reason: result.reason ?? null
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Image Moderation Error:', error);
-    // Fail open if error so users aren't blocked from submitting if Gemini goes down
-    return res.status(200).json({ passed: true, reason: null });
+    // Return the error so the frontend knows it failed, rather than blindly allowing it
+    return res.status(200).json({ 
+      passed: false, 
+      reason: "AI Image verification failed due to a server error or invalid API key. Please check the logs. Error: " + (error.message || error)
+    });
   }
 }

@@ -80,8 +80,10 @@ export default function LostFound() {
 
     try {
       let base64Data: string | undefined;
+      let mimeType: string | undefined;
       if (imagePreview) {
         base64Data = imagePreview.split(',')[1];
+        mimeType = imagePreview.split(';')[0].split(':')[1];
       }
 
       if (!base64Data) {
@@ -96,7 +98,8 @@ export default function LostFound() {
         location,
         description,
         type,
-        imageBase64: base64Data
+        imageBase64: base64Data,
+        mimeType: mimeType
       });
 
       if (!modResult.passed) {

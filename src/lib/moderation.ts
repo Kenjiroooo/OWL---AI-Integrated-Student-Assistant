@@ -18,6 +18,7 @@ export interface LostFoundSubmission {
   description: string;
   type: 'lost' | 'found';
   imageBase64?: string;
+  mimeType?: string;
 }
 
 // API_KEY is now managed by the backend proxy
@@ -127,6 +128,7 @@ export async function moderateLostFoundReport(
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             imageBase64: report.imageBase64,
+            mimeType: report.mimeType,
             itemName: report.itemName,
             description: report.description,
           }),
