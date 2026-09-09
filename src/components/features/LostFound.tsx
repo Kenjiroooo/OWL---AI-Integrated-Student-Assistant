@@ -79,12 +79,24 @@ export default function LostFound() {
     setIsAiChecking(true);
 
     try {
+      let base64Data: string | undefined;
+      if (imagePreview) {
+        base64Data = imagePreview.split(',')[1];
+      }
+
+      if (!base64Data) {
+        setSubmitError("A clear photo of the item is required for AI verification.");
+        setIsAiChecking(false);
+        return;
+      }
+
       // 1. AI Safety & Auto-Moderation Guardrail
       const modResult = await moderateLostFoundReport({
         itemName,
         location,
         description,
         type,
+        imageBase64: base64Data
       });
 
       if (!modResult.passed) {
@@ -409,7 +421,9 @@ export default function LostFound() {
 
                 {/* Photo upload */}
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Photo (Optional)</label>
+                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">
+                    Photo <span className="text-red-500">* (Required)</span>
+                  </label>
                   <div className="relative">
                     <input
                       type="file"

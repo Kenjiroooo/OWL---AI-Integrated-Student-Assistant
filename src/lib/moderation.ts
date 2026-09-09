@@ -17,6 +17,7 @@ export interface LostFoundSubmission {
   location: string;
   description: string;
   type: 'lost' | 'found';
+  imageBase64?: string;
 }
 
 // API_KEY is now managed by the backend proxy
@@ -108,11 +109,49 @@ export async function moderateLostFoundReport(
     }
 
     const data = await response.json();
+    
+    const textPassed = Boolean(data.passed);
+    const textCategory = data.category || (textPassed ? 'clean' : 'troll');
+    const textReason = data.reason || (textPassed ? undefined : 'This submission does not meet university guidelines.');
+
+    if (!textPassed) {
+      return { passed: textPassed, category: textCategory, reason: textReason };
+    }
+
+    // Second pass: Image Moderation via Gemini (if an image is provided)
+    if (report.imageBase64) {
+      try {
+        const imgRes = await fetch('/api/moderateImage', {
+          method: 'POST',
+          signal: controller.signal, // Reuse timeout
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            imageBase64: report.imageBase64,
+            itemName: report.itemName,
+            description: report.description,
+          }),
+        });
+
+        if (imgRes.ok) {
+          const imgData = await imgRes.json();
+          if (!imgData.passed) {
+            return {
+              passed: false,
+              category: 'inappropriate', // Troll image or person
+              reason: imgData.reason || 'The uploaded image was rejected by AI verification.',
+            };
+          }
+        } else {
+          console.warn('Image moderation request failed with status:', imgRes.status);
+        }
+      } catch (imgError) {
+        console.warn('Image moderation encountered an error, falling back to text pass:', imgError);
+      }
+    }
 
     return {
-      passed: Boolean(data.passed),
-      category: data.category || (data.passed ? 'clean' : 'troll'),
-      reason: data.reason || (data.passed ? undefined : 'This submission does not meet university guidelines.'),
+      passed: true,
+      category: 'clean'
     };
   } catch (error) {
     console.warn('AI moderation encountered an error, using heuristic fallback:', error);
