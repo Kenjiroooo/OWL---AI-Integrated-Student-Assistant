@@ -105,8 +105,12 @@ export async function moderateLostFoundReport(
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      console.warn('AI moderation request failed with status:', response.status);
-      return fastCheck;
+      console.error('AI text moderation request failed with status:', response.status);
+      return { 
+        passed: false, 
+        category: 'troll', 
+        reason: 'Error: Cannot connect to AI Moderation Server. If running locally, make sure to use `vercel dev` instead of `npm run dev`.' 
+      };
     }
 
     const data = await response.json();
@@ -144,10 +148,20 @@ export async function moderateLostFoundReport(
             };
           }
         } else {
-          console.warn('Image moderation request failed with status:', imgRes.status);
+          console.error('Image moderation request failed with status:', imgRes.status);
+          return {
+            passed: false,
+            category: 'troll',
+            reason: 'Error: Cannot connect to AI Image Server. If running locally, make sure to use `vercel dev`.'
+          };
         }
-      } catch (imgError) {
-        console.warn('Image moderation encountered an error, falling back to text pass:', imgError);
+      } catch (imgError: any) {
+        console.error('Image moderation encountered an error:', imgError);
+        return {
+          passed: false,
+          category: 'troll',
+          reason: 'Error: Cannot connect to AI Image Server. ' + (imgError.message || imgError)
+        };
       }
     }
 
