@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 
 // ─── Types ───
-type Phase = 'sleeping' | 'waking' | 'greeting' | 'transitioning';
+type Phase = 'sleeping' | 'murring' | 'waking' | 'greeting' | 'transitioning';
 
 // ─── Floating Stars ───
 interface Star {
@@ -158,7 +158,8 @@ function useLiveClock() {
 // ─── Sleeping OWL SVG ───
 // Uses the same geometry as OwlCharacter.tsx with sleeping/waking eye states
 function SleepingOwlSvg({ phase, isTalking }: { phase: Phase; isTalking: boolean }) {
-  const isAwake = phase !== 'sleeping';
+  const isAwake = phase === 'waking' || phase === 'greeting' || phase === 'transitioning';
+  const isMurring = phase === 'murring';
 
   // Beak flicker for talking (same logic as OwlCharacter.tsx)
   const [beakOpen, setBeakOpen] = useState(false);
@@ -219,52 +220,96 @@ function SleepingOwlSvg({ phase, isTalking }: { phase: Phase; isTalking: boolean
       {/* Face Mask */}
       <path d="M 60 110 C 60 150 100 160 128 140 C 156 160 196 150 196 110 C 196 70 150 80 128 90 C 106 80 60 70 60 110 Z" fill="#0b4c79" stroke="#0a2949" strokeWidth="6" strokeLinejoin="round" />
 
-      {/* Eyes — sleeping = closed arcs, awake = full circles */}
-      {isAwake ? (
-        <>
-          {/* Open eyes (same as OwlCharacter.tsx) */}
-          <circle cx="95" cy="115" r="28" fill="#ffffff" stroke="#0a2949" strokeWidth="6" />
-          <circle cx="161" cy="115" r="28" fill="#ffffff" stroke="#0a2949" strokeWidth="6" />
+      {/* Eyes Background */}
+      <circle cx="95" cy="115" r="28" fill="#ffffff" stroke="#0a2949" strokeWidth="6" />
+      <circle cx="161" cy="115" r="28" fill="#ffffff" stroke="#0a2949" strokeWidth="6" />
 
-          {/* Pupils */}
-          <motion.circle
-            cx={pupilX[0]} cy={pupilY} r="18" fill="#0a2949"
+      {/* Pupils */}
+      <AnimatePresence>
+        {(isAwake || isMurring) && (
+          <motion.g key="left-pupil"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={
+              isAwake 
+                ? { scale: 1, opacity: 1 }
+                : { scale: [0, 0.9, 0.9, 0], opacity: [0, 1, 1, 0] }
+            }
+            transition={{ duration: isMurring ? 1.2 : 0.3, times: isMurring ? [0, 0.2, 0.8, 1] : undefined, ease: 'backOut' }}
+            style={{ originX: "95px", originY: "115px" }}
+          >
+            <circle cx={pupilX[0]} cy={pupilY} r="18" fill="#0a2949" />
+            <circle cx={pupilX[0] + 6} cy={pupilY - 7} r="6" fill="#ffffff" />
+            <circle cx={pupilX[0] - 5} cy={pupilY + 7} r="2.5" fill="#ffffff" />
+          </motion.g>
+        )}
+        {isAwake && (
+          <motion.g key="right-pupil"
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: 'backOut' }}
-          />
-          <motion.circle
-            cx={pupilX[1]} cy={pupilY} r="18" fill="#0a2949"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.3, ease: 'backOut' }}
-          />
+            style={{ originX: "161px", originY: "115px" }}
+          >
+            <circle cx={pupilX[1]} cy={pupilY} r="18" fill="#0a2949" />
+            <circle cx={pupilX[1] + 6} cy={pupilY - 7} r="6" fill="#ffffff" />
+            <circle cx={pupilX[1] - 5} cy={pupilY + 7} r="2.5" fill="#ffffff" />
+          </motion.g>
+        )}
+      </AnimatePresence>
 
-          {/* Pupil highlights */}
-          <motion.circle cx={pupilX[0] + 6} cy={pupilY - 7} r="6" fill="#ffffff"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} />
-          <motion.circle cx={pupilX[1] + 6} cy={pupilY - 7} r="6" fill="#ffffff"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} />
-          <motion.circle cx={pupilX[0] - 5} cy={pupilY + 7} r="2.5" fill="#ffffff"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }} />
-          <motion.circle cx={pupilX[1] - 5} cy={pupilY + 7} r="2.5" fill="#ffffff"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }} />
-        </>
-      ) : (
-        <>
-          {/* Closed eyes — horizontal arcs representing shut eyelids */}
-          <circle cx="95" cy="115" r="28" fill="#ffffff" stroke="#0a2949" strokeWidth="6" />
-          <circle cx="161" cy="115" r="28" fill="#ffffff" stroke="#0a2949" strokeWidth="6" />
-          {/* Eyelid covers */}
-          <path d="M 67 115 Q 95 90 123 115" fill="#0b4c79" stroke="#0a2949" strokeWidth="4" />
-          <path d="M 67 115 Q 95 135 123 115" fill="#0b4c79" stroke="#0a2949" strokeWidth="4" />
-          <path d="M 133 115 Q 161 90 189 115" fill="#0b4c79" stroke="#0a2949" strokeWidth="4" />
-          <path d="M 133 115 Q 161 135 189 115" fill="#0b4c79" stroke="#0a2949" strokeWidth="4" />
-          {/* Closed eye lines */}
-          <path d="M 72 115 Q 95 125 118 115" fill="none" stroke="#0a2949" strokeWidth="3" strokeLinecap="round" />
-          <path d="M 138 115 Q 161 125 184 115" fill="none" stroke="#0a2949" strokeWidth="3" strokeLinecap="round" />
-        </>
-      )}
+      {/* Eyelid Covers (Blue Almonds) */}
+      {/* Left Eye */}
+      <motion.g
+        animate={{ opacity: isAwake ? 0 : 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        <motion.path 
+          animate={{
+             d: isMurring 
+                ? [
+                    "M 67 115 Q 95 90 123 115", 
+                    "M 67 100 Q 95 50 123 100", 
+                    "M 67 100 Q 95 50 123 100", 
+                    "M 67 115 Q 95 90 123 115"
+                  ] 
+                : "M 67 115 Q 95 90 123 115"
+          }}
+          transition={{ duration: isMurring ? 1.2 : 0.3, times: isMurring ? [0, 0.2, 0.8, 1] : undefined, ease: "easeInOut" }}
+          fill="#0b4c79" stroke="#0a2949" strokeWidth="4" 
+        />
+        <motion.path 
+          animate={{
+             d: isMurring 
+                ? [
+                    "M 67 115 Q 95 135 123 115", 
+                    "M 67 130 Q 95 180 123 130", 
+                    "M 67 130 Q 95 180 123 130", 
+                    "M 67 115 Q 95 135 123 115"
+                  ] 
+                : "M 67 115 Q 95 135 123 115"
+          }}
+          transition={{ duration: isMurring ? 1.2 : 0.3, times: isMurring ? [0, 0.2, 0.8, 1] : undefined, ease: "easeInOut" }}
+          fill="#0b4c79" stroke="#0a2949" strokeWidth="4" 
+        />
+        <motion.path 
+          animate={{
+             opacity: isMurring ? [1, 0, 0, 1] : 1
+          }}
+          transition={{ duration: isMurring ? 1.2 : 0.3, times: isMurring ? [0, 0.2, 0.8, 1] : undefined, ease: "easeInOut" }}
+          d="M 72 115 Q 95 125 118 115" 
+          fill="none" stroke="#0a2949" strokeWidth="3" strokeLinecap="round" 
+        />
+      </motion.g>
+
+      {/* Right Eye */}
+      <motion.g
+        animate={{ opacity: isAwake ? 0 : 1 }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+      >
+        <path d="M 133 115 Q 161 90 189 115" fill="#0b4c79" stroke="#0a2949" strokeWidth="4" />
+        <path d="M 133 115 Q 161 135 189 115" fill="#0b4c79" stroke="#0a2949" strokeWidth="4" />
+        <path d="M 138 115 Q 161 125 184 115" fill="none" stroke="#0a2949" strokeWidth="3" strokeLinecap="round" />
+      </motion.g>
 
       {/* Beak */}
       {isTalking ? (
@@ -300,9 +345,11 @@ export default function StartPage() {
   const navigate = useNavigate();
   const { time, date } = useLiveClock();
   const [phase, setPhase] = useState<Phase>('sleeping');
+  const [hasBeenTapped, setHasBeenTapped] = useState(false);
+  const [murrMessage, setMurrMessage] = useState("Mrrr... 😴");
   // isTalking is now driven by actual speech events, not the typewriter
   const [isTalking, setIsTalking] = useState(false);
-  const greetingText = useRef(`${getGreeting()} Welcome to OWL Kiosk`);
+  const greetingText = useRef(`Hoo? I'm awake! 🦉 ${getGreeting()} Welcome to OWL Kiosk`);
   const { displayed, done: typingDone } = useTypewriter(
     greetingText.current,
     phase === 'greeting',
@@ -311,6 +358,21 @@ export default function StartPage() {
 
   const handleOwlClick = useCallback(() => {
     if (phase !== 'sleeping') return;
+
+    if (!hasBeenTapped) {
+      setPhase('murring');
+      setHasBeenTapped(true);
+
+      const r = Math.random();
+      if (r < 0.1) setMurrMessage("Mrrr... five more minutes... 😴");
+      else if (r < 0.2) setMurrMessage("Mrrr... rude. 😴");
+      else setMurrMessage("Mrrr... 😴");
+
+      setTimeout(() => {
+        setPhase('sleeping');
+      }, 1200);
+      return;
+    }
 
     // Phase 2: Wake up
     setPhase('waking');
@@ -378,7 +440,7 @@ export default function StartPage() {
 
   // Background color transitions
   const bgGradient =
-    phase === 'sleeping'
+    phase === 'sleeping' || phase === 'murring'
       ? 'radial-gradient(ellipse at 50% 60%, #0f2140 0%, #0a1628 60%, #060e1a 100%)'
       : phase === 'waking'
         ? 'radial-gradient(ellipse at 50% 60%, #142a4f 0%, #0f2140 60%, #0a1628 100%)'
@@ -423,14 +485,14 @@ export default function StartPage() {
           filter: 'blur(40px)',
         }}
         animate={
-          phase === 'sleeping'
+          phase === 'sleeping' || phase === 'murring'
             ? { scale: [1, 1.15, 1], opacity: [0.6, 0.9, 0.6] }
             : phase === 'transitioning'
               ? { scale: 3, opacity: 0 }
               : { scale: 1.2, opacity: 1 }
         }
         transition={
-          phase === 'sleeping'
+          phase === 'sleeping' || phase === 'murring'
             ? { duration: 4, repeat: Infinity, ease: 'easeInOut' }
             : { duration: 1 }
         }
@@ -502,21 +564,25 @@ export default function StartPage() {
         className="relative flex flex-col items-center"
         animate={
           phase === 'sleeping'
-            ? { y: [0, -8, 0], scale: 1 }
-            : phase === 'waking'
-              ? { y: 0, scale: [1, 1.15, 1] }
-              : phase === 'transitioning'
-                ? { scale: 4, opacity: 0, y: -100 }
-                : { y: 0, scale: 1 }
+            ? { y: [0, -8, 0], scale: 1, rotate: 0 }
+            : phase === 'murring'
+              ? { y: [0, -4, 2, -1, 0], rotate: [0, -4, 3, -1, 0], scale: 1 }
+              : phase === 'waking'
+                ? { y: [0, -15, 5, -5, 0], scale: [1, 1.05, 0.95, 1.1, 1], rotate: [0, -3, 3, 0] }
+                : phase === 'transitioning'
+                  ? { scale: 4, opacity: 0, y: -100 }
+                  : { y: 0, scale: 1, rotate: 0 }
         }
         transition={
           phase === 'sleeping'
             ? { duration: 3.5, repeat: Infinity, ease: 'easeInOut' }
-            : phase === 'waking'
-              ? { duration: 0.6, ease: 'backOut' }
-              : phase === 'transitioning'
-                ? { duration: 1, ease: [0.4, 0, 0.2, 1] }
-                : { duration: 0.3 }
+            : phase === 'murring'
+              ? { duration: 1.2, ease: 'easeInOut' }
+              : phase === 'waking'
+                ? { duration: 0.9, ease: 'easeInOut' }
+                : phase === 'transitioning'
+                  ? { duration: 1, ease: [0.4, 0, 0.2, 1] }
+                  : { duration: 0.3 }
         }
       >
         {/* OWL container */}
@@ -527,9 +593,9 @@ export default function StartPage() {
           whileHover={phase === 'sleeping' ? { scale: 1.05 } : undefined}
           whileTap={phase === 'sleeping' ? { scale: 0.97 } : undefined}
         >
-          {/* Zzz indicators — only in sleeping */}
+          {/* Zzz indicators */}
           <AnimatePresence>
-            {phase === 'sleeping' && <SleepZzz />}
+            {(phase === 'sleeping' || phase === 'murring') && <SleepZzz />}
           </AnimatePresence>
 
           <SleepingOwlSvg phase={phase} isTalking={isTalking} />
@@ -596,10 +662,11 @@ export default function StartPage() {
           )}
         </AnimatePresence>
 
-        {/* ═══ "Click the OWL to wake up" label ═══ */}
-        <AnimatePresence>
-          {phase === 'sleeping' && (
+        {/* ═══ Texts Below OWL ═══ */}
+        <AnimatePresence mode="wait">
+          {phase === 'sleeping' && !hasBeenTapped && (
             <motion.div
+              key="sleeping-text"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0, y: 10 }}
@@ -634,6 +701,56 @@ export default function StartPage() {
                   />
                 </svg>
               </motion.div>
+            </motion.div>
+          )}
+
+          {phase === 'murring' && (
+            <motion.div
+              key="murring-text"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mt-8 flex flex-col items-center gap-3"
+            >
+              <p className="text-lg font-semibold tracking-wide" style={{ color: 'rgba(255,255,255,0.7)', fontFamily: "'Hanken Grotesk', sans-serif" }}>
+                {murrMessage}
+              </p>
+            </motion.div>
+          )}
+
+          {phase === 'sleeping' && hasBeenTapped && (
+            <motion.div
+              key="tapped-text"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mt-8 flex flex-col items-center gap-3"
+            >
+              <motion.p
+                className="text-lg font-semibold tracking-wide"
+                style={{
+                  color: 'rgba(255,255,255,0.7)',
+                  fontFamily: "'Hanken Grotesk', sans-serif",
+                }}
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                Tap OWL again to wake him up.
+              </motion.p>
+            </motion.div>
+          )}
+
+          {phase === 'waking' && (
+            <motion.div
+              key="waking-text"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mt-8 flex flex-col items-center gap-3"
+            >
+              <p className="text-lg font-semibold tracking-wide" style={{ color: 'rgba(255,255,255,0.7)', fontFamily: "'Hanken Grotesk', sans-serif" }}>
+                Huh...?
+              </p>
             </motion.div>
           )}
         </AnimatePresence>
