@@ -92,6 +92,30 @@ async function fetchCampusContext(): Promise<CampusContext> {
 
 // ── System Prompt Builder ────────────────────────────────────────────────────
 
+/**
+ * Character budget for the scraped website context block inside the system prompt.
+ * DeepSeek "deepseek-chat" has a 64K token context window (~4 chars/token).
+ * We reserve ~40K chars for the website context, leaving room for:
+ *   - System prompt header + rules (~2K)
+ *   - Firestore live data (~8K)
+ *   - Conversation history + user message (~14K)
+ */
+const WEBSITE_CONTEXT_CHAR_BUDGET = 40_000;
+
+/**
+ * Trim the website context to fit within the token budget.
+ * Cuts at the last complete `--- Source N ---` block boundary so we never
+ * truncate mid-sentence, then appends a note for the AI.
+ */
+function trimWebsiteContext(raw: string, budget: number): string {
+  if (raw.length <= budget) return raw;
+  const trimmed = raw.substring(0, budget);
+  // Find the last complete source block boundary to avoid cutting mid-sentence
+  const lastBoundary = trimmed.lastIndexOf('\n--- Source ');
+  const cleanTrimmed = lastBoundary > 0 ? trimmed.substring(0, lastBoundary) : trimmed;
+  return cleanTrimmed + '\n\n[Note: Additional UdD website content was omitted to stay within context limits. The most recent and relevant information is included above.]';
+}
+
 function buildSystemPrompt(ctx: CampusContext): string {
   return `You are OWL, the official AI Information Assistant of Universidad de Dagupan (UdD).
 
@@ -140,7 +164,7 @@ ${ctx.announcements || 'No announcements at the moment.'}
 
 ## OFFICIAL WEBSITE CONTEXT
 The following is information extracted directly from the official Universidad de Dagupan website. Use this as your primary knowledge source:
-${UDD_WEBSITE_CONTEXT}`;
+${trimWebsiteContext(UDD_WEBSITE_CONTEXT, WEBSITE_CONTEXT_CHAR_BUDGET)}`;
 }
 
 // Removed direct API_KEY since we proxy via Vercel backend
