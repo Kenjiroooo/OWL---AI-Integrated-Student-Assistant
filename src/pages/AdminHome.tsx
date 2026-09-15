@@ -3,26 +3,61 @@ import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import { signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Users, 
-  MessageSquare, 
-  ListOrdered, 
-  LogOut, 
-  Search,
+import {
+  Users,
+  MessageSquare,
+  ListOrdered,
+  LogOut,
   ChevronRight,
   ShieldCheck,
   Sparkles,
   TrendingUp,
   Activity,
+  ThumbsUp,
+  ThumbsDown,
+  Minus,
+  Zap,
+  Tag,
+  Filter,
+  AlertTriangle,
+  Lightbulb,
+  Info,
+  Siren,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 type Tab = 'students' | 'feedback' | 'queue';
+type SentimentFilter = 'all' | 'positive' | 'neutral' | 'negative';
+type UrgencyFilter = 'all' | 'low' | 'medium' | 'high' | 'critical';
+
+// ── Evaluation Config ─────────────────────────────────────────────────────────
+
+const SENTIMENT_CONFIG = {
+  positive: { label: 'Positive', color: '#10b981', bg: 'rgba(16,185,129,0.1)', border: 'rgba(16,185,129,0.25)', Icon: ThumbsUp },
+  neutral:  { label: 'Neutral',  color: '#64748b', bg: 'rgba(100,116,139,0.1)', border: 'rgba(100,116,139,0.2)', Icon: Minus },
+  negative: { label: 'Negative', color: '#ef4444', bg: 'rgba(239,68,68,0.1)',  border: 'rgba(239,68,68,0.25)', Icon: ThumbsDown },
+};
+
+const URGENCY_CONFIG = {
+  low:      { label: 'Low',      accent: '#10b981', glow: 'rgba(16,185,129,0.08)'  },
+  medium:   { label: 'Medium',   accent: '#f59e0b', glow: 'rgba(245,158,11,0.08)'  },
+  high:     { label: 'High',     accent: '#f97316', glow: 'rgba(249,115,22,0.1)'   },
+  critical: { label: 'Critical', accent: '#ef4444', glow: 'rgba(239,68,68,0.12)'   },
+};
+
+const ACTIONABILITY_CONFIG = {
+  informational: { label: 'Informational', Icon: Info,          color: '#64748b' },
+  suggestion:    { label: 'Suggestion',    Icon: Lightbulb,     color: '#8b5cf6' },
+  complaint:     { label: 'Complaint',     Icon: AlertTriangle,  color: '#f59e0b' },
+  urgent_issue:  { label: 'Urgent Issue',  Icon: Siren,         color: '#ef4444' },
+};
 
 export default function AdminHome() {
   const [activeTab, setActiveTab] = useState<Tab>('students');
   const [students, setStudents] = useState<any[]>([]);
   const [feedback, setFeedback] = useState<any[]>([]);
+  const [sentimentFilter, setSentimentFilter] = useState<SentimentFilter>('all');
+  const [urgencyFilter, setUrgencyFilter] = useState<UrgencyFilter>('all');
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -262,36 +297,205 @@ export default function AdminHome() {
             )}
 
             {/* ── Feedback Tab ── */}
-            {activeTab === 'feedback' && (
-              <motion.div
-                key="feedback"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                className="grid grid-cols-1 gap-5"
-              >
-                {feedback.map((item, i) => (
-                  <motion.div
-                    key={item.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.06 }}
-                    className="p-8 rounded-3xl"
-                    style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.8)', boxShadow: '0 4px 20px rgba(0,49,126,0.05)' }}
-                  >
-                    <div className="flex justify-between items-start mb-4">
-                      <span className="px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider" style={{ background: 'rgba(139,92,246,0.1)', color: '#7c3aed', border: '1px solid rgba(139,92,246,0.2)' }}>
-                        {item.category}
-                      </span>
-                      <span className="text-slate-400 text-xs font-bold">
-                        {new Date(item.createdAt?.seconds * 1000).toLocaleDateString()}
-                      </span>
+            {activeTab === 'feedback' && (() => {
+              // ── Derived stats
+              const evaluated = feedback.filter(f => f.sentiment);
+              const positiveCount = evaluated.filter(f => f.sentiment === 'positive').length;
+              const negativeCount = evaluated.filter(f => f.sentiment === 'negative').length;
+              const criticalHighCount = evaluated.filter(f => f.urgency === 'critical' || f.urgency === 'high').length;
+              const positivePercent = evaluated.length ? Math.round((positiveCount / evaluated.length) * 100) : 0;
+              const negativePercent = evaluated.length ? Math.round((negativeCount / evaluated.length) * 100) : 0;
+
+              // ── Filtered list
+              const filtered = feedback.filter(item => {
+                const sentimentOk = sentimentFilter === 'all' || item.sentiment === sentimentFilter;
+                const urgencyOk   = urgencyFilter   === 'all' || item.urgency   === urgencyFilter;
+                return sentimentOk && urgencyOk;
+              });
+
+              return (
+                <motion.div
+                  key="feedback"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  className="space-y-6"
+                >
+                  {/* ── Stats Row ── */}
+                  <div className="grid grid-cols-4 gap-4">
+                    {[
+                      { label: 'Total Submissions', value: feedback.length,   icon: MessageSquare, color: 'from-violet-500 to-purple-600', glow: 'rgba(139,92,246,0.15)' },
+                      { label: 'Positive Sentiment', value: `${positivePercent}%`, icon: ThumbsUp,     color: 'from-emerald-400 to-teal-500', glow: 'rgba(16,185,129,0.15)' },
+                      { label: 'Negative Sentiment', value: `${negativePercent}%`, icon: ThumbsDown,   color: 'from-rose-400 to-red-500',    glow: 'rgba(239,68,68,0.12)'  },
+                      { label: 'High / Critical',    value: criticalHighCount,     icon: Zap,          color: 'from-amber-400 to-orange-500', glow: 'rgba(251,191,36,0.15)' },
+                    ].map(stat => (
+                      <div key={stat.label} className="rounded-3xl p-5 flex items-center gap-4" style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.8)', boxShadow: `0 8px 30px ${stat.glow}` }}>
+                        <div className={`w-11 h-11 bg-gradient-to-br ${stat.color} text-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0`}>
+                          <stat.icon className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-2xl font-black text-slate-900 leading-none">{stat.value}</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{stat.label}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* ── Filter Bar ── */}
+                  <div className="flex flex-wrap items-center gap-3 p-5 rounded-2xl" style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(10px)', border: '1px solid rgba(0,49,126,0.07)' }}>
+                    <div className="flex items-center gap-2 text-slate-400">
+                      <Filter className="w-4 h-4" />
+                      <span className="text-xs font-black uppercase tracking-widest">Filters</span>
                     </div>
-                    <p className="text-slate-700 font-medium leading-relaxed">{item.content}</p>
-                  </motion.div>
-                ))}
-              </motion.div>
-            )}
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Sentiment:</span>
+                      {(['all', 'positive', 'neutral', 'negative'] as SentimentFilter[]).map(s => (
+                        <button
+                          key={s}
+                          onClick={() => setSentimentFilter(s)}
+                          className="px-3 py-1.5 rounded-xl text-xs font-black capitalize transition-all"
+                          style={sentimentFilter === s
+                            ? { background: 'linear-gradient(135deg, #2559bf, #00c1fd)', color: '#fff', boxShadow: '0 4px 12px rgba(37,89,191,0.25)' }
+                            : { background: 'rgba(0,49,126,0.05)', color: '#64748b' }}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="w-px h-5 bg-slate-200" />
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Urgency:</span>
+                      {(['all', 'low', 'medium', 'high', 'critical'] as UrgencyFilter[]).map(u => (
+                        <button
+                          key={u}
+                          onClick={() => setUrgencyFilter(u)}
+                          className="px-3 py-1.5 rounded-xl text-xs font-black capitalize transition-all"
+                          style={urgencyFilter === u
+                            ? { background: 'linear-gradient(135deg, #2559bf, #00c1fd)', color: '#fff', boxShadow: '0 4px 12px rgba(37,89,191,0.25)' }
+                            : { background: 'rgba(0,49,126,0.05)', color: '#64748b' }}
+                        >
+                          {u}
+                        </button>
+                      ))}
+                    </div>
+                    {(sentimentFilter !== 'all' || urgencyFilter !== 'all') && (
+                      <button
+                        onClick={() => { setSentimentFilter('all'); setUrgencyFilter('all'); }}
+                        className="ml-auto text-xs font-black text-slate-400 hover:text-red-500 transition-colors"
+                      >
+                        Clear filters
+                      </button>
+                    )}
+                  </div>
+
+                  {/* ── Feedback Cards ── */}
+                  <div className="grid grid-cols-1 gap-5">
+                    <AnimatePresence mode="popLayout">
+                      {filtered.length === 0 ? (
+                        <motion.div
+                          key="empty"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="flex flex-col items-center justify-center py-24 text-slate-300"
+                          style={{ background: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.7)', borderRadius: '2rem' }}
+                        >
+                          <MessageSquare className="w-20 h-20 mb-6 opacity-30" />
+                          <p className="text-xl font-black text-slate-400">No feedback matches your filters</p>
+                        </motion.div>
+                      ) : filtered.map((item, i) => {
+                        const sentiment = SENTIMENT_CONFIG[item.sentiment as keyof typeof SENTIMENT_CONFIG];
+                        const urgency   = URGENCY_CONFIG[item.urgency as keyof typeof URGENCY_CONFIG];
+                        const action    = ACTIONABILITY_CONFIG[item.actionability as keyof typeof ACTIONABILITY_CONFIG];
+                        const isCritical = item.urgency === 'critical' || item.urgency === 'high';
+
+                        return (
+                          <motion.div
+                            layout
+                            key={item.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.97 }}
+                            transition={{ delay: i * 0.04 }}
+                            className="rounded-3xl overflow-hidden"
+                            style={{
+                              background: 'rgba(255,255,255,0.85)',
+                              backdropFilter: 'blur(10px)',
+                              border: `1px solid ${isCritical ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.8)'}`,
+                              boxShadow: `0 4px 24px ${urgency ? urgency.glow : 'rgba(0,49,126,0.05)'}`,
+                            }}
+                          >
+                            {/* Urgency accent bar */}
+                            {urgency && (
+                              <div className="h-1 w-full" style={{ background: urgency.accent }} />
+                            )}
+
+                            <div className="p-7">
+                              {/* Top row: category + sentiment + date */}
+                              <div className="flex flex-wrap items-center gap-3 mb-4">
+                                <span className="px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider" style={{ background: 'rgba(139,92,246,0.1)', color: '#7c3aed', border: '1px solid rgba(139,92,246,0.2)' }}>
+                                  {item.category}
+                                </span>
+
+                                {sentiment && (
+                                  <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black" style={{ background: sentiment.bg, color: sentiment.color, border: `1px solid ${sentiment.border}` }}>
+                                    <sentiment.Icon className="w-3 h-3" />
+                                    {sentiment.label}
+                                  </span>
+                                )}
+
+                                {urgency && (
+                                  <span className="px-3 py-1.5 rounded-full text-xs font-black" style={{ background: `${urgency.accent}18`, color: urgency.accent, border: `1px solid ${urgency.accent}40` }}>
+                                    {urgency.label} Urgency
+                                  </span>
+                                )}
+
+                                <span className="ml-auto text-slate-400 text-xs font-bold">
+                                  {item.createdAt?.seconds
+                                    ? new Date(item.createdAt.seconds * 1000).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' })
+                                    : '—'}
+                                </span>
+                              </div>
+
+                              {/* AI Summary */}
+                              {item.summary && (
+                                <p className="text-sm font-black text-slate-700 mb-3 flex items-start gap-2">
+                                  <Sparkles className="w-4 h-4 text-violet-400 mt-0.5 flex-shrink-0" />
+                                  {item.summary}
+                                </p>
+                              )}
+
+                              {/* Full Content */}
+                              <p className="text-slate-600 font-medium leading-relaxed text-sm mb-4">{item.content}</p>
+
+                              {/* Bottom row: tags + actionability */}
+                              <div className="flex flex-wrap items-center gap-2">
+                                {action && (
+                                  <span className="flex items-center gap-1.5 text-xs font-bold" style={{ color: action.color }}>
+                                    <action.Icon className="w-3.5 h-3.5" />
+                                    {action.label}
+                                  </span>
+                                )}
+                                {Array.isArray(item.tags) && item.tags.length > 0 && (
+                                  <>
+                                    <div className="w-px h-4 bg-slate-200" />
+                                    {item.tags.map((tag: string) => (
+                                      <span key={tag} className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest" style={{ background: 'rgba(0,49,126,0.06)', color: '#2559bf' }}>
+                                        <Tag className="w-2.5 h-2.5" />
+                                        {tag}
+                                      </span>
+                                    ))}
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </AnimatePresence>
+                  </div>
+                </motion.div>
+              );
+            })()}
 
             {/* ── Queue Tab ── */}
             {activeTab === 'queue' && (
