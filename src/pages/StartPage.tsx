@@ -17,7 +17,7 @@ interface Star {
 }
 
 function FloatingStars() {
-  const stars: Star[] = Array.from({ length: 40 }, (_, i) => ({
+  const stars: Star[] = Array.from({ length: 15 }, (_, i) => ({
     id: i,
     x: Math.random() * 100,
     y: Math.random() * 100,
@@ -793,11 +793,6 @@ export default function StartPage() {
           </motion.footer>
         )}
       </AnimatePresence>
-
-      {/* ── Fonts ── */}
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Work+Sans:wght@500;600;700&display=swap');
-      `}</style>
     </motion.div>
   );
 }

@@ -60,36 +60,7 @@ function useLiveClock() {
   return time;
 }
 
-// Floating particles background
-function FloatingParticles() {
-  const particles = Array.from({ length: 14 }, (_, i) => ({
-    id: i,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    size: 3 + Math.random() * 6,
-    duration: 8 + Math.random() * 10,
-    delay: Math.random() * 6,
-    opacity: 0.04 + Math.random() * 0.12,
-  }));
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {particles.map(p => (
-        <motion.div
-          key={p.id}
-          className="absolute rounded-full"
-          style={{
-            left: `${p.x}%`, top: `${p.y}%`,
-            width: p.size, height: p.size,
-            background: 'radial-gradient(circle, #2559bf, #00c1fd)',
-            opacity: p.opacity,
-          }}
-          animate={{ y: [0, -25, 0], x: [0, 8, -8, 0], scale: [1, 1.4, 1] }}
-          transition={{ duration: p.duration, delay: p.delay, repeat: Infinity, ease: 'easeInOut' }}
-        />
-      ))}
-    </div>
-  );
-}
+
 
 export default function StudentHome() {
   const { profile } = useAuth();
@@ -118,19 +89,16 @@ export default function StudentHome() {
     >
       {/* ── Mesh / glow orbs ── */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute rounded-full" style={{ top: '-15%', right: '-12%', width: 800, height: 800, background: 'radial-gradient(circle, rgba(0,193,253,0.10) 0%, transparent 70%)', filter: 'blur(70px)' }} />
-        <div className="absolute rounded-full" style={{ bottom: '-18%', left: '-12%', width: 700, height: 700, background: 'radial-gradient(circle, rgba(37,89,191,0.09) 0%, transparent 70%)', filter: 'blur(80px)' }} />
-        <div className="absolute rounded-full" style={{ top: '45%', left: '35%', width: 500, height: 500, background: 'radial-gradient(circle, rgba(0,49,126,0.05) 0%, transparent 70%)', filter: 'blur(60px)' }} />
-        {/* Subtle dot grid */}
-        <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(rgba(0,49,126,0.06) 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+        {/* Simplified gradients instead of expensive blur filters */}
+        <div className="absolute rounded-full" style={{ top: '-15%', right: '-12%', width: 800, height: 800, background: 'radial-gradient(circle, rgba(0,193,253,0.06) 0%, transparent 60%)' }} />
+        <div className="absolute rounded-full" style={{ bottom: '-18%', left: '-12%', width: 700, height: 700, background: 'radial-gradient(circle, rgba(37,89,191,0.05) 0%, transparent 60%)' }} />
+        <div className="absolute rounded-full" style={{ top: '45%', left: '35%', width: 500, height: 500, background: 'radial-gradient(circle, rgba(0,49,126,0.03) 0%, transparent 60%)' }} />
       </div>
-
-      <FloatingParticles />
 
       {/* ══════════════════ HEADER ══════════════════ */}
       <header
         className="sticky top-0 z-50 px-4 sm:px-10 py-3 sm:py-4 flex items-center justify-between"
-        style={{ background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(0,49,126,0.08)', boxShadow: '0 2px 20px rgba(0,49,126,0.06)' }}
+        style={{ background: 'rgba(255,255,255,0.92)', borderBottom: '1px solid rgba(0,49,126,0.08)', boxShadow: '0 2px 20px rgba(0,49,126,0.06)' }}
       >
         {/* Left: Logo + Greeting */}
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-4 sm:gap-6">
@@ -205,7 +173,7 @@ export default function StudentHome() {
             <div
               key={stat.label}
               className="flex items-center gap-3 px-4 py-3 rounded-2xl"
-              style={{ background: stat.bg, border: `1px solid ${stat.border}`, backdropFilter: 'blur(10px)' }}
+              style={{ background: stat.bg, border: `1px solid ${stat.border}` }}
             >
               <div className="p-2 rounded-xl" style={{ background: `${stat.color}20` }}>
                 <stat.icon className="w-4 h-4" style={{ color: stat.color }} />
@@ -249,9 +217,9 @@ export default function StudentHome() {
               }}
             />
 
-            {/* Glow blobs */}
-            <div className="absolute top-[-20%] right-[-5%] w-80 h-80 rounded-full opacity-15 pointer-events-none" style={{ background: 'radial-gradient(circle, #00c1fd, transparent 70%)', filter: 'blur(40px)' }} />
-            <div className="absolute bottom-[-30%] left-[15%] w-56 h-56 rounded-full opacity-10 pointer-events-none" style={{ background: 'radial-gradient(circle, #7dd3fc, transparent 70%)', filter: 'blur(40px)' }} />
+            {/* Glow blobs - simplified */}
+            <div className="absolute top-[-20%] right-[-5%] w-80 h-80 rounded-full opacity-20 pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(0,193,253,0.5), transparent 60%)' }} />
+            <div className="absolute bottom-[-30%] left-[15%] w-56 h-56 rounded-full opacity-15 pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(125,211,252,0.5), transparent 60%)' }} />
 
             {/* Decorative corner grid */}
             <div className="absolute inset-0 pointer-events-none opacity-[0.04]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
@@ -281,14 +249,12 @@ export default function StudentHome() {
               <p className="text-blue-100 text-base sm:text-lg font-medium opacity-75 leading-relaxed max-w-lg">
                 Ask about enrollment, find rooms, check schedules, and get instant campus assistance.
               </p>
-              <motion.div
-                className="inline-flex items-center gap-2 font-black text-sm uppercase tracking-widest pt-1"
+              <div
+                className="inline-flex items-center gap-2 font-black text-sm uppercase tracking-widest pt-1 animate-pulse"
                 style={{ color: '#7de8ff' }}
-                animate={{ x: [0, 4, 0] }}
-                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
               >
                 Start Chatting <ArrowRight className="w-4 h-4" />
-              </motion.div>
+              </div>
             </div>
           </div>
         </motion.button>
@@ -328,11 +294,10 @@ export default function StudentHome() {
               onClick={() => navigate(`/feature/${feature.id}`)}
               onHoverStart={() => setHoveredCard(feature.id)}
               onHoverEnd={() => setHoveredCard(null)}
-              className="group relative text-left flex flex-col gap-5 overflow-hidden"
+              className="group relative text-left flex flex-col gap-5 overflow-hidden will-animate"
               style={{
-                background: 'rgba(255,255,255,0.82)',
-                backdropFilter: 'blur(16px)',
-                border: '1px solid rgba(255,255,255,0.7)',
+                background: 'rgba(255,255,255,0.95)',
+                border: '1px solid rgba(220,230,240,0.7)',
                 borderRadius: '2rem',
                 padding: '2rem',
                 boxShadow: hoveredCard === feature.id
@@ -376,16 +341,6 @@ export default function StudentHome() {
                 <feature.icon className="w-28 h-28 text-slate-900" />
               </div>
 
-              {/* Shimmer on hover */}
-              <motion.div
-                className="absolute inset-0 pointer-events-none rounded-[2rem]"
-                animate={hoveredCard === feature.id ? { backgroundPosition: ['200% center', '-200% center'] } : {}}
-                transition={{ duration: 1.2, ease: 'linear' }}
-                style={{
-                  background: 'linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.5) 50%, transparent 70%)',
-                  backgroundSize: '400% 100%',
-                }}
-              />
             </motion.button>
           ))}
         </motion.div>
@@ -394,7 +349,7 @@ export default function StudentHome() {
       {/* ══════════════════ FOOTER ══════════════════ */}
       <footer
         className="relative z-10 px-6 sm:px-12 py-8 flex flex-col md:flex-row justify-between items-center gap-6"
-        style={{ background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(16px)', borderTop: '1px solid rgba(0,49,126,0.08)' }}
+        style={{ background: 'rgba(255,255,255,0.92)', borderTop: '1px solid rgba(0,49,126,0.08)' }}
       >
         <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 text-center sm:text-left">
           <img src={schoolLogo} alt="Universidad de Dagupan" className="h-10 sm:h-12 object-contain opacity-75 hover:opacity-100 transition-opacity" />
@@ -418,10 +373,6 @@ export default function StudentHome() {
         </div>
       </footer>
 
-      {/* Font imports */}
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;700;800&display=swap');
-      `}</style>
     </div>
   );
 }
