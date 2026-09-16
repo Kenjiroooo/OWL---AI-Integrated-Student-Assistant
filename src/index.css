@@ -36,12 +36,18 @@
   background: #94a3b8;
 }
 
-/* Base transitions */
-* {
+/* Base transitions - ONLY on elements that need them, not global */
+button, a {
   @apply transition-colors duration-200;
 }
 
 /* Button active states */
 button:active {
   transform: scale(0.98);
+}
+
+/* Hardware acceleration hints for animated elements */
+.will-animate {
+  will-change: transform, opacity;
+  contain: layout style;
 }

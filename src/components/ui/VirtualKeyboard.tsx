@@ -32,6 +32,18 @@ const LAYOUT_NUMBERS = [
     ['{abc}', ',', '{space}', '.', '{submit}']
 ];
 
+let sharedAudioCtx: AudioContext | null = null;
+function getAudioCtx() {
+    if (!sharedAudioCtx) {
+        try {
+            sharedAudioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        } catch (e) {
+            // Not supported
+        }
+    }
+    return sharedAudioCtx;
+}
+
 export function VirtualKeyboard({ value, onChange, onSubmit, onClose, show }: VirtualKeyboardProps) {
     const [isShift, setIsShift] = useState(false);
     const [isNumbers, setIsNumbers] = useState(false);
@@ -39,7 +51,14 @@ export function VirtualKeyboard({ value, onChange, onSubmit, onClose, show }: Vi
     const playClickSound = () => {
         // Optional click sound for tactile feedback
         try {
-            const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const audioCtx = getAudioCtx();
+            if (!audioCtx) return;
+            
+            // Resume context if it was suspended by browser autoplay policy
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
             const oscillator = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
             
