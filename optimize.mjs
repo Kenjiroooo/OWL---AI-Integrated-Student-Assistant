@@ -11,19 +11,26 @@ const files = fs.readdirSync(assetsDir);
 
 async function optimize() {
   for (const file of files) {
-    if (file.endsWith('.png') || file.endsWith('.jpg')) {
+    if (file.endsWith('.png') || file.endsWith('.jpg') || file.endsWith('.webp')) {
       const filePath = path.join(assetsDir, file);
-      const newFileName = file.replace(/\.(png|jpg)$/, '.webp');
-      const newFilePath = path.join(assetsDir, newFileName);
+      const tempFilePath = path.join(assetsDir, `temp_${file.replace(/\.(png|jpg)$/, '.webp')}`);
       
-      console.log(`Converting ${file} to WebP...`);
+      let width = 400;
+      let quality = 65;
+      if (file.includes('maincampus') || file.includes('conflict_exam')) {
+        width = 800;
+        quality = 75;
+      }
+      
+      console.log(`Optimizing ${file} to ${width}px at quality ${quality}...`);
       try {
         await sharp(filePath)
-          .resize({ width: 1200, withoutEnlargement: true })
-          .webp({ quality: 80, effort: 6 })
-          .toFile(newFilePath);
+          .resize({ width, withoutEnlargement: true })
+          .webp({ quality, effort: 6 })
+          .toFile(tempFilePath);
         
         fs.unlinkSync(filePath);
+        fs.renameSync(tempFilePath, filePath.replace(/\.(png|jpg)$/, '.webp'));
         console.log(`Finished ${file}`);
       } catch (err) {
         console.error(`Error on ${file}:`, err);
