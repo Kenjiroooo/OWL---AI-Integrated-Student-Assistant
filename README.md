@@ -296,3 +296,4 @@ This project is continuously being improved and may receive additional features,
 If you find this project interesting, feel free to explore the project, provide feedback, and suggest improvements.
 
 > Built with curiosity, technology, and the goal of making student assistance more accessible through AI. 🤖🎓
+<!-- -->
