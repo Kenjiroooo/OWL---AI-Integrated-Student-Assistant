@@ -1,6 +1,6 @@
 import { db } from './firebase';
 import { collection, getDocs } from 'firebase/firestore';
-import { UDD_WEBSITE_CONTEXT } from './uddWebsiteContext';
+
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -116,7 +116,23 @@ function trimWebsiteContext(raw: string, budget: number): string {
   return cleanTrimmed + '\n\n[Note: Additional UdD website content was omitted to stay within context limits. The most recent and relevant information is included above.]';
 }
 
-function buildSystemPrompt(ctx: CampusContext): string {
+let _websiteContext: string | null = null;
+async function getWebsiteContext(): Promise<string> {
+  if (_websiteContext) return _websiteContext;
+  try {
+    const resp = await fetch('/udd-context.txt');
+    if (resp.ok) {
+      _websiteContext = await resp.text();
+    } else {
+      _websiteContext = '(Website context unavailable)';
+    }
+  } catch {
+    _websiteContext = '(Website context unavailable)';
+  }
+  return _websiteContext;
+}
+
+function buildSystemPrompt(ctx: CampusContext, websiteCtx: string): string {
   return `You are OWL, the official AI Information Assistant of Universidad de Dagupan (UdD).
 
 Your ONLY authorized knowledge source is the official Universidad de Dagupan website, its official subdomains, and the internal university database provided below.
@@ -164,7 +180,7 @@ ${ctx.announcements || 'No announcements at the moment.'}
 
 ## OFFICIAL WEBSITE CONTEXT
 The following is information extracted directly from the official Universidad de Dagupan website. Use this as your primary knowledge source:
-${trimWebsiteContext(UDD_WEBSITE_CONTEXT, WEBSITE_CONTEXT_CHAR_BUDGET)}`;
+${trimWebsiteContext(websiteCtx, WEBSITE_CONTEXT_CHAR_BUDGET)}`;
 }
 
 // Removed direct API_KEY since we proxy via Vercel backend
@@ -183,7 +199,8 @@ export async function askOwl(
   try {
 
     const campusContext = await fetchCampusContext();
-    const systemPrompt = buildSystemPrompt(campusContext);
+    const websiteContext = await getWebsiteContext();
+    const systemPrompt = buildSystemPrompt(campusContext, websiteContext);
 
     // Map our chat history to DeepSeek's expected format
     const messages = [
