@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
+import { speak, cancelSpeech, unlockAudio } from '../lib/owlSpeech';
 
 // ─── Types ───
 type Phase = 'sleeping' | 'murring' | 'waking' | 'greeting' | 'transitioning';
@@ -356,7 +357,15 @@ export default function StartPage() {
     40
   );
 
+  // Cleanup speech on unmount
+  useEffect(() => {
+    return () => {
+      cancelSpeech();
+    };
+  }, []);
+
   const handleOwlClick = useCallback(() => {
+    unlockAudio();
     if (phase !== 'sleeping') return;
 
     if (!hasBeenTapped) {
@@ -381,40 +390,12 @@ export default function StartPage() {
     setTimeout(() => {
       setPhase('greeting');
 
-      // Speak the greeting — lips sync to actual audio start/end
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(greetingText.current);
-
-        // Load voices (some browsers populate lazily)
-        const pickVoice = () => {
-          const voices = window.speechSynthesis.getVoices();
-          return (
-            voices.find(
-              (v) =>
-                v.name.includes('Google UK English Male') ||
-                v.name.includes('Google US English') ||
-                (v.name.includes('Male') && v.lang.startsWith('en'))
-            ) || voices.find((v) => v.lang.startsWith('en'))
-          );
-        };
-
-        const preferredVoice = pickVoice();
-        if (preferredVoice) utterance.voice = preferredVoice;
-
-        utterance.rate = 1.0;
-        utterance.pitch = 1.0;
-
-        // ── Key fix: drive isTalking from real speech events ──
-        // onstart fires when the browser actually begins playing audio
-        utterance.onstart = () => setIsTalking(true);
-
-        // onend / onerror stop the lip animation
-        utterance.onend = () => setIsTalking(false);
-        utterance.onerror = () => setIsTalking(false);
-
-        window.speechSynthesis.speak(utterance);
-      }
+      // Speak greeting using multi-tier speech engine (Web Speech -> Audio TTS -> Lip-sync)
+      speak(greetingText.current, {
+        onStart: () => setIsTalking(true),
+        onEnd: () => setIsTalking(false),
+        onError: () => setIsTalking(false),
+      });
     }, 900);
   }, [phase]);
 
