@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { OwlCharacter } from '../components/OwlCharacter';
 import { askOwl, type ChatMessage } from '../lib/gemini';
 import { VirtualKeyboard } from '../components/ui/VirtualKeyboard';
+import { speak, cancelSpeech, unlockAudio } from '../lib/owlSpeech';
 
 interface Message {
     id: string;
@@ -63,9 +64,7 @@ export default function OwlChatPage() {
     }, [messages.length]);
 
     const handleStop = () => {
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-        }
+        cancelSpeech();
         setIsTalking(false);
 
         if (abortControllerRef.current) {
@@ -78,14 +77,13 @@ export default function OwlChatPage() {
     useEffect(() => {
         // Cleanup speech on unmount
         return () => {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-            }
+            cancelSpeech();
         };
     }, []);
 
     const handleSend = async (e?: FormEvent, presetPrompt?: string) => {
         e?.preventDefault();
+        unlockAudio();
         const text = presetPrompt || input;
         if (!text.trim() || isTyping) return;
 
@@ -113,47 +111,27 @@ export default function OwlChatPage() {
             };
             setMessages(prev => [...prev, aiMsg]);
 
-            // Speak the AI's response
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(aiResponse);
-                // Find a clear, normal-paced male voice
-                const voices = window.speechSynthesis.getVoices();
-                // Prefer Google Male voices, or any English Male voice
-                const preferredVoice = voices.find(v => 
-                    v.name.includes('Google UK English Male') || 
-                    v.name.includes('Google US English') || 
-                    (v.name.includes('Male') && v.lang.startsWith('en'))
-                ) || voices.find(v => v.lang.startsWith('en')); // Fallback
+            // Speak the AI's response via universal multi-tier speech engine
+            const chunks = chunkText(aiResponse, 170);
+            const cumulativeLengths: number[] = [];
+            let currentLen = 0;
+            for (let c of chunks) {
+                currentLen += c.length + 1; // approximate space
+                cumulativeLengths.push(currentLen);
+            }
 
-                if (preferredVoice) utterance.voice = preferredVoice;
-                
-                // Set normal pace and pitch
-                utterance.rate = 1.0;
-                utterance.pitch = 1.0;
-                
-                // Calculate chunk boundaries for sync
-                const chunks = chunkText(aiResponse, 170);
-                const cumulativeLengths: number[] = [];
-                let currentLen = 0;
-                for (let c of chunks) {
-                    currentLen += c.length + 1; // approximate space
-                    cumulativeLengths.push(currentLen);
-                }
-                
-                utterance.onboundary = (e) => {
+            speak(aiResponse, {
+                onStart: () => setIsTalking(true),
+                onEnd: () => setIsTalking(false),
+                onError: () => setIsTalking(false),
+                onBoundary: (charIndex) => {
                     hasBoundaryFiredRef.current = true;
-                    const idx = cumulativeLengths.findIndex(len => e.charIndex <= len);
+                    const idx = cumulativeLengths.findIndex(len => charIndex <= len);
                     if (idx !== -1) {
                         setCurrentPage(idx);
                     }
-                };
-                
-                utterance.onstart = () => setIsTalking(true);
-                utterance.onend = () => setIsTalking(false);
-                utterance.onerror = () => setIsTalking(false);
-                window.speechSynthesis.speak(utterance);
-            }
+                }
+            });
         } catch (error: any) {
             if (error.name === 'AbortError') {
                 return;
