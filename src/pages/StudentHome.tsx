@@ -8,7 +8,7 @@ import {
   Calendar,
   Bell,
   Search,
-  MessageSquare,
+  ClipboardCheck,
   HelpCircle,
   PackageSearch,
   Wallet,
@@ -35,7 +35,7 @@ const features = [
   { id: 'exam', title: 'Examination Timetable', icon: Clock, color: 'from-indigo-500 to-purple-600', glow: 'rgba(139,92,246,0.25)', description: 'Your Seat & Schedule' },
   { id: 'announcements', title: 'Notice Board', icon: Bell, color: 'from-rose-400 to-pink-600', glow: 'rgba(244,63,94,0.25)', description: 'Campus News & Events' },
   { id: 'faculty', title: 'Faculty Locator', icon: Search, color: 'from-cyan-400 to-blue-600', glow: 'rgba(6,182,212,0.25)', description: 'Find Teachers & Offices' },
-  { id: 'feedback', title: 'Feedback Center', icon: MessageSquare, color: 'from-violet-500 to-purple-600', glow: 'rgba(139,92,246,0.25)', description: 'Suggestions & Reports' },
+  { id: 'feedback', title: 'Faculty Evaluation', icon: ClipboardCheck, color: 'from-sky-400 to-sky-600', glow: 'rgba(56,189,248,0.25)', description: 'Rate Your Professors' },
   { id: 'inquiry', title: 'Inquiry Center', icon: HelpCircle, color: 'from-sky-400 to-indigo-600', glow: 'rgba(56,189,248,0.25)', description: 'FAQs & General Help' },
   { id: 'lost-found', title: 'Lost & Found', icon: PackageSearch, color: 'from-amber-400 to-orange-600', glow: 'rgba(251,191,36,0.25)', description: 'Report or Claim Items' },
 
