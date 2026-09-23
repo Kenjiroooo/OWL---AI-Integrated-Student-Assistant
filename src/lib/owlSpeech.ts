@@ -1,11 +1,12 @@
 /**
  * owlSpeech.ts — Universal Text-to-Speech Engine for OWL Kiosk
  * 
- * Optimized for Orange Pi 3B (Debian XFCE) and modern browsers.
- * Implements a resilient 3-tier fallback architecture:
- *   Tier 1: Web Speech API (with Linux voice detection, Chromium resume fix, and start/end watchdogs)
- *   Tier 2: HTML5 Audio TTS (Google Translate TTS chunks via Audio element — works without speech-dispatcher)
- *   Tier 3: Visual Lip-Sync Simulation (timed lip animation so the character never freezes)
+ * Optimized for Orange Pi 3B (Debian Bookworm XFCE, kernel 5.10.160) and modern browsers.
+ * Implements a resilient 4-tier fallback architecture:
+ *   Tier 1:   Web Speech API (with Linux voice detection, Chromium resume fix, and start/end watchdogs)
+ *   Tier 1.5: Local Piper TTS Server (ARM64-native neural TTS via http://localhost:5050 — primary engine on Orange Pi)
+ *   Tier 2:   HTML5 Audio TTS (Google Translate TTS chunks via Audio element — works without speech-dispatcher)
+ *   Tier 3:   Visual Lip-Sync Simulation (timed lip animation so the character never freezes)
  */
 
 export interface SpeakOptions {
@@ -18,7 +19,7 @@ export interface SpeakOptions {
   onBoundary?: (charIndex: number, text: string) => void;
 }
 
-export type SpeechEngine = 'webspeech' | 'audio-tts' | 'visual-only' | 'idle';
+export type SpeechEngine = 'webspeech' | 'piper-local' | 'audio-tts' | 'visual-only' | 'idle';
 
 // ── State ────────────────────────────────────────────────────────────────────
 let currentEngine: SpeechEngine = 'idle';
@@ -31,6 +32,8 @@ let currentAudio: HTMLAudioElement | null = null;
 let visualTimer: ReturnType<typeof setTimeout> | null = null;
 let watchdogTimer: ReturnType<typeof setTimeout> | null = null;
 let audioUnlocked = false;
+let piperAvailable: boolean | null = null; // null = not yet probed
+let piperProbePromise: Promise<boolean> | null = null;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -359,6 +362,145 @@ function speakWithWebSpeech(
   });
 }
 
+// ── Tier 1.5: Local Piper TTS Server ──────────────────────────────────────────
+
+const PIPER_BASE_URL = 'http://localhost:5050';
+
+/**
+ * Probe whether the local Piper TTS server is running.
+ * Caches the result so we only probe once per page load.
+ */
+export function probePiperServer(): Promise<boolean> {
+  if (piperAvailable !== null) return Promise.resolve(piperAvailable);
+  if (piperProbePromise) return piperProbePromise;
+
+  piperProbePromise = new Promise((resolve) => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => {
+      controller.abort();
+      piperAvailable = false;
+      resolve(false);
+    }, 2000);
+
+    fetch(`${PIPER_BASE_URL}/health`, { signal: controller.signal })
+      .then((res) => {
+        clearTimeout(timeout);
+        if (res.ok) {
+          piperAvailable = true;
+          console.log('[OwlSpeech] Piper TTS server detected at localhost:5050');
+          resolve(true);
+        } else {
+          piperAvailable = false;
+          resolve(false);
+        }
+      })
+      .catch(() => {
+        clearTimeout(timeout);
+        piperAvailable = false;
+        resolve(false);
+      });
+  });
+
+  return piperProbePromise;
+}
+
+/**
+ * Tier 1.5: Synthesize speech via the local Piper TTS HTTP server.
+ * Splits text into sentence chunks and plays each WAV sequentially.
+ */
+function speakWithLocalPiper(text: string, options?: SpeakOptions): Promise<boolean> {
+  return new Promise((resolve) => {
+    const chunks = chunkTextBySentences(text, 200);
+    if (chunks.length === 0) {
+      resolve(false);
+      return;
+    }
+
+    let chunkIndex = 0;
+    let charOffset = 0;
+    currentEngine = 'piper-local';
+
+    const playNextChunk = () => {
+      if (chunkIndex >= chunks.length) {
+        setTalking(false);
+        currentEngine = 'idle';
+        options?.onEnd?.();
+        resolve(true);
+        return;
+      }
+
+      const chunk = chunks[chunkIndex];
+      const encoded = encodeURIComponent(chunk);
+      const url = `${PIPER_BASE_URL}/tts?text=${encoded}`;
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+
+      fetch(url, { signal: controller.signal })
+        .then((res) => {
+          clearTimeout(timeout);
+          if (!res.ok) throw new Error(`Piper HTTP ${res.status}`);
+          return res.blob();
+        })
+        .then((blob) => {
+          const audioUrl = URL.createObjectURL(blob);
+          const audio = new Audio(audioUrl);
+          currentAudio = audio;
+          audio.playbackRate = options?.rate ?? 1.0;
+
+          audio.onplay = () => {
+            setTalking(true);
+            if (chunkIndex === 0) {
+              options?.onStart?.();
+            }
+            options?.onBoundary?.(charOffset, chunk);
+          };
+
+          audio.onended = () => {
+            URL.revokeObjectURL(audioUrl);
+            charOffset += chunk.length + 1;
+            chunkIndex++;
+            playNextChunk();
+          };
+
+          audio.onerror = () => {
+            URL.revokeObjectURL(audioUrl);
+            if (chunkIndex === 0) {
+              setTalking(false);
+              currentAudio = null;
+              resolve(false);
+            } else {
+              chunkIndex++;
+              playNextChunk();
+            }
+          };
+
+          audio.play().catch(() => {
+            URL.revokeObjectURL(audioUrl);
+            if (chunkIndex === 0) {
+              setTalking(false);
+              currentAudio = null;
+              resolve(false);
+            }
+          });
+        })
+        .catch((err) => {
+          clearTimeout(timeout);
+          console.warn('[OwlSpeech] Piper TTS fetch error:', err);
+          if (chunkIndex === 0) {
+            setTalking(false);
+            resolve(false);
+          } else {
+            chunkIndex++;
+            playNextChunk();
+          }
+        });
+    };
+
+    playNextChunk();
+  });
+}
+
 // ── Tier 2: HTML5 Audio TTS (Google Translate TTS endpoint) ───────────────────
 
 function speakWithAudioTTS(text: string, options?: SpeakOptions): Promise<boolean> {
@@ -502,6 +644,20 @@ export async function speak(rawText: string, options?: SpeakOptions): Promise<vo
     }
   } catch (err) {
     console.warn('[OwlSpeech] Tier 1 error:', err);
+  }
+
+  // Tier 1.5: Try Local Piper TTS Server (primary engine on Orange Pi 3B)
+  try {
+    const piperReady = await probePiperServer();
+    if (piperReady) {
+      console.log('[OwlSpeech] Attempting Tier 1.5 (Local Piper TTS)');
+      const piperSuccess = await speakWithLocalPiper(text, options);
+      if (piperSuccess) {
+        return;
+      }
+    }
+  } catch (err) {
+    console.warn('[OwlSpeech] Tier 1.5 error:', err);
   }
 
   // Tier 2: Try HTML5 Audio TTS (Google Translate stream)
