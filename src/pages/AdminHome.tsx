@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, orderBy, query } from 'firebase/firestore';
+import { collection, getDocs, orderBy, query, doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import { signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import {
   Users,
-  MessageSquare,
+  ClipboardCheck,
   ListOrdered,
   LogOut,
   ChevronRight,
@@ -13,53 +13,41 @@ import {
   Sparkles,
   TrendingUp,
   Activity,
-  ThumbsUp,
-  ThumbsDown,
-  Minus,
-  Zap,
-  Tag,
-  Filter,
-  AlertTriangle,
-  Lightbulb,
-  Info,
-  Siren,
+  Star,
+  Calendar,
+  CalendarClock,
+  ToggleLeft,
+  ToggleRight,
+  Award,
+  BarChart3,
+  ChevronDown,
+  ChevronUp,
+  Save,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { FACULTY_DATA, SCHOOLS } from '../components/features/facultyLocator/facultyData';
 
-type Tab = 'students' | 'feedback' | 'queue';
-type SentimentFilter = 'all' | 'positive' | 'neutral' | 'negative';
-type UrgencyFilter = 'all' | 'low' | 'medium' | 'high' | 'critical';
-
-// ── Evaluation Config ─────────────────────────────────────────────────────────
-
-const SENTIMENT_CONFIG = {
-  positive: { label: 'Positive', color: '#10b981', bg: 'rgba(16,185,129,0.1)', border: 'rgba(16,185,129,0.25)', Icon: ThumbsUp },
-  neutral:  { label: 'Neutral',  color: '#64748b', bg: 'rgba(100,116,139,0.1)', border: 'rgba(100,116,139,0.2)', Icon: Minus },
-  negative: { label: 'Negative', color: '#ef4444', bg: 'rgba(239,68,68,0.1)',  border: 'rgba(239,68,68,0.25)', Icon: ThumbsDown },
-};
-
-const URGENCY_CONFIG = {
-  low:      { label: 'Low',      accent: '#10b981', glow: 'rgba(16,185,129,0.08)'  },
-  medium:   { label: 'Medium',   accent: '#f59e0b', glow: 'rgba(245,158,11,0.08)'  },
-  high:     { label: 'High',     accent: '#f97316', glow: 'rgba(249,115,22,0.1)'   },
-  critical: { label: 'Critical', accent: '#ef4444', glow: 'rgba(239,68,68,0.12)'   },
-};
-
-const ACTIONABILITY_CONFIG = {
-  informational: { label: 'Informational', Icon: Info,          color: '#64748b' },
-  suggestion:    { label: 'Suggestion',    Icon: Lightbulb,     color: '#8b5cf6' },
-  complaint:     { label: 'Complaint',     Icon: AlertTriangle,  color: '#f59e0b' },
-  urgent_issue:  { label: 'Urgent Issue',  Icon: Siren,         color: '#ef4444' },
-};
+type Tab = 'students' | 'evaluations' | 'queue';
 
 export default function AdminHome() {
   const [activeTab, setActiveTab] = useState<Tab>('students');
   const [students, setStudents] = useState<any[]>([]);
-  const [feedback, setFeedback] = useState<any[]>([]);
-  const [sentimentFilter, setSentimentFilter] = useState<SentimentFilter>('all');
-  const [urgencyFilter, setUrgencyFilter] = useState<UrgencyFilter>('all');
+  const [evaluations, setEvaluations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  // ── Evaluation Period State ─────────────────────────────────────────────
+  const [periodStartDate, setPeriodStartDate] = useState('');
+  const [periodEndDate, setPeriodEndDate] = useState('');
+  const [periodLabel, setPeriodLabel] = useState('');
+  const [periodId, setPeriodId] = useState('');
+  const [periodSaving, setPeriodSaving] = useState(false);
+  const [periodSaved, setPeriodSaved] = useState(false);
+  const [periodActive, setPeriodActive] = useState(false);
+
+  // ── Evaluation Results State ────────────────────────────────────────────
+  const [expandedFaculty, setExpandedFaculty] = useState<string | null>(null);
+  const [schoolFilter, setSchoolFilter] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -68,8 +56,22 @@ export default function AdminHome() {
         const studentSnap = await getDocs(query(collection(db, 'users'), orderBy('fullName')));
         setStudents(studentSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any)).filter(u => u.role === 'student'));
 
-        const feedbackSnap = await getDocs(query(collection(db, 'feedback'), orderBy('createdAt', 'desc')));
-        setFeedback(feedbackSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        const evalSnap = await getDocs(query(collection(db, 'facultyEvaluations'), orderBy('createdAt', 'desc')));
+        setEvaluations(evalSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+        // Fetch evaluation period settings
+        const periodSnap = await getDoc(doc(db, 'settings', 'evaluationPeriod'));
+        if (periodSnap.exists()) {
+          const data = periodSnap.data();
+          const start = data.startDate?.toDate?.() || new Date(data.startDate);
+          const end = data.endDate?.toDate?.() || new Date(data.endDate);
+          setPeriodStartDate(start.toISOString().split('T')[0]);
+          setPeriodEndDate(end.toISOString().split('T')[0]);
+          setPeriodLabel(data.periodLabel || '');
+          setPeriodId(data.periodId || '');
+          const now = new Date();
+          setPeriodActive(now >= start && now <= end);
+        }
       } catch (err) {
         console.error("Error fetching admin data:", err);
       } finally {
@@ -84,9 +86,90 @@ export default function AdminHome() {
     navigate('/login');
   };
 
+  const handleSavePeriod = async () => {
+    if (!periodStartDate || !periodEndDate || !periodLabel || !periodId) return;
+    setPeriodSaving(true);
+    try {
+      const start = new Date(periodStartDate);
+      const end = new Date(periodEndDate);
+      end.setHours(23, 59, 59, 999);
+      await setDoc(doc(db, 'settings', 'evaluationPeriod'), {
+        startDate: Timestamp.fromDate(start),
+        endDate: Timestamp.fromDate(end),
+        periodLabel,
+        periodId,
+        updatedAt: Timestamp.now(),
+      });
+      const now = new Date();
+      setPeriodActive(now >= start && now <= end);
+      setPeriodSaved(true);
+      setTimeout(() => setPeriodSaved(false), 3000);
+    } catch (err) {
+      console.error('Error saving evaluation period:', err);
+    } finally {
+      setPeriodSaving(false);
+    }
+  };
+
+  // ── Derived evaluation stats ────────────────────────────────────────────
+  const facultyStats = React.useMemo(() => {
+    const map = new Map<string, { name: string; school: string; schoolId: string; ratings: number[]; count: number; criteriaAverages: Record<string, number[]> }>();
+    
+    evaluations.forEach((ev) => {
+      if (!map.has(ev.facultyId)) {
+        map.set(ev.facultyId, {
+          name: ev.facultyName,
+          school: ev.schoolName || '',
+          schoolId: ev.schoolId || '',
+          ratings: [],
+          count: 0,
+          criteriaAverages: {},
+        });
+      }
+      const entry = map.get(ev.facultyId)!;
+      entry.ratings.push(ev.overallAverage || 0);
+      entry.count++;
+
+      // Aggregate per-criteria ratings
+      if (ev.ratings && typeof ev.ratings === 'object') {
+        Object.entries(ev.ratings).forEach(([key, val]) => {
+          if (!entry.criteriaAverages[key]) entry.criteriaAverages[key] = [];
+          entry.criteriaAverages[key].push(val as number);
+        });
+      }
+    });
+
+    return Array.from(map.entries())
+      .map(([id, data]) => ({
+        id,
+        ...data,
+        average: data.ratings.length ? Math.round((data.ratings.reduce((a, b) => a + b, 0) / data.ratings.length) * 100) / 100 : 0,
+      }))
+      .sort((a, b) => b.average - a.average);
+  }, [evaluations]);
+
+  const filteredFacultyStats = schoolFilter
+    ? facultyStats.filter((f) => f.schoolId === schoolFilter)
+    : facultyStats;
+
+  const totalEvaluations = evaluations.length;
+  const uniqueStudents = new Set(evaluations.map((e) => e.studentNumber)).size;
+  const uniqueFaculty = new Set(evaluations.map((e) => e.facultyId)).size;
+  const overallAvg = totalEvaluations
+    ? Math.round((evaluations.reduce((a, e) => a + (e.overallAverage || 0), 0) / totalEvaluations) * 100) / 100
+    : 0;
+
+  const CRITERIA_LABELS: Record<string, string> = {
+    teachingEffectiveness: 'Teaching Effectiveness',
+    communicationSkills: 'Communication Skills',
+    availability: 'Availability & Accessibility',
+    subjectKnowledge: 'Knowledge of Subject',
+    fairnessInGrading: 'Fairness in Grading',
+  };
+
   const navItems = [
     { id: 'students', label: 'Student Directory', icon: Users, count: students.length },
-    { id: 'feedback', label: 'Feedback Viewer', icon: MessageSquare, count: feedback.length },
+    { id: 'evaluations', label: 'Faculty Evaluations', icon: ClipboardCheck, count: evaluations.length },
     { id: 'queue', label: 'Queue Overview', icon: ListOrdered, count: null },
   ];
 
@@ -120,7 +203,7 @@ export default function AdminHome() {
         <div className="relative z-10 px-4 mb-6 grid grid-cols-2 gap-3">
           {[
             { label: 'Students', value: students.length, icon: Users, color: '#00c1fd' },
-            { label: 'Feedback', value: feedback.length, icon: MessageSquare, color: '#a78bfa' },
+            { label: 'Evaluations', value: evaluations.length, icon: ClipboardCheck, color: '#38bdf8' },
           ].map(stat => (
             <div key={stat.label} className="flex flex-col p-3 rounded-2xl" style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}>
               <stat.icon className="w-4 h-4 mb-2" style={{ color: stat.color }} />
@@ -191,7 +274,7 @@ export default function AdminHome() {
           <div>
             <h2 className="text-2xl font-black text-slate-900 tracking-tight">
               {activeTab === 'students' && 'Student Directory'}
-              {activeTab === 'feedback' && 'Feedback Hub'}
+              {activeTab === 'evaluations' && 'Faculty Evaluations'}
               {activeTab === 'queue' && 'Queue Monitor'}
             </h2>
             <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-0.5 flex items-center gap-1.5">
@@ -296,206 +379,243 @@ export default function AdminHome() {
               </motion.div>
             )}
 
-            {/* ── Feedback Tab ── */}
-            {activeTab === 'feedback' && (() => {
-              // ── Derived stats
-              const evaluated = feedback.filter(f => f.sentiment);
-              const positiveCount = evaluated.filter(f => f.sentiment === 'positive').length;
-              const negativeCount = evaluated.filter(f => f.sentiment === 'negative').length;
-              const criticalHighCount = evaluated.filter(f => f.urgency === 'critical' || f.urgency === 'high').length;
-              const positivePercent = evaluated.length ? Math.round((positiveCount / evaluated.length) * 100) : 0;
-              const negativePercent = evaluated.length ? Math.round((negativeCount / evaluated.length) * 100) : 0;
-
-              // ── Filtered list
-              const filtered = feedback.filter(item => {
-                const sentimentOk = sentimentFilter === 'all' || item.sentiment === sentimentFilter;
-                const urgencyOk   = urgencyFilter   === 'all' || item.urgency   === urgencyFilter;
-                return sentimentOk && urgencyOk;
-              });
-
-              return (
-                <motion.div
-                  key="feedback"
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -12 }}
-                  className="space-y-6"
-                >
-                  {/* ── Stats Row ── */}
-                  <div className="grid grid-cols-4 gap-4">
-                    {[
-                      { label: 'Total Submissions', value: feedback.length,   icon: MessageSquare, color: 'from-violet-500 to-purple-600', glow: 'rgba(139,92,246,0.15)' },
-                      { label: 'Positive Sentiment', value: `${positivePercent}%`, icon: ThumbsUp,     color: 'from-emerald-400 to-teal-500', glow: 'rgba(16,185,129,0.15)' },
-                      { label: 'Negative Sentiment', value: `${negativePercent}%`, icon: ThumbsDown,   color: 'from-rose-400 to-red-500',    glow: 'rgba(239,68,68,0.12)'  },
-                      { label: 'High / Critical',    value: criticalHighCount,     icon: Zap,          color: 'from-amber-400 to-orange-500', glow: 'rgba(251,191,36,0.15)' },
-                    ].map(stat => (
-                      <div key={stat.label} className="rounded-3xl p-5 flex items-center gap-4" style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.8)', boxShadow: `0 8px 30px ${stat.glow}` }}>
-                        <div className={`w-11 h-11 bg-gradient-to-br ${stat.color} text-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0`}>
-                          <stat.icon className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <p className="text-2xl font-black text-slate-900 leading-none">{stat.value}</p>
-                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{stat.label}</p>
-                        </div>
+            {/* ── Evaluations Tab ── */}
+            {activeTab === 'evaluations' && (
+              <motion.div
+                key="evaluations"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                className="space-y-6"
+              >
+                {/* Stats Row */}
+                <div className="grid grid-cols-4 gap-4">
+                  {[
+                    { label: 'Total Evaluations', value: totalEvaluations, icon: ClipboardCheck, color: 'from-sky-400 to-sky-600', glow: 'rgba(56,189,248,0.15)' },
+                    { label: 'Unique Students', value: uniqueStudents, icon: Users, color: 'from-emerald-400 to-teal-500', glow: 'rgba(16,185,129,0.15)' },
+                    { label: 'Faculty Evaluated', value: uniqueFaculty, icon: Award, color: 'from-violet-400 to-purple-500', glow: 'rgba(139,92,246,0.15)' },
+                    { label: 'Avg. Rating', value: `${overallAvg}/5`, icon: Star, color: 'from-amber-400 to-orange-500', glow: 'rgba(251,191,36,0.15)' },
+                  ].map(stat => (
+                    <div key={stat.label} className="rounded-3xl p-5 flex items-center gap-4" style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.8)', boxShadow: `0 8px 30px ${stat.glow}` }}>
+                      <div className={`w-11 h-11 bg-gradient-to-br ${stat.color} text-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0`}>
+                        <stat.icon className="w-5 h-5" />
                       </div>
-                    ))}
+                      <div>
+                        <p className="text-2xl font-black text-slate-900 leading-none">{stat.value}</p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{stat.label}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Evaluation Period Controls */}
+                <div className="rounded-3xl p-6" style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.8)', boxShadow: '0 4px 20px rgba(56,189,248,0.08)' }}>
+                  <div className="flex items-center justify-between mb-5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-sky-400 to-sky-600 text-white rounded-2xl flex items-center justify-center shadow-lg">
+                        <CalendarClock className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-black text-slate-800 text-lg">Evaluation Period</h3>
+                        <p className="text-slate-400 text-xs font-bold">Configure when students can submit evaluations</p>
+                      </div>
+                    </div>
+                    <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest ${periodActive ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-slate-100 text-slate-400 border border-slate-200'}`}>
+                      {periodActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                      {periodActive ? 'Active' : 'Closed'}
+                    </div>
                   </div>
 
-                  {/* ── Filter Bar ── */}
-                  <div className="flex flex-wrap items-center gap-3 p-5 rounded-2xl" style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(10px)', border: '1px solid rgba(0,49,126,0.07)' }}>
-                    <div className="flex items-center gap-2 text-slate-400">
-                      <Filter className="w-4 h-4" />
-                      <span className="text-xs font-black uppercase tracking-widest">Filters</span>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Period ID</label>
+                      <input
+                        type="text"
+                        value={periodId}
+                        onChange={(e) => setPeriodId(e.target.value)}
+                        placeholder="2026-2nd-sem"
+                        className="w-full px-4 py-3 rounded-xl text-sm font-bold bg-white border-2 border-sky-100 outline-none focus:border-sky-400 transition-all placeholder:text-slate-300"
+                      />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Sentiment:</span>
-                      {(['all', 'positive', 'neutral', 'negative'] as SentimentFilter[]).map(s => (
-                        <button
-                          key={s}
-                          onClick={() => setSentimentFilter(s)}
-                          className="px-3 py-1.5 rounded-xl text-xs font-black capitalize transition-all"
-                          style={sentimentFilter === s
-                            ? { background: 'linear-gradient(135deg, #2559bf, #00c1fd)', color: '#fff', boxShadow: '0 4px 12px rgba(37,89,191,0.25)' }
-                            : { background: 'rgba(0,49,126,0.05)', color: '#64748b' }}
-                        >
-                          {s}
-                        </button>
-                      ))}
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Label</label>
+                      <input
+                        type="text"
+                        value={periodLabel}
+                        onChange={(e) => setPeriodLabel(e.target.value)}
+                        placeholder="2nd Semester 2026-2027"
+                        className="w-full px-4 py-3 rounded-xl text-sm font-bold bg-white border-2 border-sky-100 outline-none focus:border-sky-400 transition-all placeholder:text-slate-300"
+                      />
                     </div>
-                    <div className="w-px h-5 bg-slate-200" />
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Urgency:</span>
-                      {(['all', 'low', 'medium', 'high', 'critical'] as UrgencyFilter[]).map(u => (
-                        <button
-                          key={u}
-                          onClick={() => setUrgencyFilter(u)}
-                          className="px-3 py-1.5 rounded-xl text-xs font-black capitalize transition-all"
-                          style={urgencyFilter === u
-                            ? { background: 'linear-gradient(135deg, #2559bf, #00c1fd)', color: '#fff', boxShadow: '0 4px 12px rgba(37,89,191,0.25)' }
-                            : { background: 'rgba(0,49,126,0.05)', color: '#64748b' }}
-                        >
-                          {u}
-                        </button>
-                      ))}
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Start Date</label>
+                      <input
+                        type="date"
+                        value={periodStartDate}
+                        onChange={(e) => setPeriodStartDate(e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl text-sm font-bold bg-white border-2 border-sky-100 outline-none focus:border-sky-400 transition-all"
+                      />
                     </div>
-                    {(sentimentFilter !== 'all' || urgencyFilter !== 'all') && (
-                      <button
-                        onClick={() => { setSentimentFilter('all'); setUrgencyFilter('all'); }}
-                        className="ml-auto text-xs font-black text-slate-400 hover:text-red-500 transition-colors"
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">End Date</label>
+                      <input
+                        type="date"
+                        value={periodEndDate}
+                        onChange={(e) => setPeriodEndDate(e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl text-sm font-bold bg-white border-2 border-sky-100 outline-none focus:border-sky-400 transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end mt-4 gap-3">
+                    {periodSaved && (
+                      <motion.span
+                        initial={{ opacity: 0, x: 10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="text-emerald-500 text-xs font-black"
                       >
-                        Clear filters
-                      </button>
+                        ✓ Saved successfully
+                      </motion.span>
                     )}
+                    <button
+                      onClick={handleSavePeriod}
+                      disabled={periodSaving || !periodStartDate || !periodEndDate || !periodLabel || !periodId}
+                      className="px-6 py-3 rounded-2xl text-white font-black text-sm flex items-center gap-2 transition-all active:scale-95 disabled:opacity-40"
+                      style={{ background: 'linear-gradient(135deg, #0ea5e9, #38bdf8)', boxShadow: '0 4px 16px rgba(14,165,233,0.25)' }}
+                    >
+                      <Save className="w-4 h-4" />
+                      {periodSaving ? 'Saving...' : 'Save Period'}
+                    </button>
                   </div>
+                </div>
 
-                  {/* ── Feedback Cards ── */}
-                  <div className="grid grid-cols-1 gap-5">
-                    <AnimatePresence mode="popLayout">
-                      {filtered.length === 0 ? (
-                        <motion.div
-                          key="empty"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="flex flex-col items-center justify-center py-24 text-slate-300"
-                          style={{ background: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.7)', borderRadius: '2rem' }}
+                {/* School Filter */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mr-2">Filter by School:</span>
+                  <button
+                    onClick={() => setSchoolFilter(null)}
+                    className="px-3 py-1.5 rounded-xl text-xs font-black transition-all"
+                    style={!schoolFilter
+                      ? { background: 'linear-gradient(135deg, #0ea5e9, #38bdf8)', color: '#fff', boxShadow: '0 4px 12px rgba(14,165,233,0.25)' }
+                      : { background: 'rgba(0,49,126,0.05)', color: '#64748b' }
+                    }
+                  >
+                    All
+                  </button>
+                  {SCHOOLS.map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => setSchoolFilter(s.id === schoolFilter ? null : s.id)}
+                      className="px-3 py-1.5 rounded-xl text-xs font-black transition-all"
+                      style={schoolFilter === s.id
+                        ? { background: 'linear-gradient(135deg, #0ea5e9, #38bdf8)', color: '#fff', boxShadow: '0 4px 12px rgba(14,165,233,0.25)' }
+                        : { background: 'rgba(0,49,126,0.05)', color: '#64748b' }
+                      }
+                    >
+                      {s.name.replace('School of ', '')}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Faculty Rankings */}
+                <div className="space-y-3">
+                  {filteredFacultyStats.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-24 text-slate-300" style={{ background: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.7)', borderRadius: '2rem' }}>
+                      <ClipboardCheck className="w-20 h-20 mb-6 opacity-30" />
+                      <p className="text-xl font-black text-slate-400">No evaluations yet</p>
+                      <p className="text-slate-400 font-medium text-sm mt-1">Evaluations will appear here once students submit them</p>
+                    </div>
+                  ) : (
+                    filteredFacultyStats.map((faculty, i) => (
+                      <motion.div
+                        key={faculty.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.04 }}
+                        className="rounded-3xl overflow-hidden"
+                        style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.8)', boxShadow: '0 4px 20px rgba(56,189,248,0.06)' }}
+                      >
+                        {/* Faculty summary row */}
+                        <button
+                          onClick={() => setExpandedFaculty(expandedFaculty === faculty.id ? null : faculty.id)}
+                          className="w-full flex items-center gap-5 p-5 text-left hover:bg-sky-50/50 transition-colors"
                         >
-                          <MessageSquare className="w-20 h-20 mb-6 opacity-30" />
-                          <p className="text-xl font-black text-slate-400">No feedback matches your filters</p>
-                        </motion.div>
-                      ) : filtered.map((item, i) => {
-                        const sentiment = SENTIMENT_CONFIG[item.sentiment as keyof typeof SENTIMENT_CONFIG];
-                        const urgency   = URGENCY_CONFIG[item.urgency as keyof typeof URGENCY_CONFIG];
-                        const action    = ACTIONABILITY_CONFIG[item.actionability as keyof typeof ACTIONABILITY_CONFIG];
-                        const isCritical = item.urgency === 'critical' || item.urgency === 'high';
+                          {/* Rank */}
+                          <div className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm flex-shrink-0" style={{
+                            background: i === 0 ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : i === 1 ? 'linear-gradient(135deg, #94a3b8, #64748b)' : i === 2 ? 'linear-gradient(135deg, #d97706, #b45309)' : '#f1f5f9',
+                            color: i < 3 ? '#fff' : '#64748b',
+                          }}>
+                            #{i + 1}
+                          </div>
 
-                        return (
-                          <motion.div
-                            layout
-                            key={item.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.97 }}
-                            transition={{ delay: i * 0.04 }}
-                            className="rounded-3xl overflow-hidden"
-                            style={{
-                              background: 'rgba(255,255,255,0.85)',
-                              backdropFilter: 'blur(10px)',
-                              border: `1px solid ${isCritical ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.8)'}`,
-                              boxShadow: `0 4px 24px ${urgency ? urgency.glow : 'rgba(0,49,126,0.05)'}`,
-                            }}
-                          >
-                            {/* Urgency accent bar */}
-                            {urgency && (
-                              <div className="h-1 w-full" style={{ background: urgency.accent }} />
-                            )}
+                          {/* Faculty info */}
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-black text-slate-800 text-base truncate">{faculty.name}</h4>
+                            <p className="text-sky-600 text-xs font-bold">{faculty.school}</p>
+                          </div>
 
-                            <div className="p-7">
-                              {/* Top row: category + sentiment + date */}
-                              <div className="flex flex-wrap items-center gap-3 mb-4">
-                                <span className="px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider" style={{ background: 'rgba(139,92,246,0.1)', color: '#7c3aed', border: '1px solid rgba(139,92,246,0.2)' }}>
-                                  {item.category}
-                                </span>
-
-                                {sentiment && (
-                                  <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black" style={{ background: sentiment.bg, color: sentiment.color, border: `1px solid ${sentiment.border}` }}>
-                                    <sentiment.Icon className="w-3 h-3" />
-                                    {sentiment.label}
-                                  </span>
-                                )}
-
-                                {urgency && (
-                                  <span className="px-3 py-1.5 rounded-full text-xs font-black" style={{ background: `${urgency.accent}18`, color: urgency.accent, border: `1px solid ${urgency.accent}40` }}>
-                                    {urgency.label} Urgency
-                                  </span>
-                                )}
-
-                                <span className="ml-auto text-slate-400 text-xs font-bold">
-                                  {item.createdAt?.seconds
-                                    ? new Date(item.createdAt.seconds * 1000).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' })
-                                    : '—'}
-                                </span>
+                          {/* Stats */}
+                          <div className="flex items-center gap-4 flex-shrink-0">
+                            <div className="text-right">
+                              <div className="flex items-center gap-1.5">
+                                <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                                <span className="text-xl font-black text-slate-800">{faculty.average}</span>
                               </div>
-
-                              {/* AI Summary */}
-                              {item.summary && (
-                                <p className="text-sm font-black text-slate-700 mb-3 flex items-start gap-2">
-                                  <Sparkles className="w-4 h-4 text-violet-400 mt-0.5 flex-shrink-0" />
-                                  {item.summary}
-                                </p>
-                              )}
-
-                              {/* Full Content */}
-                              <p className="text-slate-600 font-medium leading-relaxed text-sm mb-4">{item.content}</p>
-
-                              {/* Bottom row: tags + actionability */}
-                              <div className="flex flex-wrap items-center gap-2">
-                                {action && (
-                                  <span className="flex items-center gap-1.5 text-xs font-bold" style={{ color: action.color }}>
-                                    <action.Icon className="w-3.5 h-3.5" />
-                                    {action.label}
-                                  </span>
-                                )}
-                                {Array.isArray(item.tags) && item.tags.length > 0 && (
-                                  <>
-                                    <div className="w-px h-4 bg-slate-200" />
-                                    {item.tags.map((tag: string) => (
-                                      <span key={tag} className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest" style={{ background: 'rgba(0,49,126,0.06)', color: '#2559bf' }}>
-                                        <Tag className="w-2.5 h-2.5" />
-                                        {tag}
-                                      </span>
-                                    ))}
-                                  </>
-                                )}
-                              </div>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{faculty.count} reviews</p>
                             </div>
-                          </motion.div>
-                        );
-                      })}
-                    </AnimatePresence>
-                  </div>
-                </motion.div>
-              );
-            })()}
+                            {expandedFaculty === faculty.id ? (
+                              <ChevronUp className="w-5 h-5 text-sky-400" />
+                            ) : (
+                              <ChevronDown className="w-5 h-5 text-slate-300" />
+                            )}
+                          </div>
+                        </button>
+
+                        {/* Expanded criteria breakdown */}
+                        <AnimatePresence>
+                          {expandedFaculty === faculty.id && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.3 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="px-5 pb-5 pt-2 border-t border-sky-50">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                  {Object.entries(CRITERIA_LABELS).map(([key, label]) => {
+                                    const values = faculty.criteriaAverages[key] || [];
+                                    const avg = values.length ? Math.round((values.reduce((a: number, b: number) => a + b, 0) / values.length) * 100) / 100 : 0;
+                                    const pct = (avg / 5) * 100;
+                                    return (
+                                      <div key={key} className="space-y-1.5">
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-xs font-bold text-slate-600">{label}</span>
+                                          <span className="text-xs font-black text-sky-600">{avg}/5</span>
+                                        </div>
+                                        <div className="h-2.5 bg-sky-50 rounded-full overflow-hidden">
+                                          <motion.div
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${pct}%` }}
+                                            transition={{ duration: 0.6, delay: 0.1 }}
+                                            className="h-full rounded-full"
+                                            style={{ background: 'linear-gradient(90deg, #38bdf8, #0ea5e9)' }}
+                                          />
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
+                    ))
+                  )}
+                </div>
+              </motion.div>
+            )}
 
             {/* ── Queue Tab ── */}
             {activeTab === 'queue' && (
