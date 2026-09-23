@@ -81,7 +81,7 @@ export default function FeaturePage() {
               <ChevronLeft className="w-6 h-6" />
             </button>
             <div>
-              <h1 className="text-xl font-bold text-slate-800 capitalize">{id?.replace('-', ' ')}</h1>
+              <h1 className="text-xl font-bold text-slate-800 capitalize">{id === 'feedback' ? 'Faculty Evaluation' : id?.replace('-', ' ')}</h1>
               <p className="text-slate-500 text-sm font-medium">OWL Kiosk Service</p>
             </div>
           </div>
