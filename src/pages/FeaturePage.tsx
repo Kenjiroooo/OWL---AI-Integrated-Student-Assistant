@@ -5,8 +5,7 @@ import { ChevronLeft, Home } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useOwlAssistant } from '../context/OwlAssistantContext';
 
-// Import Feature Modules (To be created)
-import AcademicAssistance from '../components/features/AcademicAssistance';
+// Import Feature Modules
 import CampusNav from '../components/features/CampusNav';
 import Transport from '../components/features/Transport';
 import ExamTimetable from '../components/features/ExamTimetable';
@@ -47,7 +46,6 @@ export default function FeaturePage() {
 
   const renderFeature = () => {
     switch (id) {
-      case 'academic': return <AcademicAssistance />;
       case 'campus-nav': return <CampusNav />;
       case 'transport': return <Transport />;
       case 'exam': return <ExamTimetable />;
@@ -56,7 +54,6 @@ export default function FeaturePage() {
       case 'feedback': return <FeedbackCenter />;
       case 'inquiry': return <InquiryCenter />;
       case 'lost-found': return <LostFound />;
-
       default: return <div>Feature not found</div>;
     }
   };

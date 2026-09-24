@@ -2,24 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  GraduationCap,
   Map,
   Bus,
-  Calendar,
   Bell,
   Search,
   ClipboardCheck,
   HelpCircle,
   PackageSearch,
-  Wallet,
-  FileText,
   LogOut,
-  Clock,
   Sparkles,
   ArrowRight,
   Wifi,
   Shield,
   Zap,
+  Clock,
 } from 'lucide-react';
 import { auth } from '../lib/firebase';
 import { signOut } from 'firebase/auth';
@@ -29,7 +25,6 @@ import schoolLogo from '../assets/university-logo.webp';
 import { OwlCharacter } from '../components/OwlCharacter';
 
 const features = [
-  { id: 'academic', title: 'Academic Assistance', icon: GraduationCap, color: 'from-blue-500 to-indigo-600', glow: 'rgba(99,102,241,0.25)', description: 'Grades, Enrollment, Requirements' },
   { id: 'campus-nav', title: 'Campus Navigation', icon: Map, color: 'from-emerald-400 to-teal-600', glow: 'rgba(20,184,166,0.25)', description: 'Building Maps, Room Finder' },
   { id: 'transport', title: 'Campus Transport', icon: Bus, color: 'from-orange-400 to-rose-600', glow: 'rgba(251,113,133,0.25)', description: 'E-Jeep Live Timetable' },
   { id: 'exam', title: 'Examination Timetable', icon: Clock, color: 'from-indigo-500 to-purple-600', glow: 'rgba(139,92,246,0.25)', description: 'Your Seat & Schedule' },
@@ -38,7 +33,6 @@ const features = [
   { id: 'feedback', title: 'Faculty Evaluation', icon: ClipboardCheck, color: 'from-sky-400 to-sky-600', glow: 'rgba(56,189,248,0.25)', description: 'Rate Your Professors' },
   { id: 'inquiry', title: 'Inquiry Center', icon: HelpCircle, color: 'from-sky-400 to-indigo-600', glow: 'rgba(56,189,248,0.25)', description: 'FAQs & General Help' },
   { id: 'lost-found', title: 'Lost & Found', icon: PackageSearch, color: 'from-amber-400 to-orange-600', glow: 'rgba(251,191,36,0.25)', description: 'Report or Claim Items' },
-
 ];
 
 // Live animated clock

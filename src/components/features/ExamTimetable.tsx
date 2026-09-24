@@ -7,7 +7,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import conflictExamImg from '../../assets/conflict_exam_schedule.webp';
 import { DUMMY_EXAMS } from '../../data/dummyExamData';
 import { useOwlAssistant } from '../../context/OwlAssistantContext';
-import SecureFeatureWrapper from '../common/SecureFeatureWrapper';
 
 export default function ExamTimetable() {
   const { profile } = useAuth();
@@ -84,8 +83,7 @@ export default function ExamTimetable() {
   });
 
   return (
-    <SecureFeatureWrapper featureName="Examination Timetable" demoId="23-7687">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="max-w-7xl mx-auto space-y-8">
         <div className="bg-indigo-600 rounded-[3rem] p-12 text-white shadow-2xl shadow-indigo-200">
           <h2 className="text-4xl font-black mb-4">Exam Timetable</h2>
           <p className="text-indigo-100 text-xl font-medium opacity-90 max-w-2xl">
@@ -383,6 +381,5 @@ export default function ExamTimetable() {
           )}
         </AnimatePresence>
       </div>
-    </SecureFeatureWrapper>
   );
 }
