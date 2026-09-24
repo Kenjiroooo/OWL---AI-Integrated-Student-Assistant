@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Delete, ArrowBigUp, Check, X, Keyboard } from 'lucide-react';
-import clsx from 'clsx';
 
 interface VirtualKeyboardProps {
     value: string;
@@ -142,7 +141,7 @@ export function VirtualKeyboard({ value, onChange, onSubmit, onClose, show }: Vi
 
                         {/* Keyboard Rows */}
                         {currentLayout.map((row, rowIndex) => (
-                            <div key={rowIndex} className={clsx("flex justify-center gap-2 sm:gap-3", rowIndex === 1 && "px-4 sm:px-6")}>
+                            <div key={rowIndex} className={"flex justify-center gap-2 sm:gap-3" + (rowIndex === 1 ? " px-4 sm:px-6" : "")}>
                                 {row.map((key) => {
                                     let content: React.ReactNode = key;
                                     let className = "bg-white border border-slate-200 text-slate-700 shadow-sm hover:bg-slate-50 hover:shadow";
@@ -153,8 +152,8 @@ export function VirtualKeyboard({ value, onChange, onSubmit, onClose, show }: Vi
                                         className = "bg-slate-100 border border-slate-200 text-slate-600 hover:bg-slate-200 w-16 sm:w-20";
                                         isSpecial = true;
                                     } else if (key === '{shift}') {
-                                        content = <ArrowBigUp className={clsx("w-5 h-5 sm:w-6 sm:h-6", isShift && "fill-current")} />;
-                                        className = clsx("border hover:bg-slate-200 w-16 sm:w-20", isShift ? "bg-blue-100 border-blue-300 text-blue-600" : "bg-slate-100 border-slate-200 text-slate-600");
+                                        content = <ArrowBigUp className={"w-5 h-5 sm:w-6 sm:h-6" + (isShift ? " fill-current" : "")} />;
+                                        className = "border hover:bg-slate-200 w-16 sm:w-20 " + (isShift ? "bg-blue-100 border-blue-300 text-blue-600" : "bg-slate-100 border-slate-200 text-slate-600");
                                         isSpecial = true;
                                     } else if (key === '{space}') {
                                         content = "Space";
@@ -181,11 +180,11 @@ export function VirtualKeyboard({ value, onChange, onSubmit, onClose, show }: Vi
                                                 e.preventDefault();
                                                 handleKeyPress(key);
                                             }}
-                                            className={clsx(
-                                                "h-12 sm:h-14 rounded-xl flex items-center justify-center transition-all active:scale-95 active:brightness-95",
-                                                !isSpecial && "flex-1 min-w-[2.5rem] sm:min-w-[3rem] font-medium text-lg sm:text-xl",
+                                            className={
+                                                "h-12 sm:h-14 rounded-xl flex items-center justify-center transition-all active:scale-95 active:brightness-95 " +
+                                                (!isSpecial ? "flex-1 min-w-[2.5rem] sm:min-w-[3rem] font-medium text-lg sm:text-xl " : "") +
                                                 className
-                                            )}
+                                            }
                                         >
                                             {content}
                                         </button>
