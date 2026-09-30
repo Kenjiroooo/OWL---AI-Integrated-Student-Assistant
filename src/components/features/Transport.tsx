@@ -1,73 +1,133 @@
-import React from 'react';
-import { Bus } from 'lucide-react';
+// ─────────────────────────────────────────────────────────────────────────────
+// Transport.tsx – Campus Transport feature (Enhanced Shell — Option A)
+//
+// Keeps the SakayUDD iframe as the primary live tracker while adding a
+// premium interactive wrapper with tabs, quick stats, a route map, a
+// departure schedule, and a how-to-ride guide.
+//
+// SakayUDD is an official Universidad de Dagupan thesis project. We embed
+// their service with respect and attribution via the Live Tracker tab.
+// ─────────────────────────────────────────────────────────────────────────────
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Wifi, Map, CalendarClock, BookOpen } from 'lucide-react';
+
+import TransportHero from './transport/TransportHero';
+import TransportQuickStats from './transport/TransportQuickStats';
+import TransportLiveTracker from './transport/TransportLiveTracker';
+import TransportRouteMap from './transport/TransportRouteMap';
+import TransportSchedule from './transport/TransportSchedule';
+import TransportHowToRide from './transport/TransportHowToRide';
+import TransportSidebar from './transport/TransportSidebar';
+
+// Leaflet CSS must be imported globally for map rendering
+import 'leaflet/dist/leaflet.css';
+
+type TabId = 'live' | 'map' | 'schedule' | 'guide';
+
+interface Tab {
+  id: TabId;
+  label: string;
+  icon: React.ReactNode;
+  description: string;
+}
+
+const TABS: Tab[] = [
+  {
+    id: 'live',
+    label: 'Live Tracker',
+    icon: <Wifi className="w-4 h-4" />,
+    description: 'Real-time e-jeepney location',
+  },
+  {
+    id: 'map',
+    label: 'Route Map',
+    icon: <Map className="w-4 h-4" />,
+    description: 'Interactive stop map',
+  },
+  {
+    id: 'schedule',
+    label: 'Schedules',
+    icon: <CalendarClock className="w-4 h-4" />,
+    description: 'Departure timetable',
+  },
+  {
+    id: 'guide',
+    label: 'How to Ride',
+    icon: <BookOpen className="w-4 h-4" />,
+    description: 'Rider guide & tips',
+  },
+];
 
 export default function Transport() {
+  const [activeTab, setActiveTab] = useState<TabId>('live');
+
   return (
-    <div className="space-y-8">
-      {/* Live Status Header */}
-      <div className="bg-orange-500 rounded-[2.5rem] py-6 px-8 text-white shadow-xl shadow-orange-100 relative overflow-hidden">
-        <div className="relative z-10 flex flex-col items-start gap-3">
-          <div className="flex items-center gap-3">
-            <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
-              <Bus className="w-6 h-6" />
-            </div>
-            <h2 className="text-2xl font-black italic tracking-tight">SakayUDD</h2>
-          </div>
-          <p className="text-orange-100 text-sm font-medium opacity-90 max-w-2xl leading-relaxed">
-            SakayUDD is a transportation assistance system for Universidad de Dagupan students that provides e-jeepney routes, stops, and schedules, helping students navigate the campus and nearby areas more easily.
-          </p>
+    <div className="space-y-5">
+      {/* ── Hero Banner ─────────────────────────────────────── */}
+      <TransportHero />
+
+      {/* ── Quick Stats Row ──────────────────────────────────── */}
+      <TransportQuickStats />
+
+      {/* ── Tab Navigation ──────────────────────────────────── */}
+      <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-2">
+        <div className="flex gap-1">
+          {TABS.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`relative flex-1 flex flex-col items-center gap-1.5 px-3 py-3 rounded-[1.5rem] text-xs font-bold transition-all duration-200 ${
+                activeTab === tab.id
+                  ? 'bg-orange-500 text-white shadow-lg shadow-orange-100'
+                  : 'text-slate-500 hover:text-orange-600 hover:bg-orange-50'
+              }`}
+            >
+              {activeTab === tab.id && (
+                <motion.div
+                  layoutId="active-tab-bg"
+                  className="absolute inset-0 bg-orange-500 rounded-[1.5rem]"
+                  transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                  style={{ zIndex: -1 }}
+                />
+              )}
+              <span className="relative z-10 flex items-center gap-1.5">
+                {tab.icon}
+                <span className="hidden sm:inline">{tab.label}</span>
+              </span>
+              <span className={`relative z-10 text-[10px] font-medium hidden md:block ${
+                activeTab === tab.id ? 'text-orange-100' : 'text-slate-400'
+              }`}>
+                {tab.description}
+              </span>
+            </button>
+          ))}
         </div>
-        <Bus className="absolute -right-8 -bottom-8 w-48 h-48 opacity-10 -rotate-12" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-        <div className="lg:col-span-4 space-y-4">
-          <div className="flex items-center justify-between px-4 mb-2">
-            <h3 className="font-bold text-slate-800 uppercase tracking-widest text-sm">Today's Timetable</h3>
-            <span className="text-orange-600 font-bold text-xs uppercase bg-orange-50 px-3 py-1 rounded-full border border-orange-100 animate-pulse">Live Tracking Enabled</span>
-          </div>
-          
-          <div className="w-full h-[650px] bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-            <iframe 
-              src="https://uddsoe-sakayudd.firebaseapp.com/" 
-              className="w-full h-full border-0" 
-              title="Sakay UdD Transport Tracker"
-            />
-          </div>
+      {/* ── Main Content + Sidebar ───────────────────────────── */}
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-5 items-start">
+        {/* Tab content */}
+        <div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.22, ease: 'easeInOut' }}
+            >
+              {activeTab === 'live'     && <TransportLiveTracker />}
+              {activeTab === 'map'      && <TransportRouteMap />}
+              {activeTab === 'schedule' && <TransportSchedule />}
+              {activeTab === 'guide'    && <TransportHowToRide />}
+            </motion.div>
+          </AnimatePresence>
         </div>
 
-        {/* Promotional / Download Card */}
-        <div className="lg:col-span-1 bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col justify-center">
-          {/* Sakay UdD Promotional Section */}
-          <div className="flex-1 flex flex-col items-center justify-center p-5 bg-gradient-to-br from-orange-500 to-red-500 rounded-3xl text-white shadow-lg relative overflow-hidden group text-center">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl -translate-y-10 translate-x-10"></div>
-            
-            <h4 className="text-xl font-black italic tracking-tight mb-2 relative z-10">Sakay UdD</h4>
-            <p className="text-orange-100 text-xs font-medium text-center mb-5 max-w-[180px] relative z-10">
-              Track the E-Jeep in real-time. Download the official app now!
-            </p>
-            
-            <div className="bg-white p-2.5 rounded-2xl shadow-xl mb-4 relative z-10 transform group-hover:scale-105 transition-transform duration-300">
-              <img 
-                src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://sakayudd-website.vercel.app/" 
-                alt="Sakay UdD QR Code" 
-                className="w-24 h-24 object-contain rounded-xl"
-              />
-            </div>
-            
-            <p className="text-[11px] font-bold uppercase tracking-widest text-orange-100 mb-3 relative z-10 animate-bounce">
-              Scan to Download
-            </p>
-
-            <a 
-              href="https://sakayudd-website.vercel.app/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="relative z-10 bg-white text-orange-600 font-black text-xs px-5 py-2.5 rounded-full hover:bg-orange-50 hover:shadow-lg transition-all"
-            >
-              Get the App
-            </a>
-          </div>
+        {/* Sidebar — always visible */}
+        <div className="xl:sticky xl:top-24">
+          <TransportSidebar />
         </div>
       </div>
     </div>
