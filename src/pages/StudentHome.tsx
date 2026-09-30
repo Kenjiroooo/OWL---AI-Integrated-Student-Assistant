@@ -349,7 +349,7 @@ export default function StudentHome() {
           <img src={schoolLogo} alt="Universidad de Dagupan" className="h-10 sm:h-12 object-contain opacity-75 hover:opacity-100 transition-opacity" />
           <div className="h-8 w-px bg-slate-200 hidden sm:block" />
           <div>
-            <p className="text-slate-500 font-bold text-xs sm:text-sm tracking-tight">© 2025 UNIVERSIDAD DE DAGUPAN</p>
+            <p className="text-slate-500 font-bold text-xs sm:text-sm tracking-tight">© 2026 UNIVERSIDAD DE DAGUPAN</p>
             <p className="text-[10px] uppercase tracking-[0.18em] text-slate-400 opacity-70 mt-0.5">OWL KIOSK OS v2.0</p>
           </div>
         </div>
