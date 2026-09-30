@@ -126,13 +126,13 @@ export default function FeedbackCenter() {
             periodLabel: data.periodLabel || '',
           };
           setEvalPeriod(period);
-          setPeriodOpen(now >= start && now <= end);
+          setPeriodOpen(true); // Always open — date check bypassed
         } else {
-          setPeriodOpen(false);
+          setPeriodOpen(true); // Always open — no period doc required
         }
       } catch (err) {
         console.error('Error fetching evaluation period:', err);
-        setPeriodOpen(false);
+        setPeriodOpen(true); // Always open even on error
       } finally {
         setPeriodLoading(false);
       }
