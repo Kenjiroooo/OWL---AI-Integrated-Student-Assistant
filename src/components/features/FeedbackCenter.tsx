@@ -16,6 +16,10 @@ import {
   Sparkles,
   BadgeCheck,
   AlertCircle,
+  ShieldAlert,
+  BookOpen,
+  School,
+  ChevronDown,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { FACULTY_DATA, SCHOOLS, type Faculty } from './facultyLocator/facultyData';
@@ -92,6 +96,37 @@ function StarRating({
 
 type Step = 'student-id' | 'select-faculty' | 'evaluate' | 'success';
 
+// Student ID pattern: XX-XXXX-XXX (e.g., 12-3456-789)
+const STUDENT_ID_PATTERN = /^\d{2}-\d{4}-\d{3}$/;
+
+// Subject code pattern: 2-5 letters followed by 2-4 digits (e.g., PSYM108, IT101, BSBA2001)
+const SUBJECT_CODE_PATTERN = /^[A-Z]{2,5}\d{2,4}$/;
+
+// Schools available for evaluation
+const EVALUATION_SCHOOLS = [
+  'School of Information Technology',
+  'School of Engineering',
+  'School of Teacher Education',
+  'School of Business and Accountancy',
+  'School of International Hospitality Management',
+  'School of Humanities',
+  'School of Health and Sciences',
+  'School of Criminology',
+  'School of Professional Studies',
+] as const;
+
+/** Auto-format raw input into XX-XXXX-XXX pattern */
+function formatStudentId(raw: string): string {
+  // Strip everything except digits
+  const digits = raw.replace(/\D/g, '').slice(0, 9);
+  let formatted = '';
+  for (let i = 0; i < digits.length; i++) {
+    if (i === 2 || i === 6) formatted += '-';
+    formatted += digits[i];
+  }
+  return formatted;
+}
+
 export default function FeedbackCenter() {
   // ── State ─────────────────────────────────────────────────────────────────
   const [step, setStep] = useState<Step>('student-id');
@@ -104,6 +139,12 @@ export default function FeedbackCenter() {
   const [selectedSchool, setSelectedSchool] = useState<string | null>(null);
   const [evaluatedFacultyIds, setEvaluatedFacultyIds] = useState<Set<string>>(new Set());
   const [studentIdError, setStudentIdError] = useState('');
+  const [commentError, setCommentError] = useState('');
+  const [moderating, setModerating] = useState(false);
+  const [subjectCode, setSubjectCode] = useState('');
+  const [subjectCodeError, setSubjectCodeError] = useState('');
+  const [evalSchool, setEvalSchool] = useState('');
+  const [evalSchoolError, setEvalSchoolError] = useState('');
 
   // ── Evaluation period ─────────────────────────────────────────────────────
   const [evalPeriod, setEvalPeriod] = useState<EvaluationPeriod | null>(null);
@@ -178,14 +219,57 @@ export default function FeedbackCenter() {
   }, [selectedSchool, searchQuery]);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
+  const handleStudentIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatStudentId(e.target.value);
+    setStudentNumber(formatted);
+    setStudentIdError('');
+  };
+
+  const handleSubjectCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Auto-uppercase and strip spaces
+    const val = e.target.value.toUpperCase().replace(/\s/g, '').slice(0, 9);
+    setSubjectCode(val);
+    setSubjectCodeError('');
+  };
+
   const handleStudentIdSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    let hasError = false;
+
+    // Validate student number
     const trimmed = studentNumber.trim();
     if (!trimmed) {
       setStudentIdError('Please enter your student number.');
-      return;
+      hasError = true;
+    } else if (!STUDENT_ID_PATTERN.test(trimmed)) {
+      setStudentIdError('Invalid format. Please use: XX-XXXX-XXX (e.g., 12-3456-789)');
+      hasError = true;
+    } else {
+      setStudentIdError('');
     }
-    setStudentIdError('');
+
+    // Validate subject code
+    const codeTrimmed = subjectCode.trim();
+    if (!codeTrimmed) {
+      setSubjectCodeError('Please enter the subject code.');
+      hasError = true;
+    } else if (!SUBJECT_CODE_PATTERN.test(codeTrimmed)) {
+      setSubjectCodeError('Invalid format. Use letters + digits (e.g., PSYM108, IT101)');
+      hasError = true;
+    } else {
+      setSubjectCodeError('');
+    }
+
+    // Validate school selection
+    if (!evalSchool) {
+      setEvalSchoolError('Please select your school.');
+      hasError = true;
+    } else {
+      setEvalSchoolError('');
+    }
+
+    if (hasError) return;
+
     await fetchEvaluatedFaculty(trimmed);
     setStep('select-faculty');
   };
@@ -206,14 +290,48 @@ export default function FeedbackCenter() {
     const allRated = CRITERIA.every((c) => ratings[c.key] && ratings[c.key] > 0);
     if (!allRated) return;
 
+    setCommentError('');
     setLoading(true);
+
     try {
+      // ── Moderate comment before submission ──────────────────────────────
+      if (comment.trim()) {
+        setModerating(true);
+        try {
+          const modRes = await fetch('/api/moderateEvaluation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              comment: comment.trim(),
+              facultyName: selectedFaculty.name,
+            }),
+          });
+          const modData = await modRes.json();
+          if (!modData.passed) {
+            setCommentError(
+              modData.reason ||
+              'Your comment contains inappropriate content. Please provide constructive feedback.'
+            );
+            setLoading(false);
+            setModerating(false);
+            return;
+          }
+        } catch (modErr) {
+          console.error('Comment moderation error:', modErr);
+          // Fail open — allow submission if moderation API is unreachable
+        } finally {
+          setModerating(false);
+        }
+      }
+
       const ratingValues = CRITERIA.map((c) => ratings[c.key]);
       const overallAverage =
         Math.round((ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length) * 100) / 100;
 
       await addDoc(collection(db, 'facultyEvaluations'), {
         studentNumber: studentNumber.trim(),
+        subjectCode: subjectCode.trim(),
+        evaluationSchool: evalSchool,
         facultyId: selectedFaculty.id,
         facultyName: selectedFaculty.name,
         schoolId: SCHOOLS.find((s) => s.name === selectedFaculty.school)?.id || '',
@@ -332,33 +450,123 @@ export default function FeedbackCenter() {
           )}
 
           {/* Form */}
-          <form onSubmit={handleStudentIdSubmit} className="space-y-6 mt-8">
-            <div className="relative">
-              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-sky-400">
-                <GraduationCap className="w-6 h-6" />
+          <form onSubmit={handleStudentIdSubmit} className="space-y-5 mt-8 text-left">
+            {/* Student Number */}
+            <div>
+              <label className="text-xs font-black text-slate-500 uppercase tracking-wider mb-2 block px-1">Student Number</label>
+              <div className="relative">
+                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-sky-400">
+                  <GraduationCap className="w-5 h-5" />
+                </div>
+                <input
+                  type="text"
+                  value={studentNumber}
+                  onChange={handleStudentIdChange}
+                  placeholder="XX-XXXX-XXX"
+                  maxLength={11}
+                  className={`w-full pl-13 pr-6 py-4 rounded-2xl text-base font-bold text-slate-800 bg-white border-2 outline-none focus:ring-4 transition-all placeholder:text-slate-300 placeholder:font-medium tracking-widest ${
+                    studentIdError
+                      ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
+                      : 'border-sky-100 focus:border-sky-400 focus:ring-sky-100'
+                  }`}
+                  style={{ boxShadow: '0 4px 16px rgba(56,189,248,0.08)', paddingLeft: '3.25rem' }}
+                />
               </div>
-              <input
-                type="text"
-                value={studentNumber}
-                onChange={(e) => {
-                  setStudentNumber(e.target.value);
-                  setStudentIdError('');
-                }}
-                placeholder="Enter your Student Number"
-                className="w-full pl-14 pr-6 py-5 rounded-2xl text-lg font-bold text-slate-800 bg-white border-2 border-sky-100 outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all placeholder:text-slate-300 placeholder:font-medium"
-                style={{ boxShadow: '0 4px 16px rgba(56,189,248,0.08)' }}
-              />
+              {studentIdError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center gap-2 text-red-500 text-xs font-bold px-1 mt-1.5"
+                >
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {studentIdError}
+                </motion.div>
+              )}
+              {!studentIdError && (
+                <p className="text-slate-300 text-[11px] font-bold px-1 mt-1">
+                  Format: XX-XXXX-XXX (e.g., 12-3456-789)
+                </p>
+              )}
             </div>
-            {studentIdError && (
-              <motion.div
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-2 text-red-500 text-sm font-bold px-2"
-              >
-                <AlertCircle className="w-4 h-4" />
-                {studentIdError}
-              </motion.div>
-            )}
+
+            {/* Subject Code */}
+            <div>
+              <label className="text-xs font-black text-slate-500 uppercase tracking-wider mb-2 block px-1">Subject Code</label>
+              <div className="relative">
+                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-sky-400">
+                  <BookOpen className="w-5 h-5" />
+                </div>
+                <input
+                  type="text"
+                  value={subjectCode}
+                  onChange={handleSubjectCodeChange}
+                  placeholder="e.g. PSYM108"
+                  maxLength={9}
+                  className={`w-full pl-13 pr-6 py-4 rounded-2xl text-base font-bold text-slate-800 bg-white border-2 outline-none focus:ring-4 transition-all placeholder:text-slate-300 placeholder:font-medium tracking-wider uppercase ${
+                    subjectCodeError
+                      ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
+                      : 'border-sky-100 focus:border-sky-400 focus:ring-sky-100'
+                  }`}
+                  style={{ boxShadow: '0 4px 16px rgba(56,189,248,0.08)', paddingLeft: '3.25rem' }}
+                />
+              </div>
+              {subjectCodeError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center gap-2 text-red-500 text-xs font-bold px-1 mt-1.5"
+                >
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {subjectCodeError}
+                </motion.div>
+              )}
+              {!subjectCodeError && (
+                <p className="text-slate-300 text-[11px] font-bold px-1 mt-1">
+                  Letters followed by digits (e.g., PSYM108, IT101)
+                </p>
+              )}
+            </div>
+
+            {/* School Selector */}
+            <div>
+              <label className="text-xs font-black text-slate-500 uppercase tracking-wider mb-2 block px-1">School / Department</label>
+              <div className="relative">
+                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-sky-400 pointer-events-none">
+                  <School className="w-5 h-5" />
+                </div>
+                <div className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none">
+                  <ChevronDown className="w-5 h-5" />
+                </div>
+                <select
+                  value={evalSchool}
+                  onChange={(e) => { setEvalSchool(e.target.value); setEvalSchoolError(''); }}
+                  className={`w-full pl-13 pr-12 py-4 rounded-2xl text-base font-bold bg-white border-2 outline-none focus:ring-4 transition-all appearance-none cursor-pointer ${
+                    !evalSchool ? 'text-slate-300' : 'text-slate-800'
+                  } ${
+                    evalSchoolError
+                      ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
+                      : 'border-sky-100 focus:border-sky-400 focus:ring-sky-100'
+                  }`}
+                  style={{ boxShadow: '0 4px 16px rgba(56,189,248,0.08)', paddingLeft: '3.25rem' }}
+                >
+                  <option value="" disabled>Select your school</option>
+                  {EVALUATION_SCHOOLS.map((school) => (
+                    <option key={school} value={school}>{school}</option>
+                  ))}
+                </select>
+              </div>
+              {evalSchoolError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center gap-2 text-red-500 text-xs font-bold px-1 mt-1.5"
+                >
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {evalSchoolError}
+                </motion.div>
+              )}
+            </div>
+
             <motion.button
               type="submit"
               whileHover={{ scale: 1.02 }}
@@ -394,7 +602,7 @@ export default function FeedbackCenter() {
               <div>
                 <h2 className="text-3xl font-black text-slate-800 tracking-tight">Select Faculty</h2>
                 <p className="text-slate-400 font-medium text-sm mt-0.5">
-                  Student: <span className="text-sky-600 font-bold">{studentNumber}</span> · Choose a professor to evaluate
+                  Student: <span className="text-sky-600 font-bold">{studentNumber}</span> · <span className="text-sky-500 font-bold">{subjectCode}</span> · Choose a professor to evaluate
                 </p>
               </div>
             </div>
@@ -610,10 +818,30 @@ export default function FeedbackCenter() {
               </div>
               <textarea
                 value={comment}
-                onChange={(e) => setComment(e.target.value)}
+                onChange={(e) => {
+                  setComment(e.target.value);
+                  setCommentError('');
+                }}
                 placeholder="Share your thoughts about this professor..."
-                className="w-full h-32 bg-sky-50/50 border-2 border-sky-100 rounded-2xl p-5 text-sm font-medium outline-none focus:border-sky-400 focus:ring-4 focus:ring-sky-100 transition-all resize-none placeholder:text-slate-300"
+                className={`w-full h-32 bg-sky-50/50 border-2 rounded-2xl p-5 text-sm font-medium outline-none focus:ring-4 transition-all resize-none placeholder:text-slate-300 ${
+                  commentError
+                    ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
+                    : 'border-sky-100 focus:border-sky-400 focus:ring-sky-100'
+                }`}
               />
+              {commentError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-start gap-2.5 p-4 rounded-2xl bg-red-50 border border-red-100"
+                >
+                  <ShieldAlert className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-red-600 text-sm font-bold">Comment Flagged</p>
+                    <p className="text-red-400 text-xs font-medium mt-0.5">{commentError}</p>
+                  </div>
+                </motion.div>
+              )}
             </div>
 
             {/* Submit */}
@@ -633,7 +861,7 @@ export default function FeedbackCenter() {
                   boxShadow: allRated ? '0 8px 24px rgba(14,165,233,0.3)' : 'none',
                 }}
               >
-                {loading ? 'Submitting...' : 'Submit Evaluation'}
+                {moderating ? 'Checking comment...' : loading ? 'Submitting...' : 'Submit Evaluation'}
                 <ClipboardCheck className="w-5 h-5" />
               </motion.button>
             </div>
