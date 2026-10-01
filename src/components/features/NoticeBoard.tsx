@@ -178,12 +178,12 @@ export default function NoticeBoard() {
                             key={i}
                             src={finalSrc}
                             alt={`${ann.title} photo ${i + 1}`}
-                            className="w-full h-44 object-cover bg-slate-100"
+                            className="w-full h-64 object-cover bg-slate-100"
                             onError={(e) => {
                               console.warn('[NoticeBoard] Broken image URL:', finalSrc);
                               (e.target as HTMLImageElement).style.display = 'none';
                               const placeholder = document.createElement('div');
-                              placeholder.className = 'w-full h-44 bg-slate-100 flex items-center justify-center text-slate-400 text-xs font-medium';
+                              placeholder.className = 'w-full h-64 bg-slate-100 flex items-center justify-center text-slate-400 text-xs font-medium';
                               placeholder.textContent = '⚠ Image not found';
                               (e.target as HTMLImageElement).parentNode?.appendChild(placeholder);
                             }}
