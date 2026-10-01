@@ -7,12 +7,12 @@ export async function seedDummyData() {
   // 1. Announcements
   const announcements = [
     { title: "Midterm Exams Schedule", content: "Midterm exams will start on May 15th. Please check your portals.", type: "news", createdAt: new Date() },
-    { title: "Campus Founding Anniversary", content: "Join us for the 75th Anniversary celebration next week!", type: "event", targetDate: new Date("2024-12-31"), createdAt: new Date() },
+    { title: "Campus Founding Anniversary", content: "Join us for the 75th Anniversary celebration next week!", type: "event", targetDate: new Date("2024-12-31"), createdAt: new Date(), imageUrls: ['/announcement-images/pitch.jpg'] },
     { title: "Typhoon Warning", content: "Classes are suspended due to inclement weather.", type: "emergency", createdAt: new Date() }
   ];
 
   announcements.forEach(ann => {
-    const ref = doc(collection(db, 'announcements'));
+    const ref = doc(collection(db, 'announcement'));
     batch.set(ref, ann);
   });
 
