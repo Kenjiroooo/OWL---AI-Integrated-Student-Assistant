@@ -199,6 +199,9 @@ ${ctx.buildings || 'No building data available at the moment.'}
 ### 🗺️ Additional Campus Map Landmarks
 ${HARDCODED_MAP_LOCATIONS}
 
+### 🎶 University Hymn
+${HARDCODED_UNIVERSITY_HYMN}
+
 ### 👩‍🏫 Faculty Directory
 ${ctx.faculty || 'No faculty data available at the moment.'}
 
