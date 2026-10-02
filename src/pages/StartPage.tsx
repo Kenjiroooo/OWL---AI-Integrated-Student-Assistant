@@ -744,6 +744,11 @@ export default function StartPage() {
               className="mt-8 flex flex-col items-center z-20"
             >
               <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  cancelSpeech();
+                  setPhase('transitioning');
+                }}
                 className="px-6 py-2 rounded-full text-sm font-semibold tracking-wider uppercase transition-all duration-200 hover:bg-white/20 active:scale-95 flex items-center gap-2 cursor-pointer"
                 style={{
                   background: 'rgba(255,255,255,0.1)',
