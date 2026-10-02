@@ -734,6 +734,17 @@ export default function StartPage() {
               </p>
             </motion.div>
           )}
+
+          {phase === 'greeting' && (
+            <motion.div
+              key="greeting-skip"
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              className="mt-8 flex flex-col items-center z-20"
+            >
+            </motion.div>
+          )}
         </AnimatePresence>
       </motion.div>
 
