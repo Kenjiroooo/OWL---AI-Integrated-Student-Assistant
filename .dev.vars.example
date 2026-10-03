@@ -1,0 +1,5 @@
+# Local secrets for `npm run cf:dev` (wrangler dev).
+# Copy this file to `.dev.vars` and fill in real values. Never commit `.dev.vars`.
+DEEPSEEK_API_KEY="your-deepseek-api-key-here"
+GEMINI_API_KEY="your-gemini-api-key-here"
+IMGBB_API_KEY="your-imgbb-api-key-here"
