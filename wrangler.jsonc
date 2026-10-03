@@ -1,0 +1,53 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "app",
+  "main": "worker/index.ts",
+  "compatibility_date": "2025-09-01",
+  "workers_dev": true,
+  // Serves the Vite build (dist/) and falls back to index.html for React Router.
+  // Only /api/* runs the Worker first; everything else is served straight from
+  // the edge asset cache (free + unlimited static requests).
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": [
+      "/api/*"
+    ]
+  },
+  // Per-IP rate limits (free). `period` must be 10 or 60 seconds.
+  // namespace_id values only need to be unique within your account.
+  "ratelimits": [
+    {
+      "name": "RL_CHAT",
+      "namespace_id": "7101",
+      "simple": {
+        "limit": 20,
+        "period": 60
+      }
+    },
+    {
+      "name": "RL_GENERAL",
+      "namespace_id": "7102",
+      "simple": {
+        "limit": 30,
+        "period": 60
+      }
+    },
+    {
+      "name": "RL_IMAGE",
+      "namespace_id": "7103",
+      "simple": {
+        "limit": 10,
+        "period": 60
+      }
+    }
+  ],
+  "observability": {
+    "enabled": true
+  }
+  // Secrets (set with `npx wrangler secret put <NAME>`, never commit them):
+  //   DEEPSEEK_API_KEY, GEMINI_API_KEY, IMGBB_API_KEY
+  // Optional plain var if you later add a custom domain:
+  //   "vars": { "ALLOWED_ORIGINS": "https://yourdomain.com" }
+}
