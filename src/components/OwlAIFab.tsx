@@ -15,7 +15,7 @@ export default function OwlAIFab() {
   const location = useLocation();
 
   // Don't render on the full OWL chat page, starting page, or dashboard
-  const hiddenPaths = ['/', '/home', '/owl-chat'];
+  const hiddenPaths = ['/', '/home', '/owl-chat', '/mobile-upload'];
   if (hiddenPaths.includes(location.pathname)) return null;
 
   return (
