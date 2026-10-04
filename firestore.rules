@@ -26,7 +26,7 @@ service cloud.firestore {
     }
 
     function isValidId(id) {
-      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+      return id is string && id.size() <= 128;
     }
 
     function incoming() {
@@ -102,6 +102,31 @@ service cloud.firestore {
     match /lostAndFoundClaims/{id} {
       allow create: if isSignedIn();
       allow read, update, delete: if isAdmin();
+    }
+
+    // Kiosk <-> Phone photo hand-off for Lost & Found (short-lived sessions).
+    // No auth required: the unguessable UUID is the secret, so listing is disabled.
+    match /kioskUploads/{sessionId} {
+      allow get: if isValidId(sessionId);
+      allow list: if false;
+
+      // Kiosk opens a session
+      allow create: if isValidId(sessionId) &&
+                       incoming().keys().hasOnly(['status', 'createdAt']) &&
+                       incoming().status == 'waiting' &&
+                       incoming().createdAt == request.time;
+
+      // Phone fills it once, within 10 minutes of creation
+      allow update: if existing().status == 'waiting' &&
+                       request.time < existing().createdAt + duration.value(10, 'm') &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['status', 'image', 'uploadedAt']) &&
+                       incoming().status == 'uploaded' &&
+                       incoming().image is string &&
+                       incoming().image.size() < 900000 &&
+                       incoming().image.matches('data:image/(jpeg|png|webp);base64,.*');
+
+      // Kiosk cleans up after receiving (or on cancel/expiry)
+      allow delete: if isValidId(sessionId);
     }
 
     // Feedback
