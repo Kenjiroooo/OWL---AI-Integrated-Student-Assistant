@@ -4,10 +4,11 @@ import { db } from '../../lib/firebase';
 import {
   PackageSearch, Plus, MapPin, Tag, Clock,
   CheckCircle2, ImagePlus, Loader2, HandshakeIcon, X, User, Hash, Phone, ShieldCheck,
-  ShieldAlert, Sparkles
+  ShieldAlert, Sparkles, Smartphone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { moderateLostFoundReport } from '../../lib/moderation';
+import PhoneUploadModal from './lostFound/PhoneUploadModal';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface LostFoundItem {
@@ -42,6 +43,8 @@ export default function LostFound() {
   const [description, setDescription] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageSource, setImageSource] = useState<'device' | 'phone' | null>(null);
+  const [showPhoneUpload, setShowPhoneUpload] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [isAiChecking, setIsAiChecking] = useState(false);
   const [moderationReason, setModerationReason] = useState<string | null>(null);
@@ -113,7 +116,7 @@ export default function LostFound() {
 
       // 2. Image upload — non-blocking: if it fails we submit without the image
       let imageUrl: string | null = null;
-      if (imageFile) {
+      if (imagePreview) {
         try {
           const base64Data = imagePreview?.split(',')[1];
           if (base64Data) {
@@ -149,7 +152,7 @@ export default function LostFound() {
       // Success — clear & close form
       setSubmitSuccess(true);
       setItemName(''); setLocation(''); setDescription('');
-      setImageFile(null); setImagePreview(null);
+      setImageFile(null); setImagePreview(null); setImageSource(null);
       fetchItems();
       setTimeout(() => {
         setShowForm(false);
@@ -228,6 +231,19 @@ export default function LostFound() {
       </div>
 
       <AnimatePresence>
+        {/* ── Phone Upload (QR) Modal ──────────────────────────────────────── */}
+        {showPhoneUpload && (
+          <PhoneUploadModal
+            onClose={() => setShowPhoneUpload(false)}
+            onImageReceived={(dataUrl) => {
+              setImagePreview(dataUrl);
+              setImageFile(null);
+              setImageSource('phone');
+              setSubmitError(null);
+            }}
+          />
+        )}
+
         {/* ── Claim Modal ──────────────────────────────────────────────────── */}
         {claimItemId && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
@@ -434,6 +450,7 @@ export default function LostFound() {
                       onChange={e => {
                         const file = e.target.files?.[0] || null;
                         setImageFile(file);
+                        setImageSource(file ? 'device' : null);
                         if (file) {
                           const reader = new FileReader();
                           reader.onloadend = () => setImagePreview(reader.result as string);
@@ -451,22 +468,40 @@ export default function LostFound() {
                           <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
                         </div>
                       )}
-                      <label
-                        htmlFor="image-upload"
-                        className="flex items-center gap-3 w-full px-6 py-4 bg-slate-50 hover:bg-slate-100 rounded-2xl cursor-pointer transition-colors border-2 border-dashed border-slate-200 hover:border-amber-500 text-slate-500 font-bold"
-                      >
-                        <ImagePlus className="w-5 h-5 text-amber-500" />
-                        <span className="flex-1 truncate">{imageFile ? imageFile.name : 'Click to upload an image'}</span>
-                        {imageFile && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <button
+                          type="button"
+                          onClick={() => setShowPhoneUpload(true)}
+                          className="flex items-center justify-center gap-3 w-full px-6 py-5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-2xl font-black shadow-lg shadow-amber-200 transition-all active:scale-95"
+                        >
+                          <Smartphone className="w-5 h-5" />
+                          <span>{imagePreview ? 'Replace via Phone (Scan QR)' : 'Upload from Phone (Scan QR)'}</span>
+                        </button>
+                        <label
+                          htmlFor="image-upload"
+                          className="flex items-center justify-center gap-3 w-full px-6 py-5 bg-slate-50 hover:bg-slate-100 rounded-2xl cursor-pointer transition-colors border-2 border-dashed border-slate-200 hover:border-amber-500 text-slate-500 font-bold"
+                        >
+                          <ImagePlus className="w-5 h-5 text-amber-500" />
+                          <span>Choose from this device</span>
+                        </label>
+                      </div>
+                      {imagePreview && (
+                        <div className="flex items-center justify-between gap-3 px-5 py-3 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-700">
+                          <span className="flex items-center gap-2 font-bold text-sm truncate">
+                            <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                            {imageSource === 'phone'
+                              ? 'Photo received from your phone'
+                              : imageFile?.name || 'Photo selected'}
+                          </span>
                           <button
                             type="button"
-                            onClick={e => { e.preventDefault(); setImageFile(null); setImagePreview(null); }}
-                            className="text-red-500 text-sm hover:underline"
+                            onClick={() => { setImageFile(null); setImagePreview(null); setImageSource(null); }}
+                            className="text-red-500 text-sm font-bold hover:underline flex-shrink-0"
                           >
                             Remove
                           </button>
-                        )}
-                      </label>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
