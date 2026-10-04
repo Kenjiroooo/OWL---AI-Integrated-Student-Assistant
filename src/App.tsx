@@ -5,6 +5,7 @@ import { OwlAssistantProvider } from './context/OwlAssistantContext';
 import OwlAIFab from './components/OwlAIFab';
 import OwlChatDrawer from './components/OwlChatDrawer';
 import { AuthProvider } from './context/AuthContext';
+import GlobalKeyboard from './components/GlobalKeyboard';
 
 // Helper to handle dynamic import failures (stale chunk caching)
 const lazyWithRetry = (componentImport: () => Promise<any>) => {
@@ -25,6 +26,7 @@ const StudentHome = lazyWithRetry(() => import('./pages/StudentHome'));
 const AdminHome = lazyWithRetry(() => import('./pages/AdminHome'));
 const FeaturePage = lazyWithRetry(() => import('./pages/FeaturePage'));
 const OwlChatPage = lazyWithRetry(() => import('./pages/OwlChatPage'));
+const MobileUploadPage = lazyWithRetry(() => import('./pages/MobileUploadPage'));
 
 const LoadingScreen = () => (
   <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -51,6 +53,9 @@ export default function App() {
               {/* OWL AI Chat */}
               <Route path="/owl-chat" element={<OwlChatPage />} />
 
+              {/* Phone-side page opened from the Lost & Found QR code */}
+              <Route path="/mobile-upload" element={<MobileUploadPage />} />
+
               {/* Admin panel */}
               <Route path="/admin" element={<AdminHome />} />
 
@@ -62,6 +67,7 @@ export default function App() {
           {/* Global OWL AI Floating Button + Drawer (visible on all pages) */}
           <OwlAIFab />
           <OwlChatDrawer />
+          <GlobalKeyboard />
         </OwlAssistantProvider>
       </BrowserRouter>
     </AuthProvider>
