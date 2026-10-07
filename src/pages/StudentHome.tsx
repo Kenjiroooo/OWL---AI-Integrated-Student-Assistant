@@ -21,7 +21,8 @@ import { auth } from '../lib/firebase';
 import { signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import appLogo from '../assets/app-logo.webp';
-import schoolLogo from '../assets/university-logo.webp';
+import soeLogo from '../assets/soe-logo.webp';
+
 import { OwlCharacter } from '../components/OwlCharacter';
 
 const features = [
@@ -121,9 +122,9 @@ export default function StudentHome() {
             <span className="font-black text-xs tracking-wider text-slate-700 tabular-nums">{time}</span>
           </div>
 
-          {/* University logo + date */}
+          {/* Date and Logo */}
           <motion.div whileHover={{ scale: 1.03 }} className="flex items-center gap-3 px-4 py-2 rounded-full" style={{ background: 'rgba(255,255,255,0.8)', border: '1px solid rgba(0,49,126,0.10)', boxShadow: '0 2px 10px rgba(0,49,126,0.05)' }}>
-            <img src={schoolLogo} alt="UdD" className="h-7 object-contain" />
+            <img src={soeLogo} alt="SOE" className="h-7 object-contain" />
             <div className="h-5 w-px bg-slate-200" />
             <span className="font-black text-[10px] uppercase tracking-[0.1em] text-slate-400">
               {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()}
@@ -346,7 +347,7 @@ export default function StudentHome() {
         style={{ background: 'rgba(255,255,255,0.92)', borderTop: '1px solid rgba(0,49,126,0.08)' }}
       >
         <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 text-center sm:text-left">
-          <img src={schoolLogo} alt="Universidad de Dagupan" className="h-10 sm:h-12 object-contain opacity-75 hover:opacity-100 transition-opacity" />
+          <img src={soeLogo} alt="SOE Logo" className="h-10 sm:h-12 object-contain opacity-75 hover:opacity-100 transition-opacity" />
           <div className="h-8 w-px bg-slate-200 hidden sm:block" />
           <div>
             <p className="text-slate-500 font-bold text-xs sm:text-sm tracking-tight">© 2026 UNIVERSIDAD DE DAGUPAN</p>
