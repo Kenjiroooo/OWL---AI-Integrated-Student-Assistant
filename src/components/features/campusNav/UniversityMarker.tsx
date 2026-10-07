@@ -1,7 +1,7 @@
 import React from 'react';
 import { Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
-import universityLogo from '../../../assets/university-logo.webp';
+import soeLogo from '../../../assets/soe-logo.webp';
 
 interface Props {
   position: [number, number];
@@ -34,7 +34,7 @@ export default function UniversityMarker({ position, title, subtitle, descriptio
         <div className="p-1">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center border border-slate-200 overflow-hidden">
-              <img src={universityLogo} alt="University Logo" className="w-full h-full object-contain p-1" />
+              <img src={soeLogo} alt="SOE Logo" className="w-full h-full object-contain p-1" />
             </div>
             <div>
               <h3 className="font-bold text-blue-900 text-base leading-tight">{title}</h3>
