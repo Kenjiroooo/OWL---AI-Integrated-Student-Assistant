@@ -423,7 +423,7 @@ export default function FeedbackCenter() {
   // ── Step: Student ID Entry ────────────────────────────────────────────────
   if (step === 'student-id') {
     return (
-      <div className="max-w-xl mx-auto py-16 px-4">
+      <div className="max-w-xl mx-auto py-16 px-4 pb-80">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -588,7 +588,7 @@ export default function FeedbackCenter() {
   // ── Step: Faculty Selection ───────────────────────────────────────────────
   if (step === 'select-faculty') {
     return (
-      <div className="max-w-5xl mx-auto py-8 px-4 space-y-6">
+      <div className="max-w-5xl mx-auto py-8 px-4 space-y-6 pb-80">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
@@ -736,7 +736,7 @@ export default function FeedbackCenter() {
     const allRated = CRITERIA.every((c) => ratings[c.key] && ratings[c.key] > 0);
 
     return (
-      <div className="max-w-3xl mx-auto py-8 px-4">
+      <div className="max-w-3xl mx-auto py-8 px-4 pb-96">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
           {/* Header */}
           <div className="flex items-center gap-4">
@@ -821,6 +821,24 @@ export default function FeedbackCenter() {
                 onChange={(e) => {
                   setComment(e.target.value);
                   setCommentError('');
+                }}
+                onFocus={(e) => {
+                  const target = e.target;
+                  setTimeout(() => {
+                    const keyboardHeight = 360;
+                    const headerHeight = 90;
+                    const rect = target.getBoundingClientRect();
+                    const visibleBottom = window.innerHeight - keyboardHeight - 20;
+                    if (rect.bottom > visibleBottom || rect.top < headerHeight + 20) {
+                      const targetY = headerHeight + 35;
+                      const currentScrollY = window.scrollY || window.pageYOffset;
+                      const scrollTarget = currentScrollY + rect.top - targetY;
+                      window.scrollTo({
+                        top: Math.max(0, scrollTarget),
+                        behavior: 'smooth',
+                      });
+                    }
+                  }, 150);
                 }}
                 placeholder="Share your thoughts about this professor..."
                 className={`w-full h-32 bg-sky-50/50 border-2 rounded-2xl p-5 text-sm font-medium outline-none focus:ring-4 transition-all resize-none placeholder:text-slate-300 ${
