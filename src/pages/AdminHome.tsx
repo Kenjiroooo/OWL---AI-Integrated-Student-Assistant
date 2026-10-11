@@ -29,6 +29,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { FACULTY_DATA, SCHOOLS } from '../components/features/facultyLocator/facultyData';
 import AdminLogin from '../components/admin/AdminLogin';
+import ChangeAdminCredentialsModal from '../components/admin/ChangeAdminCredentialsModal';
 
 type Tab = 'students' | 'evaluations' | 'queue';
 
@@ -36,6 +37,7 @@ export default function AdminHome() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     return sessionStorage.getItem('owl_admin_authenticated') === 'true';
   });
+  const [showChangeCredsModal, setShowChangeCredsModal] = useState(false);
 
   const [activeTab, setActiveTab] = useState<Tab>('students');
   const [students, setStudents] = useState<any[]>([]);
@@ -267,7 +269,7 @@ export default function AdminHome() {
           
           <motion.button
             whileHover={{ x: 3 }}
-            onClick={() => {}}
+            onClick={() => setShowChangeCredsModal(true)}
             className="w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl transition-all font-bold text-xs cursor-pointer"
             style={{ color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.05)' }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.1)'; (e.currentTarget as HTMLElement).style.color = '#fff'; }}
@@ -322,6 +324,20 @@ export default function AdminHome() {
             </p>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowChangeCredsModal(true)}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/90 shadow-xs transition-all cursor-pointer"
+            >
+              <KeyRound className="w-3.5 h-3.5 text-sky-600" />
+              Change Password
+            </button>
+            <button
+              onClick={() => navigate('/home')}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/90 shadow-xs transition-all cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 text-emerald-600" />
+              Exit to Kiosk
+            </button>
             <div className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', color: '#059669' }}>
               <motion.div className="w-2 h-2 bg-emerald-500 rounded-full" animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.5, repeat: Infinity }} />
               System Online
@@ -693,6 +709,11 @@ export default function AdminHome() {
           </AnimatePresence>
         </div>
       </main>
+
+      <ChangeAdminCredentialsModal
+        isOpen={showChangeCredsModal}
+        onClose={() => setShowChangeCredsModal(false)}
+      />
     </div>
   );
 }
