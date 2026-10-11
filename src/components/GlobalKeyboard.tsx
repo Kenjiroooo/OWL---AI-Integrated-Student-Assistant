@@ -20,6 +20,21 @@ export default function GlobalKeyboard() {
     }
   }, [isAdminRoute]);
 
+  // Expand bottom scrollable space so form fields are never trapped
+  useEffect(() => {
+    if (!activeInput) {
+      document.body.style.paddingBottom = '';
+      return;
+    }
+
+    const prevPadding = document.body.style.paddingBottom;
+    document.body.style.paddingBottom = '420px';
+
+    return () => {
+      document.body.style.paddingBottom = prevPadding || '';
+    };
+  }, [activeInput]);
+
   useEffect(() => {
     if (isAdminRoute) return;
 
