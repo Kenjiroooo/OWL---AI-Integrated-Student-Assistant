@@ -20,17 +20,65 @@ export default function GlobalKeyboard() {
     }
   }, [isAdminRoute]);
 
-  // Expand bottom scrollable space so form fields are never trapped
+  // Keep input visible above the keyboard and expand bottom scrollable space
   useEffect(() => {
     if (!activeInput) {
       document.body.style.paddingBottom = '';
       return;
     }
 
+    // Add generous bottom padding so elements at the bottom of forms can be scrolled up
     const prevPadding = document.body.style.paddingBottom;
     document.body.style.paddingBottom = '420px';
 
+    const scrollIntoViewTimer = setTimeout(() => {
+      if (!activeInput) return;
+
+      const keyboardHeight = 360;
+      const headerHeight = 90;
+      const rect = activeInput.getBoundingClientRect();
+      const visibleTop = headerHeight + 15;
+      const visibleBottom = window.innerHeight - keyboardHeight - 15;
+
+      // If input is covered by keyboard or tucked under sticky header
+      if (rect.bottom > visibleBottom || rect.top < visibleTop) {
+        // Find if input lives in an overflow-y scrollable container
+        let scrollParent: HTMLElement | null = null;
+        let p = activeInput.parentElement;
+        while (p && p !== document.body) {
+          const style = window.getComputedStyle(p);
+          if (
+            (style.overflowY === 'auto' || style.overflowY === 'scroll') &&
+            p.scrollHeight > p.clientHeight
+          ) {
+            scrollParent = p;
+            break;
+          }
+          p = p.parentElement;
+        }
+
+        if (scrollParent) {
+          const pRect = scrollParent.getBoundingClientRect();
+          const targetOffset = rect.top - pRect.top - 40;
+          scrollParent.scrollTo({
+            top: scrollParent.scrollTop + targetOffset,
+            behavior: 'smooth',
+          });
+        } else {
+          // Window scroll
+          const targetY = visibleTop + 30;
+          const currentScrollY = window.scrollY || window.pageYOffset;
+          const scrollTarget = currentScrollY + rect.top - targetY;
+          window.scrollTo({
+            top: Math.max(0, scrollTarget),
+            behavior: 'smooth',
+          });
+        }
+      }
+    }, 120);
+
     return () => {
+      clearTimeout(scrollIntoViewTimer);
       document.body.style.paddingBottom = prevPadding || '';
     };
   }, [activeInput]);
@@ -47,6 +95,7 @@ export default function GlobalKeyboard() {
       ) {
         return;
       }
+
       const target = e.target as HTMLElement;
       // Allow for both text inputs, search inputs, emails, etc. and textareas
       if (
@@ -121,6 +170,11 @@ export default function GlobalKeyboard() {
   const onKeyPress = (button: string) => {
     if (button === '{shift}' || button === '{lock}') {
       setLayoutName(layoutName === 'default' ? 'shift' : 'default');
+    } else if (button === '{accept}') {
+      if (activeInput?.tagName === 'INPUT') {
+        activeInput.blur();
+        setActiveInput(null);
+      }
     }
   };
 
@@ -139,16 +193,24 @@ export default function GlobalKeyboard() {
     >
       <div className="max-w-5xl mx-auto">
         <div className="flex justify-between items-center mb-3 px-2">
-          <div className="flex items-center gap-2 text-slate-700 font-semibold">
+          <div className="flex items-center gap-2 text-slate-700 font-semibold text-sm">
             <KeyboardIcon className="w-5 h-5 text-blue-600" />
             <span>Virtual Keyboard</span>
+            {activeInput && (
+              <span className="hidden sm:inline-flex items-center text-xs text-sky-700 font-bold bg-sky-100/90 px-2.5 py-0.5 rounded-full border border-sky-200/80 truncate max-w-xs">
+                {activeInput.tagName === 'TEXTAREA' ? 'Additional Comments' : activeInput.placeholder || 'Active Input'}
+              </span>
+            )}
           </div>
           <button 
-            onClick={() => setActiveInput(null)} 
-            className="p-2 hover:bg-slate-300/80 rounded-xl text-slate-600 transition-colors flex items-center gap-1 text-sm font-medium"
+            onClick={() => {
+              activeInput?.blur();
+              setActiveInput(null);
+            }} 
+            className="px-3 py-1.5 bg-slate-300/80 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition-colors flex items-center gap-1.5 text-xs shadow-xs cursor-pointer"
             title="Close Keyboard"
           >
-            <X className="w-5 h-5" /> Close
+            <X className="w-4 h-4" /> Close
           </button>
         </div>
         <div className="bg-white rounded-xl shadow-sm overflow-hidden p-2">
