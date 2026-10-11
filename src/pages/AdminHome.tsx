@@ -26,10 +26,15 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { FACULTY_DATA, SCHOOLS } from '../components/features/facultyLocator/facultyData';
+import AdminLogin from '../components/admin/AdminLogin';
 
 type Tab = 'students' | 'evaluations' | 'queue';
 
 export default function AdminHome() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    return sessionStorage.getItem('owl_admin_authenticated') === 'true';
+  });
+
   const [activeTab, setActiveTab] = useState<Tab>('students');
   const [students, setStudents] = useState<any[]>([]);
   const [evaluations, setEvaluations] = useState<any[]>([]);
@@ -50,6 +55,8 @@ export default function AdminHome() {
   const [schoolFilter, setSchoolFilter] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
+
     const fetchData = async () => {
       setLoading(true);
       try {
@@ -79,11 +86,12 @@ export default function AdminHome() {
       }
     };
     fetchData();
-  }, []);
+  }, [isAuthenticated]);
 
   const handleLogout = () => {
-    signOut(auth);
-    navigate('/login');
+    signOut(auth).catch(() => {});
+    sessionStorage.removeItem('owl_admin_authenticated');
+    setIsAuthenticated(false);
   };
 
   const handleSavePeriod = async () => {
@@ -173,8 +181,12 @@ export default function AdminHome() {
     { id: 'queue', label: 'Queue Overview', icon: ListOrdered, count: null },
   ];
 
+  if (!isAuthenticated) {
+    return <AdminLogin onLoginSuccess={() => setIsAuthenticated(true)} />;
+  }
+
   return (
-    <div className="min-h-screen flex font-sans" style={{ background: 'linear-gradient(160deg, #f0f4ff 0%, #e8f0fe 45%, #dff3ff 100%)' }}>
+    <div data-no-keyboard="true" className="min-h-screen flex font-sans" style={{ background: 'linear-gradient(160deg, #f0f4ff 0%, #e8f0fe 45%, #dff3ff 100%)' }}>
 
       {/* ── Sidebar ── */}
       <aside
