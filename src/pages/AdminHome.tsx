@@ -23,6 +23,8 @@ import {
   ChevronDown,
   ChevronUp,
   Save,
+  KeyRound,
+  ArrowLeft,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { FACULTY_DATA, SCHOOLS } from '../components/features/facultyLocator/facultyData';
@@ -259,18 +261,43 @@ export default function AdminHome() {
           ))}
         </nav>
 
-        {/* Logout */}
-        <div className="relative z-10 px-4 py-6">
+        {/* Sidebar Footer Actions */}
+        <div className="relative z-10 px-4 py-6 space-y-2">
           <div className="mb-4 mx-2 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)' }} />
+          
+          <motion.button
+            whileHover={{ x: 3 }}
+            onClick={() => {}}
+            className="w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl transition-all font-bold text-xs cursor-pointer"
+            style={{ color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.05)' }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.1)'; (e.currentTarget as HTMLElement).style.color = '#fff'; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.7)'; }}
+          >
+            <KeyRound className="w-4 h-4 text-sky-400" />
+            Security Settings
+          </motion.button>
+
+          <motion.button
+            whileHover={{ x: 3 }}
+            onClick={() => navigate('/home')}
+            className="w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl transition-all font-bold text-xs cursor-pointer"
+            style={{ color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.05)' }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.1)'; (e.currentTarget as HTMLElement).style.color = '#fff'; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.7)'; }}
+          >
+            <ArrowLeft className="w-4 h-4 text-emerald-400" />
+            Exit to Kiosk
+          </motion.button>
+
           <motion.button
             whileHover={{ x: 3 }}
             onClick={handleLogout}
-            className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all font-bold text-sm"
-            style={{ color: 'rgba(252,165,165,0.7)', border: '1px solid transparent' }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.1)'; (e.currentTarget as HTMLElement).style.color = '#fca5a5'; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'rgba(252,165,165,0.7)'; }}
+            className="w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl transition-all font-bold text-xs cursor-pointer"
+            style={{ color: 'rgba(252,165,165,0.75)', border: '1px solid transparent' }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(239,68,68,0.12)'; (e.currentTarget as HTMLElement).style.color = '#fca5a5'; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'rgba(252,165,165,0.75)'; }}
           >
-            <LogOut className="w-5 h-5" />
+            <LogOut className="w-4 h-4" />
             Sign Out
           </motion.button>
         </div>
