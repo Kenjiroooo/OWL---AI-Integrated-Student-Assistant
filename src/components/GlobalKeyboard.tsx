@@ -2,15 +2,36 @@ import React, { useEffect, useState, useRef } from 'react';
 import Keyboard from 'react-simple-keyboard';
 import 'react-simple-keyboard/build/css/index.css';
 import { Keyboard as KeyboardIcon, X } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 
 export default function GlobalKeyboard() {
   const [activeInput, setActiveInput] = useState<HTMLInputElement | HTMLTextAreaElement | null>(null);
   const [layoutName, setLayoutName] = useState('default');
   const [inputVal, setInputVal] = useState('');
   const keyboardRef = useRef<any>(null);
+  const location = useLocation();
+
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
+  // Dismiss keyboard immediately if navigating into /admin
+  useEffect(() => {
+    if (isAdminRoute) {
+      setActiveInput(null);
+    }
+  }, [isAdminRoute]);
 
   useEffect(() => {
+    if (isAdminRoute) return;
+
     const handleFocusIn = (e: FocusEvent) => {
+      // Never trigger on admin pages or elements explicitly opting out
+      if (
+        window.location.pathname.startsWith('/admin') ||
+        (e.target as HTMLElement)?.closest?.('[data-no-keyboard]') ||
+        (e.target as HTMLElement)?.dataset?.noKeyboard
+      ) {
+        return;
+      }
       const target = e.target as HTMLElement;
       // Allow for both text inputs, search inputs, emails, etc. and textareas
       if (
@@ -58,7 +79,7 @@ export default function GlobalKeyboard() {
       document.removeEventListener('focusout', handleFocusOut);
       document.removeEventListener('input', handleInput);
     };
-  }, [activeInput]);
+  }, [activeInput, isAdminRoute]);
 
   const onChange = (input: string) => {
     if (!activeInput) return;
@@ -88,7 +109,7 @@ export default function GlobalKeyboard() {
     }
   };
 
-  if (!activeInput) return null;
+  if (isAdminRoute || !activeInput) return null;
 
   const isDrawerInput = activeInput?.closest('#owl-chat-drawer');
 
