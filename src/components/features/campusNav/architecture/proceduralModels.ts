@@ -279,10 +279,10 @@ export function buildMainTower3D(): Building3DResult {
   }
 
   // 3. Right-Side Vertical Tower with "UDD" lettering & Stair Core
-  // Tower height increased by 50% for realistic elevation above roofline
+  // Tower height decreased by 25% from 37.8 to 28.35 units
   const towerGroup = new THREE.Group();
   towerGroup.name = 'Vertical_UDD_Tower_Core';
-  const towerHeight = (totalFloors + 2) * floorHeight * 1.5; // 37.8 units tall (50% increase)
+  const towerHeight = (totalFloors + 2) * floorHeight * 1.5 * 0.75; // 28.35 units tall (-25%)
   const towerWidth = 5.5;
   const towerDepth = 6.5;
 
@@ -297,24 +297,24 @@ export function buildMainTower3D(): Building3DResult {
   towerMesh.receiveShadow = true;
   towerGroup.add(towerMesh);
 
-  // Vertical "UDD" sign plane on the tower face, positioned high above roofline
+  // Vertical "UDD" sign plane on the tower face, positioned above roofline
   const signMat = new THREE.MeshBasicMaterial({
     map: createVerticalSignTexture(),
     transparent: true,
   });
-  const signHeight = 13.5;
-  const signWidth = 3.2;
+  const signHeight = 8.8;
+  const signWidth = 2.4;
   const signGeo = new THREE.PlaneGeometry(signWidth, signHeight);
   const signMesh = new THREE.Mesh(signGeo, signMat);
   signMesh.position.set(
     buildingWidth / 2 - towerWidth / 2 + 0.8,
-    towerHeight - signHeight / 2 - 3.2,
+    towerHeight - signHeight / 2 - 0.9,
     buildingDepth / 4 + towerDepth / 2 + 0.05
   );
   towerGroup.add(signMesh);
 
   // Tower top maintenance roof structure & ladder
-  const cageGeo = new THREE.BoxGeometry(3.0, 3.4, 3.0);
+  const cageGeo = new THREE.BoxGeometry(2.8, 3.2, 2.8);
   const cageMesh = new THREE.Mesh(
     cageGeo,
     new THREE.MeshStandardMaterial({
@@ -324,7 +324,7 @@ export function buildMainTower3D(): Building3DResult {
   );
   cageMesh.position.set(
     buildingWidth / 2 - towerWidth / 2 + 0.8,
-    towerHeight + 1.7,
+    towerHeight + 1.6,
     buildingDepth / 4
   );
   towerGroup.add(cageMesh);
@@ -335,8 +335,8 @@ export function buildMainTower3D(): Building3DResult {
   return {
     root,
     floorGroups,
-    defaultCameraPos: new THREE.Vector3(28, 25, 42),
-    targetLookAt: new THREE.Vector3(0, 14, 0),
+    defaultCameraPos: new THREE.Vector3(26, 23, 39),
+    targetLookAt: new THREE.Vector3(0, 12, 0),
   };
 }
 
