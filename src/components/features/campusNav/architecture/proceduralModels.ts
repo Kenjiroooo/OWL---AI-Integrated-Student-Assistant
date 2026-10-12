@@ -136,21 +136,22 @@ function createEmblemTexture(): THREE.CanvasTexture {
 // ── Dynamic Canvas Texture: Vertical "UDD" Tower Sign ───────────────────────
 function createVerticalSignTexture(): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
-  canvas.width = 128;
-  canvas.height = 512;
+  canvas.width = 256;
+  canvas.height = 1024;
   const ctx = canvas.getContext('2d');
   if (ctx) {
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, 128, 512);
+    ctx.fillRect(0, 0, 256, 1024);
 
-    ctx.fillStyle = '#004085';
-    ctx.font = '900 88px sans-serif';
+    // Cyan/UDD blue matching the university branding & reference photo
+    ctx.fillStyle = '#0084d6';
+    ctx.font = '900 175px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    ctx.fillText('U', 64, 120);
-    ctx.fillText('D', 64, 256);
-    ctx.fillText('D', 64, 392);
+    ctx.fillText('U', 128, 220);
+    ctx.fillText('D', 128, 512);
+    ctx.fillText('D', 128, 804);
   }
 
   const texture = new THREE.CanvasTexture(canvas);
@@ -278,9 +279,10 @@ export function buildMainTower3D(): Building3DResult {
   }
 
   // 3. Right-Side Vertical Tower with "UDD" lettering & Stair Core
+  // Tower height increased by 50% for realistic elevation above roofline
   const towerGroup = new THREE.Group();
   towerGroup.name = 'Vertical_UDD_Tower_Core';
-  const towerHeight = (totalFloors + 2) * floorHeight;
+  const towerHeight = (totalFloors + 2) * floorHeight * 1.5; // 37.8 units tall (50% increase)
   const towerWidth = 5.5;
   const towerDepth = 6.5;
 
@@ -295,22 +297,24 @@ export function buildMainTower3D(): Building3DResult {
   towerMesh.receiveShadow = true;
   towerGroup.add(towerMesh);
 
-  // Vertical "UDD" sign plane on the tower face
+  // Vertical "UDD" sign plane on the tower face, positioned high above roofline
   const signMat = new THREE.MeshBasicMaterial({
     map: createVerticalSignTexture(),
     transparent: true,
   });
-  const signGeo = new THREE.PlaneGeometry(2.4, 9.6);
+  const signHeight = 13.5;
+  const signWidth = 3.2;
+  const signGeo = new THREE.PlaneGeometry(signWidth, signHeight);
   const signMesh = new THREE.Mesh(signGeo, signMat);
   signMesh.position.set(
     buildingWidth / 2 - towerWidth / 2 + 0.8,
-    towerHeight - 6.5,
+    towerHeight - signHeight / 2 - 3.2,
     buildingDepth / 4 + towerDepth / 2 + 0.05
   );
   towerGroup.add(signMesh);
 
   // Tower top maintenance roof structure & ladder
-  const cageGeo = new THREE.BoxGeometry(2.8, 3.2, 2.8);
+  const cageGeo = new THREE.BoxGeometry(3.0, 3.4, 3.0);
   const cageMesh = new THREE.Mesh(
     cageGeo,
     new THREE.MeshStandardMaterial({
@@ -320,7 +324,7 @@ export function buildMainTower3D(): Building3DResult {
   );
   cageMesh.position.set(
     buildingWidth / 2 - towerWidth / 2 + 0.8,
-    towerHeight + 1.6,
+    towerHeight + 1.7,
     buildingDepth / 4
   );
   towerGroup.add(cageMesh);
@@ -331,8 +335,8 @@ export function buildMainTower3D(): Building3DResult {
   return {
     root,
     floorGroups,
-    defaultCameraPos: new THREE.Vector3(26, 22, 38),
-    targetLookAt: new THREE.Vector3(0, 11, 0),
+    defaultCameraPos: new THREE.Vector3(28, 25, 42),
+    targetLookAt: new THREE.Vector3(0, 14, 0),
   };
 }
 
