@@ -160,6 +160,40 @@ function createVerticalSignTexture(): THREE.CanvasTexture {
   return texture;
 }
 
+// ── Dynamic Canvas Texture: Rooftop "UNIVERSIDAD DE DAGUPAN" Sign ────────────
+function createRooftopSignTexture(): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 2048;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+  if (ctx) {
+    // Crisp white background panel
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, 2048, 256);
+
+    // University Blue top and bottom architectural accent trim
+    ctx.fillStyle = '#005bbb';
+    ctx.fillRect(0, 0, 2048, 16);
+    ctx.fillRect(0, 240, 2048, 16);
+
+    // Subtle inner border
+    ctx.strokeStyle = '#003b7a';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(12, 20, 2024, 216);
+
+    // Bold, crisp UDD University Lettering
+    ctx.fillStyle = '#003b7a';
+    ctx.font = '900 106px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('UNIVERSIDAD DE DAGUPAN', 1024, 128);
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.anisotropy = 8;
+  return texture;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // BUILDING 1: UDD Main Campus Tower
 // ─────────────────────────────────────────────────────────────────────────────
@@ -274,6 +308,61 @@ export function buildMainTower3D(): Building3DResult {
       acMesh.position.set(acX, baseY + 1.2, buildingDepth / 2 + 0.3);
       floorGroup.add(acMesh);
     });
+
+    // On top floor (Floor 5): Add the "UNIVERSIDAD DE DAGUPAN" rooftop sign at the back
+    if (f === totalFloors) {
+      const rooftopSignGroup = new THREE.Group();
+      rooftopSignGroup.name = 'Rooftop_Back_UDD_Sign';
+
+      const signWidth = 16.5;
+      const signHeight = 2.2;
+      const signCenterX = -2.25;
+      const signCenterY = baseY + floorHeight + signHeight / 2 - 0.4; // Positioned along rooftop parapet
+      const signZ = -buildingDepth / 2 + 0.4; // Back edge of the rooftop
+
+      // Backing billboard board
+      const backingGeo = new THREE.BoxGeometry(signWidth, signHeight, 0.25);
+      const backingMesh = new THREE.Mesh(backingGeo, mats.whiteWall);
+      backingMesh.position.set(signCenterX, signCenterY, signZ);
+      backingMesh.castShadow = true;
+      rooftopSignGroup.add(backingMesh);
+
+      // Top and bottom blue architectural trim frame
+      const trimGeo = new THREE.BoxGeometry(signWidth + 0.2, 0.12, 0.3);
+      const topTrim = new THREE.Mesh(trimGeo, mats.uddBlue);
+      topTrim.position.set(signCenterX, signCenterY + signHeight / 2, signZ);
+      rooftopSignGroup.add(topTrim);
+      const botTrim = new THREE.Mesh(trimGeo, mats.uddBlue);
+      botTrim.position.set(signCenterX, signCenterY - signHeight / 2, signZ);
+      rooftopSignGroup.add(botTrim);
+
+      // Sign texture plane facing the BACK (-Z)
+      const signMat = new THREE.MeshBasicMaterial({
+        map: createRooftopSignTexture(),
+        transparent: true,
+      });
+      const planeGeo = new THREE.PlaneGeometry(signWidth - 0.2, signHeight - 0.15);
+      const backSignMesh = new THREE.Mesh(planeGeo, signMat);
+      backSignMesh.position.set(signCenterX, signCenterY, signZ - 0.14);
+      backSignMesh.rotation.y = Math.PI; // Face the back (-Z) towards viewer
+      rooftopSignGroup.add(backSignMesh);
+
+      // Support steel legs & diagonal struts anchoring to the rooftop
+      [-7, -2.25, 2.5, 6].forEach((lx) => {
+        const legGeo = new THREE.CylinderGeometry(0.08, 0.08, 1.4, 12);
+        const leg = new THREE.Mesh(legGeo, mats.metalDark);
+        leg.position.set(lx, baseY + floorHeight + 0.2, signZ);
+        rooftopSignGroup.add(leg);
+
+        const strutGeo = new THREE.CylinderGeometry(0.05, 0.05, 1.6, 8);
+        const strut = new THREE.Mesh(strutGeo, mats.metalDark);
+        strut.position.set(lx, baseY + floorHeight + 0.5, signZ + 0.5);
+        strut.rotation.x = 0.55;
+        rooftopSignGroup.add(strut);
+      });
+
+      floorGroup.add(rooftopSignGroup);
+    }
 
     floorGroups.push(floorGroup);
     root.add(floorGroup);
