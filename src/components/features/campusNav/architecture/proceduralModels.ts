@@ -149,9 +149,10 @@ function createVerticalSignTexture(): THREE.CanvasTexture {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    ctx.fillText('U', 128, 220);
+    // Slightly tighter letter spacing for a balanced, cohesive sign lockup
+    ctx.fillText('U', 128, 280);
     ctx.fillText('D', 128, 512);
-    ctx.fillText('D', 128, 804);
+    ctx.fillText('D', 128, 744);
   }
 
   const texture = new THREE.CanvasTexture(canvas);
