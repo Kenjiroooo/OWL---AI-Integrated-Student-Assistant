@@ -306,31 +306,39 @@ export function buildFameBuilding3D(): Building3DResult {
   // Main mass ground floor
   ground.add(box(mainW, FH, depth, mainFloorMats(groundFrontMat), mainCx, FH / 2, mainCz));
 
-  // Beige block ground floor with glass entrance doors
+  // Beige block ground floor with centered glass entrance doors & sidelights
   ground.add(box(beigeW, FH, beigeD, beige, beigeCx, FH / 2, beigeCz));
-  ground.add(box(2.6, 2.2, 0.08, darkGlass, 8.4, 1.4 + 1.1, beigeFrontZ + 0.05, false));
-  ground.add(box(1.2, 1.4, 0.06, mats.whiteWall, 11.2, 2.5, beigeFrontZ + 0.05, false)); // notice board
+  // Centered main entrance double doors
+  ground.add(box(3.4, 2.3, 0.08, darkGlass, beigeCx, 1.4 + 1.15, beigeFrontZ + 0.05, false));
+  ground.add(box(3.45, 0.08, 0.1, mats.metalDark, beigeCx, 1.4 + 2.3, beigeFrontZ + 0.06, false)); // door frame
+  ground.add(box(0.08, 2.3, 0.1, mats.metalDark, beigeCx, 1.4 + 1.15, beigeFrontZ + 0.06, false)); // center mullion
+  // Sidelights and notice board flanking the doors
+  ground.add(box(1.2, 2.2, 0.08, darkGlass, 7.3, 1.4 + 1.1, beigeFrontZ + 0.05, false));
+  ground.add(box(1.2, 2.2, 0.08, darkGlass, 12.4, 1.4 + 1.1, beigeFrontZ + 0.05, false));
+  ground.add(box(1.0, 1.2, 0.06, mats.whiteWall, 12.4, 2.5, beigeFrontZ + 0.09, false)); // notice board
 
-  // Raised entrance landing
-  ground.add(box(10.2, 1.4, 3.2, stairMat, 11.1, 0.7, beigeFrontZ + 1.6));
+  // Centered raised entrance landing
+  const landingW = 6.6;
+  ground.add(box(landingW, 1.4, 3.2, stairMat, beigeCx, 0.7, beigeFrontZ + 1.6));
 
-  // Wide concrete stairs (6 risers)
+  // Centered wide concrete stairs (6 risers) directly aligned with entrance
   const steps = 6;
   const rise = 1.4 / steps;
   const run = 0.6;
-  const stairX0 = 7.6;
-  const stairX1 = 14.8;
+  const stairW = 6.0;
+  const stairX0 = beigeCx - stairW / 2; // 6.85
+  const stairX1 = beigeCx + stairW / 2; // 12.85
   const stairZ0 = beigeFrontZ + 3.2;
   for (let i = 0; i < steps; i++) {
     const top = 1.4 - i * rise;
     ground.add(
-      box(stairX1 - stairX0, top, run, stairMat, (stairX0 + stairX1) / 2, top / 2, stairZ0 + i * run + run / 2)
+      box(stairW, top, run, stairMat, beigeCx, top / 2, stairZ0 + i * run + run / 2)
     );
   }
   const stairZ1 = stairZ0 + steps * run;
 
-  // Blue handrails (both sides + centre)
-  [stairX0 + 0.15, (stairX0 + stairX1) / 2, stairX1 - 0.15].forEach((x) => {
+  // Blue handrails flanking the stairs (left & right sides only, unobstructed flight)
+  [stairX0 + 0.12, stairX1 - 0.12].forEach((x) => {
     const a = new THREE.Vector3(x, 1.4 + 0.95, stairZ0 - 0.2);
     const b = new THREE.Vector3(x, 0.2 + 0.95, stairZ1);
     ground.add(rod(a, b, 0.05, fenceBlue));
@@ -339,18 +347,19 @@ export function buildFameBuilding3D(): Building3DResult {
     ground.add(rod(new THREE.Vector3(x, 0.2, stairZ1), b, 0.05, fenceBlue));
   });
 
-  // Entrance canopy: dark metal roof on steel columns
+  // Entrance canopy: dark metal roof on steel columns (framing stairs outside edges)
   const canopyY = 5.2;
   const canopy = box(13.2, 0.18, 7, canopyMat, 12.0, canopyY, 7.2);
   canopy.rotation.x = 0.04;
   ground.add(canopy);
   ground.add(box(13.3, 0.3, 0.12, canopyMat, 12.0, canopyY - 0.12, 10.72)); // fascia
-  [7.4, 11.4, 15.6, 18.2].forEach((x) => {
+  // Columns placed outside the stair flight (no column in front of the stairs)
+  [6.5, 13.2, 18.0].forEach((x) => {
     ground.add(rod(new THREE.Vector3(x, 0, 10.4), new THREE.Vector3(x, canopyY, 10.4), 0.11, mats.metalDark));
   });
-  ground.add(rod(new THREE.Vector3(18.2, 0, 4.4), new THREE.Vector3(18.2, canopyY, 4.4), 0.11, mats.metalDark));
+  ground.add(rod(new THREE.Vector3(18.0, 0, 4.4), new THREE.Vector3(18.0, canopyY, 4.4), 0.11, mats.metalDark));
 
-  // Blue steel perimeter fence (gap at the stairs)
+  // Blue steel perimeter fence (gap matching the aligned stairs)
   const fenceZ = 12.3;
   const fenceH = 1.6;
   const buildFence = (x0: number, x1: number) => {
@@ -363,8 +372,8 @@ export function buildFameBuilding3D(): Building3DResult {
       ground.add(box(0.14, fenceH + 0.3, 0.14, fenceBlue, x, (fenceH + 0.3) / 2, fenceZ, false));
     }
   };
-  buildFence(-15, stairX0 - 0.4);
-  buildFence(stairX1 + 0.4, 23);
+  buildFence(-15, stairX0 - 0.35);
+  buildFence(stairX1 + 0.35, 23);
 
   // Utility pole (prominent in the photo, front-left)
   ground.add(rod(new THREE.Vector3(-11.5, 0, 13.2), new THREE.Vector3(-11.5, 22, 13.2), 0.22, concrete));
