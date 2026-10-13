@@ -262,9 +262,9 @@ export function buildFameBuilding3D(): Building3DResult {
   const mainCz = (frontZ + backZ) / 2; // -12
 
   const beigeX0 = 6;
-  const beigeX1 = 13;
-  const beigeW = beigeX1 - beigeX0;
-  const beigeCx = (beigeX0 + beigeX1) / 2;
+  const beigeX1 = 13.7; // +10% width increase (7.0m -> 7.7m)
+  const beigeW = beigeX1 - beigeX0; // 7.7
+  const beigeCx = (beigeX0 + beigeX1) / 2; // 9.85
   const beigeFrontZ = 4.5;
   const beigeD = beigeFrontZ - backZ; // 34.5
   const beigeCz = (beigeFrontZ + backZ) / 2; // -12.75
@@ -308,18 +308,18 @@ export function buildFameBuilding3D(): Building3DResult {
 
   // Beige block ground floor with glass entrance doors
   ground.add(box(beigeW, FH, beigeD, beige, beigeCx, FH / 2, beigeCz));
-  ground.add(box(2.6, 2.2, 0.08, darkGlass, 8.2, 1.4 + 1.1, beigeFrontZ + 0.05, false));
-  ground.add(box(1.2, 1.4, 0.06, mats.whiteWall, 10.6, 2.5, beigeFrontZ + 0.05, false)); // notice board
+  ground.add(box(2.6, 2.2, 0.08, darkGlass, 8.4, 1.4 + 1.1, beigeFrontZ + 0.05, false));
+  ground.add(box(1.2, 1.4, 0.06, mats.whiteWall, 11.2, 2.5, beigeFrontZ + 0.05, false)); // notice board
 
   // Raised entrance landing
-  ground.add(box(9.5, 1.4, 3.2, stairMat, 10.75, 0.7, beigeFrontZ + 1.6));
+  ground.add(box(10.2, 1.4, 3.2, stairMat, 11.1, 0.7, beigeFrontZ + 1.6));
 
   // Wide concrete stairs (6 risers)
   const steps = 6;
   const rise = 1.4 / steps;
   const run = 0.6;
-  const stairX0 = 7.4;
-  const stairX1 = 14.4;
+  const stairX0 = 7.6;
+  const stairX1 = 14.8;
   const stairZ0 = beigeFrontZ + 3.2;
   for (let i = 0; i < steps; i++) {
     const top = 1.4 - i * rise;
@@ -341,14 +341,14 @@ export function buildFameBuilding3D(): Building3DResult {
 
   // Entrance canopy: dark metal roof on steel columns
   const canopyY = 5.2;
-  const canopy = box(12.5, 0.18, 7, canopyMat, 11.6, canopyY, 7.2);
+  const canopy = box(13.2, 0.18, 7, canopyMat, 12.0, canopyY, 7.2);
   canopy.rotation.x = 0.04;
   ground.add(canopy);
-  ground.add(box(12.6, 0.3, 0.12, canopyMat, 11.6, canopyY - 0.12, 10.72)); // fascia
-  [7.2, 11.2, 15.2, 17.6].forEach((x) => {
+  ground.add(box(13.3, 0.3, 0.12, canopyMat, 12.0, canopyY - 0.12, 10.72)); // fascia
+  [7.4, 11.4, 15.6, 18.2].forEach((x) => {
     ground.add(rod(new THREE.Vector3(x, 0, 10.4), new THREE.Vector3(x, canopyY, 10.4), 0.11, mats.metalDark));
   });
-  ground.add(rod(new THREE.Vector3(17.6, 0, 4.4), new THREE.Vector3(17.6, canopyY, 4.4), 0.11, mats.metalDark));
+  ground.add(rod(new THREE.Vector3(18.2, 0, 4.4), new THREE.Vector3(18.2, canopyY, 4.4), 0.11, mats.metalDark));
 
   // Blue steel perimeter fence (gap at the stairs)
   const fenceZ = 12.3;
@@ -389,8 +389,8 @@ export function buildFameBuilding3D(): Building3DResult {
       ground.add(frond);
     }
   };
-  palm(16.4, 7.8, 6.4);
-  palm(19.5, 5, 5.6);
+  palm(17.2, 7.8, 6.4);
+  palm(20.2, 5, 5.6);
   const tree = (x: number, z: number, s: number) => {
     ground.add(rod(new THREE.Vector3(x, 0, z), new THREE.Vector3(x, 2.6 * s, z), 0.22 * s, trunk));
     const crown = new THREE.Mesh(new THREE.IcosahedronGeometry(2.2 * s, 1), leaf);
@@ -416,25 +416,25 @@ export function buildFameBuilding3D(): Building3DResult {
 
     const fz = beigeFrontZ + 0.05;
     if (f === 1) {
-      // 2F – ribbon window
-      g.add(box(5.4, 1.1, 0.08, darkGlass, beigeCx, baseY + 2.2, fz, false));
+      // 2F – ribbon window (scaled with wider khaki block)
+      g.add(box(5.9, 1.1, 0.08, darkGlass, beigeCx, baseY + 2.2, fz, false));
     } else if (f === 2) {
-      // 3F – Universidad de Dagupan seal + small window
+      // 3F – Universidad de Dagupan seal + small window (centered on wider khaki block)
       const seal = new THREE.Mesh(
         new THREE.CylinderGeometry(1.15, 1.15, 0.12, 48),
         new THREE.MeshStandardMaterial({ map: createEmblemTexture(), roughness: 0.3 })
       );
       seal.rotation.x = Math.PI / 2;
-      seal.position.set(8.4, baseY + 1.9, fz + 0.06);
+      seal.position.set(8.65, baseY + 1.9, fz + 0.06);
       seal.castShadow = true;
       g.add(seal);
       const ring = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.09, 12, 48), fenceBlue);
-      ring.position.set(8.4, baseY + 1.9, fz + 0.1);
+      ring.position.set(8.65, baseY + 1.9, fz + 0.1);
       g.add(ring);
-      g.add(box(2.4, 0.9, 0.08, darkGlass, 11.3, baseY + 2.1, fz, false));
+      g.add(box(2.5, 0.9, 0.08, darkGlass, 11.9, baseY + 2.1, fz, false));
     } else {
-      // 4F – jalousie window strip under the cantilever
-      g.add(box(5.2, 1.0, 0.08, jalousieMat, beigeCx, baseY + 2.4, fz, false));
+      // 4F – jalousie window strip under the cantilever (scaled with wider khaki block)
+      g.add(box(5.7, 1.0, 0.08, jalousieMat, beigeCx, baseY + 2.4, fz, false));
     }
 
     // Side (+x) classroom windows along the 34.5m beige block
