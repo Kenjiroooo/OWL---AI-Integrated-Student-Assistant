@@ -8,7 +8,7 @@
 // is null.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type CampusBuildingId = 'udd-main-tower' | 'udd-main-front';
+export type CampusBuildingId = 'udd-main-tower' | 'udd-main-front' | 'udd-fame';
 
 /** Virtual "camera" pose applied to the photo panel (percent / degrees). */
 export interface CameraPose {
@@ -115,7 +115,49 @@ export const CAMPUS_BUILDINGS: readonly CampusBuilding[] = [
     orbitPose: { scale: 1.02, x: 5, y: 4, rotateX: 4, rotateY: -14 },
     theme: { skyTop: '#0a2540', skyBottom: '#0e5a8a', accent: '#38bdf8' },
   },
+  {
+    id: 'udd-fame',
+    name: 'UDD FAME Building',
+    shortName: 'FAME Building',
+    campus: 'FAME Building Campus • Dagupan City',
+    description:
+      'The FAME Building of Universidad de Dagupan, recognizable by its perforated silver mesh facade with blue arrow motifs, the cantilevered top box bearing a large blue diamond, and the beige stair block carrying the university seal.',
+    visibleFeatures: [
+      'Perforated silver mesh facade',
+      'Blue arrow / wedge motifs',
+      'Cantilevered top box with blue diamond',
+      'University seal on beige stair block',
+      'Covered entrance with blue-railed stairs',
+    ],
+    referenceImage: '/campus-buildings/fame%20building.png',
+    referenceImageAlt:
+      'Photograph of the UDD FAME Building: a silver mesh-clad building with blue arrow motifs, a cantilevered top box with a blue diamond, a beige block with the university seal and a covered entrance.',
+    modelPath: 'procedural-3d',
+    floors: [
+      { level: 0, label: 'Ground Floor, Entrance Canopy & Stairs' },
+      { level: 1, label: '2nd Floor Classrooms' },
+      { level: 2, label: '3rd Floor & University Seal' },
+      { level: 3, label: '4th Floor Classrooms' },
+      { level: 4, label: '5th Floor Cantilevered Top Box' },
+    ],
+    defaultPose: { scale: 1.06, x: 0, y: 3, rotateX: 0, rotateY: 0 },
+    establishingPose: { scale: 0.62, x: 0, y: 10, rotateX: 14, rotateY: 0 },
+    orbitPose: { scale: 1.0, x: -5, y: 3, rotateX: 4, rotateY: 14 },
+    theme: { skyTop: '#0b1f3f', skyBottom: '#3b6ea8', accent: '#60a5fa' },
+  },
 ] as const;
+
+/** Buildings grouped per campus showcase. */
+export const CAMPUS_GROUPS = {
+  main: ['udd-main-tower', 'udd-main-front'],
+  fame: ['udd-fame'],
+} as const satisfies Record<string, readonly CampusBuildingId[]>;
+
+export type CampusGroupId = keyof typeof CAMPUS_GROUPS;
+
+export function getCampusBuildings(group: CampusGroupId): CampusBuilding[] {
+  return CAMPUS_GROUPS[group].map((id) => getBuilding(id));
+}
 
 export const DEFAULT_BUILDING_ID: CampusBuildingId = 'udd-main-tower';
 
