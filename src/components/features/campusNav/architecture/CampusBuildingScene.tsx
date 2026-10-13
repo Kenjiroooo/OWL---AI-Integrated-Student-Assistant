@@ -26,6 +26,12 @@ export default function CampusBuildingScene({ building, pose, isActive }: Props)
   const [currentSrc, setCurrentSrc] = useState(building.referenceImage);
   const [retried, setRetried] = useState(false);
 
+  React.useEffect(() => {
+    setCurrentSrc(building.referenceImage);
+    setStatus('loading');
+    setRetried(false);
+  }, [building.referenceImage]);
+
   const xPct = useTransform(pose.x, (v) => `${v}%`);
   const yPct = useTransform(pose.y, (v) => `${v}%`);
   const filter = useTransform(pose.blur, (v) => `blur(${v.toFixed(2)}px) saturate(${1 + (8 - v) * 0.01})`);
@@ -91,6 +97,12 @@ export default function CampusBuildingScene({ building, pose, isActive }: Props)
                       return;
                     } else if (currentSrc.endsWith('.jpg')) {
                       setCurrentSrc(currentSrc.replace(/\.jpg$/, '.JPG'));
+                      return;
+                    } else if (currentSrc.endsWith('.PNG')) {
+                      setCurrentSrc(currentSrc.replace(/\.PNG$/, '.png'));
+                      return;
+                    } else if (currentSrc.endsWith('.png')) {
+                      setCurrentSrc(currentSrc.replace(/\.png$/, '.PNG'));
                       return;
                     }
                   }
