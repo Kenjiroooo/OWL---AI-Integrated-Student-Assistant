@@ -18,10 +18,12 @@ export interface Building3DResult {
   floorGroups: THREE.Group[];
   defaultCameraPos: THREE.Vector3;
   targetLookAt: THREE.Vector3;
+  /** Vertical gap between floors in exploded view (defaults to 4). */
+  explodeSpacing?: number;
 }
 
 // ── Shared Materials ────────────────────────────────────────────────────────
-function getMaterials() {
+export function getMaterials() {
   const whiteWall = new THREE.MeshStandardMaterial({
     color: 0xedf2f7,
     roughness: 0.45,
@@ -87,7 +89,7 @@ function getMaterials() {
 }
 
 // ── Dynamic Canvas Texture: UDD Emblem ──────────────────────────────────────
-function createEmblemTexture(): THREE.CanvasTexture {
+export function createEmblemTexture(): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
   canvas.width = 512;
   canvas.height = 512;
@@ -427,6 +429,7 @@ export function buildMainTower3D(): Building3DResult {
     floorGroups,
     defaultCameraPos: new THREE.Vector3(26, 23, 39),
     targetLookAt: new THREE.Vector3(0, 12, 0),
+    explodeSpacing: 3.8,
   };
 }
 
@@ -608,5 +611,6 @@ export function buildFrontBuilding3D(): Building3DResult {
     floorGroups,
     defaultCameraPos: new THREE.Vector3(0, 14, 34),
     targetLookAt: new THREE.Vector3(0, 8, 2),
+    explodeSpacing: 4.4,
   };
 }
