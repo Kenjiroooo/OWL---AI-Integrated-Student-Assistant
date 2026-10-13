@@ -12,6 +12,14 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { CampusBuildingId } from './buildings';
 import { buildMainTower3D, buildFrontBuilding3D, type Building3DResult } from './proceduralModels';
+import { buildFameBuilding3D } from './fameModel';
+
+/** Procedural model factory per building id. */
+const MODEL_FACTORIES: Record<CampusBuildingId, () => Building3DResult> = {
+  'udd-main-tower': buildMainTower3D,
+  'udd-main-front': buildFrontBuilding3D,
+  'udd-fame': buildFameBuilding3D,
+};
 
 export interface Campus3DCanvasHandle {
   zoomIn: () => void;
@@ -22,6 +30,8 @@ export interface Campus3DCanvasHandle {
 }
 
 interface Props {
+  /** Buildings to build into this scene (only these are instantiated). */
+  buildingIds: readonly CampusBuildingId[];
   activeBuildingId: CampusBuildingId;
   exploded: boolean;
   cinematicNonce: number; // Incrementing counter to trigger cinematic flythrough
@@ -29,7 +39,7 @@ interface Props {
 }
 
 const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3DCanvas(
-  { activeBuildingId, exploded, cinematicNonce, onCinematicComplete },
+  { buildingIds, activeBuildingId, exploded, cinematicNonce, onCinematicComplete },
   ref
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -41,8 +51,7 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
     scene: THREE.Scene | null;
     camera: THREE.PerspectiveCamera | null;
     controls: OrbitControls | null;
-    towerData: Building3DResult | null;
-    frontData: Building3DResult | null;
+    models: Partial<Record<CampusBuildingId, Building3DResult>>;
     activeId: CampusBuildingId;
     isExploded: boolean;
     cinematicTarget: {
@@ -58,8 +67,7 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
     scene: null,
     camera: null,
     controls: null,
-    towerData: null,
-    frontData: null,
+    models: {},
     activeId: activeBuildingId,
     isExploded: exploded,
     cinematicTarget: null,
@@ -102,9 +110,9 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
       controls.update();
     },
     resetView: () => {
-      const { camera, controls, towerData, frontData, activeId } = stateRef.current;
+      const { camera, controls, models, activeId } = stateRef.current;
       if (!camera || !controls) return;
-      const model = activeId === 'udd-main-tower' ? towerData : frontData;
+      const model = models[activeId];
       if (!model) return;
       stateRef.current.cinematicTarget = {
         active: true,
@@ -123,9 +131,9 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
     stateRef.current.activeId = activeBuildingId;
 
     if (prevId !== activeBuildingId) {
-      const { camera, controls, towerData, frontData } = stateRef.current;
+      const { camera, controls, models } = stateRef.current;
       if (!camera || !controls) return;
-      const targetModel = activeBuildingId === 'udd-main-tower' ? towerData : frontData;
+      const targetModel = models[activeBuildingId];
       if (!targetModel) return;
 
       stateRef.current.cinematicTarget = {
@@ -146,10 +154,10 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
   // Trigger cinematic sequence on nonce change
   useEffect(() => {
     if (cinematicNonce === 0) return;
-    const { camera, controls, towerData, frontData, activeId } = stateRef.current;
+    const { camera, controls, models, activeId } = stateRef.current;
     if (!camera || !controls) return;
 
-    const currentModel = activeId === 'udd-main-tower' ? towerData : frontData;
+    const currentModel = models[activeId];
     if (!currentModel) return;
 
     // Establishing wide position
@@ -261,22 +269,25 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
       grid.position.y = -0.48;
       scene.add(grid);
 
-      // 7. Procedural Buildings
-      const tower = buildMainTower3D();
-      const front = buildFrontBuilding3D();
-
-      scene.add(tower.root);
-      scene.add(front.root);
+      // 7. Procedural Buildings (only those belonging to this campus)
+      const models: Partial<Record<CampusBuildingId, Building3DResult>> = {};
+      for (const id of buildingIds) {
+        const m = MODEL_FACTORIES[id]();
+        // Start hidden; the animation loop scales the active one in.
+        m.root.scale.setScalar(id === activeBuildingId ? 1 : 0.001);
+        m.root.visible = id === activeBuildingId;
+        scene.add(m.root);
+        models[id] = m;
+      }
 
       stateRef.current.renderer = renderer;
       stateRef.current.scene = scene;
       stateRef.current.camera = camera;
       stateRef.current.controls = controls;
-      stateRef.current.towerData = tower;
-      stateRef.current.frontData = front;
+      stateRef.current.models = models;
 
       // Start initial camera on active building
-      const initModel = activeBuildingId === 'udd-main-tower' ? tower : front;
+      const initModel = models[activeBuildingId] ?? Object.values(models)[0]!;
       camera.position.copy(initModel.defaultCameraPos);
       controls.target.copy(initModel.targetLookAt);
       controls.update();
@@ -300,26 +311,24 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
 
         const { activeId, isExploded, cinematicTarget } = stateRef.current;
 
-        // Transition model visibility (smooth fade/scale)
-        const isTower = activeId === 'udd-main-tower';
-        const targetTowerScale = isTower ? 1 : 0.001;
-        const targetFrontScale = isTower ? 0.001 : 1;
-
-        tower.root.scale.lerp(new THREE.Vector3(targetTowerScale, targetTowerScale, targetTowerScale), delta * 5);
-        tower.root.visible = tower.root.scale.x > 0.01;
-
-        front.root.scale.lerp(new THREE.Vector3(targetFrontScale, targetFrontScale, targetFrontScale), delta * 5);
-        front.root.visible = front.root.scale.x > 0.01;
+        // Transition model visibility (smooth scale in/out)
+        const scaleTarget = new THREE.Vector3();
+        for (const [id, m] of Object.entries(models) as [CampusBuildingId, Building3DResult][]) {
+          const s = id === activeId ? 1 : 0.001;
+          m.root.scale.lerp(scaleTarget.setScalar(s), delta * 5);
+          m.root.visible = m.root.scale.x > 0.01;
+        }
 
         // Exploded View Floor Separation
-        const activeData = isTower ? tower : front;
-        const explodeSpacing = isTower ? 3.8 : 4.4;
-
-        activeData.floorGroups.forEach((floorGroup, idx) => {
-          // Keep ground floor fixed; elevate subsequent floors
-          const targetElevation = isExploded && idx > 0 ? idx * explodeSpacing : 0;
-          floorGroup.position.y = THREE.MathUtils.lerp(floorGroup.position.y, targetElevation, delta * 4.5);
-        });
+        const activeData = models[activeId];
+        if (activeData) {
+          const explodeSpacing = activeData.explodeSpacing ?? 4;
+          activeData.floorGroups.forEach((floorGroup, idx) => {
+            // Keep ground floor fixed; elevate subsequent floors
+            const targetElevation = isExploded && idx > 0 ? idx * explodeSpacing : 0;
+            floorGroup.position.y = THREE.MathUtils.lerp(floorGroup.position.y, targetElevation, delta * 4.5);
+          });
+        }
 
         // Cinematic Flythrough Controller
         if (cinematicTarget && cinematicTarget.active) {
