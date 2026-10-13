@@ -27,9 +27,12 @@ import {
 } from 'lucide-react';
 import {
   CAMPUS_BUILDINGS,
+  CAMPUS_GROUPS,
   DEFAULT_BUILDING_ID,
   getBuilding,
+  getCampusBuildings,
   type CampusBuildingId,
+  type CampusGroupId,
 } from './buildings';
 import { useBuildingTransitionController, type TransitionPhase } from './BuildingTransitionController';
 import Campus3DCanvas, { type Campus3DCanvasHandle } from './Campus3DCanvas';
@@ -38,6 +41,9 @@ import CampusBuildingSelector from './CampusBuildingSelector';
 
 interface Props {
   onClose?: () => void;
+  campusGroup?: CampusGroupId;
+  initialBuildingId?: CampusBuildingId;
+  showcaseTitle?: string;
 }
 
 const PHASE_LABEL: Record<TransitionPhase, string> = {
@@ -49,7 +55,18 @@ const PHASE_LABEL: Record<TransitionPhase, string> = {
   settling: 'Settling view',
 };
 
-export default function CampusArchitectureShowcase({ onClose }: Props) {
+export default function CampusArchitectureShowcase({
+  onClose,
+  campusGroup: propCampusGroup,
+  initialBuildingId,
+  showcaseTitle: propTitle,
+}: Props) {
+  const campusGroup: CampusGroupId =
+    propCampusGroup ?? (initialBuildingId === 'udd-fame' ? 'fame' : 'main');
+  const buildings = getCampusBuildings(campusGroup);
+  const defaultBuildingId: CampusBuildingId =
+    initialBuildingId ?? (buildings[0]?.id || DEFAULT_BUILDING_ID);
+
   const navigate = useNavigate();
   const handleClose = useCallback(() => {
     if (onClose) {
@@ -60,7 +77,7 @@ export default function CampusArchitectureShowcase({ onClose }: Props) {
   }, [onClose, navigate]);
 
   const reducedMotion = useReducedMotion() ?? false;
-  const ctrl = useBuildingTransitionController(DEFAULT_BUILDING_ID, reducedMotion);
+  const ctrl = useBuildingTransitionController(defaultBuildingId, reducedMotion);
   const { poses, activeId, phase, busy, playIntro, switchTo, nudge, resetView } = ctrl;
   const active = getBuilding(activeId);
 
@@ -74,11 +91,11 @@ export default function CampusArchitectureShowcase({ onClose }: Props) {
   // Cinematic intro on open
   useEffect(() => {
     if (viewMode === 'photo') {
-      void playIntro(DEFAULT_BUILDING_ID);
+      void playIntro(defaultBuildingId);
     }
     closeBtnRef.current?.focus({ preventScroll: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [defaultBuildingId]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -208,6 +225,7 @@ export default function CampusArchitectureShowcase({ onClose }: Props) {
       {viewMode === '3d' ? (
         <Campus3DCanvas
           ref={canvas3DRef}
+          buildingIds={buildings.map((b) => b.id)}
           activeBuildingId={activeId}
           exploded={exploded}
           cinematicNonce={cinematicNonce}
@@ -221,7 +239,7 @@ export default function CampusArchitectureShowcase({ onClose }: Props) {
           onPointerCancel={endDrag}
           onWheel={onWheel}
         >
-          {CAMPUS_BUILDINGS.map((b) => (
+          {buildings.map((b) => (
             <React.Fragment key={b.id}>
               <CampusBuildingScene building={b} pose={poses[b.id]} isActive={b.id === activeId} />
             </React.Fragment>
@@ -242,14 +260,14 @@ export default function CampusArchitectureShowcase({ onClose }: Props) {
           <div>
             <div className="flex items-center gap-2">
               <p className="text-[11px] uppercase tracking-[0.25em] text-blue-300/80 font-semibold">
-                Campus Navigation · Architecture
+                Campus Navigation · {campusGroup === 'fame' ? 'FAME Campus' : 'Main Campus'} Architecture
               </p>
               <span className="hidden sm:inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 font-medium">
                 <Sparkles className="w-2.5 h-2.5 text-blue-400" /> Option B 3D
               </span>
             </div>
             <h1 id="arch-showcase-title" className="text-xl sm:text-2xl font-black tracking-tight">
-              UDD Main Campus Showcase
+              {propTitle ?? (campusGroup === 'fame' ? 'UDD FAME Campus Showcase' : 'UDD Main Campus Showcase')}
             </h1>
           </div>
         </div>
@@ -431,7 +449,9 @@ export default function CampusArchitectureShowcase({ onClose }: Props) {
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            <CampusBuildingSelector buildings={CAMPUS_BUILDINGS} activeId={activeId} onSelect={handleSelect} />
+            {buildings.length > 1 && (
+              <CampusBuildingSelector buildings={buildings} activeId={activeId} onSelect={handleSelect} />
+            )}
             <div className="flex gap-2">
               <button
                 id="arch-play-cinematic"
