@@ -282,6 +282,117 @@ function createRooftopLettersTexture(): THREE.CanvasTexture {
   return toTexture(canvas);
 }
 
+/** Regulation collegiate basketball court texture with UDD branding. */
+function createBasketballCourtTexture(): THREE.CanvasTexture {
+  const W = 2048;
+  const H = 1024;
+  const { canvas, ctx } = makeCanvas(W, H);
+
+  // Outer apron border: UDD Navy Blue
+  ctx.fillStyle = '#0a3273';
+  ctx.fillRect(0, 0, W, H);
+
+  // Playing area dimensions inside the apron
+  const padX = 120;
+  const padY = 75;
+  const courtW = W - padX * 2; // 1808
+  const courtH = H - padY * 2; // 874
+  const cx = W / 2;
+  const cy = H / 2;
+
+  // Natural polished maple wood planks
+  ctx.fillStyle = '#e2b36e';
+  ctx.fillRect(padX, padY, courtW, courtH);
+
+  // Wood plank seams
+  ctx.strokeStyle = '#d3a158';
+  ctx.lineWidth = 1;
+  for (let y = padY + 16; y < padY + courtH; y += 16) {
+    ctx.beginPath();
+    ctx.moveTo(padX, y);
+    ctx.lineTo(padX + courtW, y);
+    ctx.stroke();
+  }
+
+  // Key / Paint area colors: solid UDD Blue
+  const keyW = 380;
+  const keyH = 320;
+  ctx.fillStyle = '#145cd1';
+  ctx.fillRect(padX, cy - keyH / 2, keyW, keyH);
+  ctx.fillRect(padX + courtW - keyW, cy - keyH / 2, keyW, keyH);
+
+  // Free throw circles (keys)
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.arc(padX + keyW, cy, 115, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(padX + courtW - keyW, cy, 115, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // 3-Point arcs (white lines)
+  const threeRadius = 420;
+  // Left 3-pt arc
+  ctx.beginPath();
+  ctx.arc(padX + 90, cy, threeRadius, -Math.PI / 2 + 0.16, Math.PI / 2 - 0.16);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(padX, cy - threeRadius + 18);
+  ctx.lineTo(padX + 90, cy - threeRadius + 18);
+  ctx.moveTo(padX, cy + threeRadius - 18);
+  ctx.lineTo(padX + 90, cy + threeRadius - 18);
+  ctx.stroke();
+
+  // Right 3-pt arc
+  ctx.beginPath();
+  ctx.arc(padX + courtW - 90, cy, threeRadius, Math.PI / 2 + 0.16, (3 * Math.PI) / 2 - 0.16);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(padX + courtW, cy - threeRadius + 18);
+  ctx.lineTo(padX + courtW - 90, cy - threeRadius + 18);
+  ctx.moveTo(padX + courtW, cy + threeRadius - 18);
+  ctx.lineTo(padX + courtW - 90, cy + threeRadius - 18);
+  ctx.stroke();
+
+  // Outer boundary line (white line)
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 8;
+  ctx.strokeRect(padX, padY, courtW, courtH);
+
+  // Half-court line
+  ctx.beginPath();
+  ctx.moveTo(cx, padY);
+  ctx.lineTo(cx, padY + courtH);
+  ctx.stroke();
+
+  // Center jump circle with solid blue fill & white line
+  ctx.fillStyle = '#145cd1';
+  ctx.beginPath();
+  ctx.arc(cx, cy, 120, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Center UDD text inside jump circle
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '900 84px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('UDD', cx, cy);
+
+  // Sideline collegiate text on apron: "UNIVERSIDAD DE DAGUPAN"
+  ctx.font = '900 44px sans-serif';
+  ctx.fillText('UNIVERSIDAD DE DAGUPAN', cx, padY / 2);
+  ctx.fillText('UNIVERSIDAD DE DAGUPAN', cx, H - padY / 2);
+
+  // Baseline collegiate text: "UDD"
+  ctx.font = '900 38px sans-serif';
+  ctx.fillText('UDD', padX / 2, cy);
+  ctx.fillText('UDD', W - padX / 2, cy);
+
+  return toTexture(canvas);
+}
+
 // ── Geometry helpers ────────────────────────────────────────────────────────
 function box(
   w: number,
@@ -352,8 +463,8 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   const ground = new THREE.Group();
   ground.name = 'MainCampus_L0_Ground';
 
-  // 1. Site base, street, sidewalk & markings
-  ground.add(box(56, 0.3, 48, concrete, 2, -0.15, -4, false));
+  // 1. Site base, street, sidewalk & markings (extended to cover rear basketball arena)
+  ground.add(box(64, 0.3, 76, concrete, 4, -0.15, -16, false));
   ground.add(box(56, 0.08, 12, asphalt, 2, 0.0, 16, false));
   ground.add(box(56, 0.14, 4.5, concrete, 2, 0.07, 7.8, false)); // sidewalk
   for (let x = -24; x <= 28; x += 4) {
@@ -504,6 +615,117 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   ground.add(createCar(-17, 15.5, carDark));
   ground.add(createCar(15, 15.5, carBlue));
 
+  // 6. UDD Covered Basketball Court Arena (Rear campus athletic arena)
+  const courtMat = new THREE.MeshStandardMaterial({ map: createBasketballCourtTexture(), roughness: 0.35, metalness: 0.08 });
+  const hoopOrange = new THREE.MeshStandardMaterial({ color: 0xff5500, roughness: 0.3, metalness: 0.4 });
+  const netMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.8 });
+  const trussSilver = new THREE.MeshStandardMaterial({ color: 0xc4cbd4, roughness: 0.4, metalness: 0.5 });
+  const courtRoofBlue = new THREE.MeshStandardMaterial({ color: 0x0e4ea6, roughness: 0.45, metalness: 0.35 });
+
+  const courtX = 2.0;
+  const courtZ = -38.0;
+  const courtW = 32.0; // length along X (east-west)
+  const courtD = 18.0; // width along Z
+
+  // Concrete court apron base & tournament acrylic playing floor
+  ground.add(box(courtW + 2.0, 0.25, courtD + 2.0, concrete, courtX, 0.08, courtZ, false));
+  ground.add(box(courtW, 0.06, courtD, [mats.metalDark, mats.metalDark, courtMat, courtMat, mats.metalDark, mats.metalDark], courtX, 0.23, courtZ));
+
+  // Basketball Hoop Systems (East & West regulation hoops)
+  const addHoop = (hx: number, facingDir: number) => {
+    // Padded heavy hydraulic stanchion base
+    ground.add(box(1.2, 1.3, 1.2, blueWall, hx, 0.65, courtZ));
+    // Main cantilever boom angled towards court center
+    const boomStart = new THREE.Vector3(hx, 1.3, courtZ);
+    const boomEnd = new THREE.Vector3(hx + facingDir * 1.8, 3.4, courtZ);
+    ground.add(rod(boomStart, boomEnd, 0.12, blueWall));
+    ground.add(rod(new THREE.Vector3(hx, 0.8, courtZ), new THREE.Vector3(hx + facingDir * 1.2, 3.0, courtZ), 0.08, mats.metalSilver));
+
+    // Glass backboard
+    const bbX = hx + facingDir * 1.95;
+    ground.add(box(0.08, 1.15, 1.85, darkGlass, bbX, 3.4, courtZ));
+    ground.add(box(0.09, 1.2, 1.9, mats.whiteWall, bbX, 3.4, courtZ, false)); // border
+    ground.add(box(0.11, 0.45, 0.6, mats.whiteWall, bbX + facingDir * 0.02, 3.25, courtZ, false)); // target box
+
+    // Orange Rim (3.05m regulation height)
+    const rimX = bbX + facingDir * 0.42;
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.03, 12, 24), hoopOrange);
+    rim.rotation.x = Math.PI / 2;
+    rim.position.set(rimX, 3.05, courtZ);
+    rim.castShadow = true;
+    ground.add(rim);
+
+    // Basketball Net
+    const net = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.14, 0.45, 12, 1, true), netMat);
+    net.position.set(rimX, 2.8, courtZ);
+    ground.add(net);
+  };
+  addHoop(courtX - 14.5, 1);  // Left basket facing right
+  addHoop(courtX + 14.5, -1); // Right basket facing left
+
+  // Covered Court Steel Arched Canopy (Collegiate sports arena shelter)
+  const roofH = 9.8;
+  const colRadius = 0.22;
+  const colZs = [courtZ - 9.5, courtZ, courtZ + 9.5];
+  const colXs = [courtX - 16.2, courtX + 16.2];
+
+  colXs.forEach((cx) => {
+    colZs.forEach((cz) => {
+      // Robust structural steel columns
+      ground.add(rod(new THREE.Vector3(cx, 0, cz), new THREE.Vector3(cx, roofH, cz), colRadius, mats.metalDark));
+      // Base footing
+      ground.add(box(0.8, 0.6, 0.8, concrete, cx, 0.3, cz));
+    });
+  });
+
+  // Longitudinal side truss beams
+  colXs.forEach((cx) => {
+    ground.add(box(0.35, 0.5, 20.0, trussSilver, cx, roofH, courtZ));
+  });
+
+  // 3 Transverse arched steel roof trusses spanning over the court (width 32.8m)
+  const trussRadius = 17.5;
+  colZs.forEach((cz) => {
+    const archCenter = new THREE.Vector3(courtX, roofH - 4.5, cz);
+    const archGeo = new THREE.TorusGeometry(trussRadius, 0.18, 12, 40, Math.PI * 0.76);
+    const archMesh = new THREE.Mesh(archGeo, trussSilver);
+    archMesh.rotation.z = Math.PI * 0.12;
+    archMesh.position.copy(archCenter);
+    ground.add(archMesh);
+
+    // Inner parallel chord truss
+    const innerGeo = new THREE.TorusGeometry(trussRadius - 0.7, 0.12, 12, 40, Math.PI * 0.76);
+    const innerMesh = new THREE.Mesh(innerGeo, trussSilver);
+    innerMesh.rotation.z = Math.PI * 0.12;
+    innerMesh.position.copy(archCenter);
+    ground.add(innerMesh);
+
+    // Suspended industrial sports LED floodlight fixture in the center
+    const lightBank = box(2.4, 0.25, 0.8, mats.metalDark, courtX, roofH + 2.5, cz);
+    ground.add(lightBank);
+    const lightLens = box(2.2, 0.05, 0.7, mats.whiteWall, courtX, roofH + 2.35, cz, false);
+    ground.add(lightLens);
+  });
+
+  // Barrel-vault standing seam roof cover
+  const barrelW = 33.0;
+  const barrelD = 20.2;
+  const barrelY = roofH + 2.9;
+  ground.add(box(barrelW, 0.25, barrelD, courtRoofBlue, courtX, barrelY, courtZ));
+  // Fascia
+  ground.add(box(barrelW + 0.2, 0.5, 0.15, mats.metalSilver, courtX, barrelY, courtZ - barrelD / 2));
+  ground.add(box(barrelW + 0.2, 0.5, 0.15, mats.metalSilver, courtX, barrelY, courtZ + barrelD / 2));
+
+  // Sideline player team benches & scorer table
+  [-6, 6].forEach((bx) => {
+    // Blue team benches
+    ground.add(box(4.5, 0.45, 0.5, blueWall, courtX + bx, 0.45, courtZ + 8.2));
+    ground.add(box(4.5, 0.5, 0.1, blueWall, courtX + bx, 0.85, courtZ + 8.45)); // backrest
+  });
+  // Official scorer's table
+  ground.add(box(2.8, 0.75, 0.9, blueWall, courtX, 0.55, courtZ + 8.2));
+  ground.add(box(2.6, 0.4, 0.08, mats.whiteWall, courtX, 0.55, courtZ + 8.68, false));
+
   floorGroups.push(ground);
   root.add(ground);
 
@@ -601,8 +823,8 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   return {
     root,
     floorGroups,
-    defaultCameraPos: new THREE.Vector3(18, 16, 44),
-    targetLookAt: new THREE.Vector3(-1, 9.5, -2),
+    defaultCameraPos: new THREE.Vector3(26, 22, 46),
+    targetLookAt: new THREE.Vector3(0, 8.0, -12),
     explodeSpacing: 4.5,
   };
 }

@@ -62,11 +62,12 @@ export const CAMPUS_BUILDINGS: readonly CampusBuilding[] = [
     shortName: 'Main Campus',
     campus: 'Main Campus • Dagupan City',
     description:
-      'The unified campus complex of Universidad de Dagupan: featuring the 6-storey academic block with perforated mesh chevron facade, circular university seal, the modern chapel with monumental cross, grand entrance portal and roadside digital billboard.',
+      'The unified campus complex of Universidad de Dagupan: featuring the 6-storey academic block with perforated mesh chevron facade, circular university seal, modern chapel with monumental cross, grand entrance portal, and covered collegiate basketball arena.',
     visibleFeatures: [
       'Perforated mesh facade with chevron arrows',
       'Circular Universidad de Dagupan seal',
       'Modern A-frame chapel with monumental cross',
+      'Covered collegiate basketball arena',
       'Grand blue entrance portal & arched truss',
       'Roadside digital billboard & rooftop signage',
     ],
@@ -75,7 +76,7 @@ export const CAMPUS_BUILDINGS: readonly CampusBuilding[] = [
       'Architectural rendering of the unified UDD Main Campus: perforated mesh facade with chevron motifs, top seal, A-frame chapel with cross, entrance portal, and roadside billboard.',
     modelPath: 'procedural-3d',
     floors: [
-      { level: 0, label: 'Ground Concourse, Chapel Pavilion & Entrance Portal' },
+      { level: 0, label: 'Ground Concourse, Chapel, Entrance Portal & Basketball Arena' },
       { level: 1, label: '2nd Floor Academic Hall & Mesh Tier 1' },
       { level: 2, label: '3rd Floor Laboratories & Mesh Tier 2' },
       { level: 3, label: '4th Floor Classrooms & Mesh Tier 3' },
