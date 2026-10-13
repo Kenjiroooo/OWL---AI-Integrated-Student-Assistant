@@ -8,7 +8,7 @@
 // is null.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type CampusBuildingId = 'udd-main-tower' | 'udd-main-front' | 'udd-fame';
+export type CampusBuildingId = 'udd-main' | 'udd-main-tower' | 'udd-main-front' | 'udd-fame';
 
 /** Virtual "camera" pose applied to the photo panel (percent / degrees). */
 export interface CameraPose {
@@ -56,6 +56,37 @@ export interface CampusBuilding {
 }
 
 export const CAMPUS_BUILDINGS: readonly CampusBuilding[] = [
+  {
+    id: 'udd-main',
+    name: 'UDD Main Campus',
+    shortName: 'Main Campus',
+    campus: 'Main Campus • Dagupan City',
+    description:
+      'The unified campus complex of Universidad de Dagupan: featuring the 6-storey academic block with perforated mesh chevron facade, circular university seal, the modern chapel with monumental cross, grand entrance portal and roadside digital billboard.',
+    visibleFeatures: [
+      'Perforated mesh facade with chevron arrows',
+      'Circular Universidad de Dagupan seal',
+      'Modern A-frame chapel with monumental cross',
+      'Grand blue entrance portal & arched truss',
+      'Roadside digital billboard & rooftop signage',
+    ],
+    referenceImage: '/campus-buildings/udd-main.jpg',
+    referenceImageAlt:
+      'Architectural rendering of the unified UDD Main Campus: perforated mesh facade with chevron motifs, top seal, A-frame chapel with cross, entrance portal, and roadside billboard.',
+    modelPath: 'procedural-3d',
+    floors: [
+      { level: 0, label: 'Ground Concourse, Chapel Pavilion & Entrance Portal' },
+      { level: 1, label: '2nd Floor Academic Hall & Mesh Tier 1' },
+      { level: 2, label: '3rd Floor Laboratories & Mesh Tier 2' },
+      { level: 3, label: '4th Floor Classrooms & Mesh Tier 3' },
+      { level: 4, label: '5th Floor Upper Bay & UDD Seal' },
+      { level: 5, label: 'Rooftop Deck, Penthouse Tower & Signage' },
+    ],
+    defaultPose: { scale: 1.05, x: 0, y: 2, rotateX: 0, rotateY: 0 },
+    establishingPose: { scale: 0.62, x: 0, y: 10, rotateX: 14, rotateY: 0 },
+    orbitPose: { scale: 1.0, x: -5, y: 3, rotateX: 4, rotateY: 14 },
+    theme: { skyTop: '#0b1f3f', skyBottom: '#1e4b8f', accent: '#60a5fa' },
+  },
   {
     id: 'udd-main-tower',
     name: 'UDD Main Campus Tower',
@@ -149,7 +180,7 @@ export const CAMPUS_BUILDINGS: readonly CampusBuilding[] = [
 
 /** Buildings grouped per campus showcase. */
 export const CAMPUS_GROUPS = {
-  main: ['udd-main-tower', 'udd-main-front'],
+  main: ['udd-main'],
   fame: ['udd-fame'],
 } as const satisfies Record<string, readonly CampusBuildingId[]>;
 
@@ -159,7 +190,7 @@ export function getCampusBuildings(group: CampusGroupId): CampusBuilding[] {
   return CAMPUS_GROUPS[group].map((id) => getBuilding(id));
 }
 
-export const DEFAULT_BUILDING_ID: CampusBuildingId = 'udd-main-tower';
+export const DEFAULT_BUILDING_ID: CampusBuildingId = 'udd-main';
 
 export function getBuilding(id: CampusBuildingId): CampusBuilding {
   const b = CAMPUS_BUILDINGS.find((x) => x.id === id);

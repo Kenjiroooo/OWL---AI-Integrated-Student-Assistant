@@ -13,11 +13,13 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { CampusBuildingId } from './buildings';
 import { buildMainTower3D, buildFrontBuilding3D, type Building3DResult } from './proceduralModels';
 import { buildFameBuilding3D } from './fameModel';
+import { buildUnifiedMainCampus3D } from './mainCampusModel';
 
 /** Procedural model factory per building id. */
 const MODEL_FACTORIES: Record<CampusBuildingId, () => Building3DResult> = {
-  'udd-main-tower': buildMainTower3D,
-  'udd-main-front': buildFrontBuilding3D,
+  'udd-main': buildUnifiedMainCampus3D,
+  'udd-main-tower': buildUnifiedMainCampus3D,
+  'udd-main-front': buildUnifiedMainCampus3D,
   'udd-fame': buildFameBuilding3D,
 };
 
