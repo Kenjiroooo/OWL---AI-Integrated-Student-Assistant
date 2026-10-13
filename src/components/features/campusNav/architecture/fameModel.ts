@@ -164,9 +164,9 @@ function createTopBoxFrontTexture(): THREE.CanvasTexture {
   return toTexture(canvas);
 }
 
-/** Side faces of the top box (stripe continues around the corner). */
+/** Side faces of the top box (stripe continues along the extended 300% length). */
 function createTopBoxSideTexture(): THREE.CanvasTexture {
-  const W = 1024;
+  const W = 2048;
   const H = 512;
   const { canvas, ctx } = makeCanvas(W, H);
   const g = ctx.createLinearGradient(0, 0, 0, H);
@@ -174,7 +174,7 @@ function createTopBoxSideTexture(): THREE.CanvasTexture {
   g.addColorStop(1, C.silverBottom);
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
-  panelLines(ctx, 0, 0, W, H, 10, 5, '#99a1aa');
+  panelLines(ctx, 0, 0, W, H, 30, 5, '#99a1aa');
   ctx.fillStyle = C.darkWedge;
   ctx.fillRect(0, 133, W, 36);
   ctx.fillStyle = '#4b5158';
@@ -182,12 +182,21 @@ function createTopBoxSideTexture(): THREE.CanvasTexture {
   return toTexture(canvas);
 }
 
-/** Generic light ACP panel grid for side / rear faces. */
+/** Generic light ACP panel grid for rear faces. */
 function createPanelGridTexture(): THREE.CanvasTexture {
   const { canvas, ctx } = makeCanvas(512, 256);
   ctx.fillStyle = '#d3d8dd';
   ctx.fillRect(0, 0, 512, 256);
   panelLines(ctx, 0, 0, 512, 256, 6, 2, '#a7aeb6');
+  return toTexture(canvas);
+}
+
+/** Light ACP panel grid for extended long side faces. */
+function createSidePanelGridTexture(): THREE.CanvasTexture {
+  const { canvas, ctx } = makeCanvas(1024, 256);
+  ctx.fillStyle = '#d3d8dd';
+  ctx.fillRect(0, 0, 1024, 256);
+  panelLines(ctx, 0, 0, 1024, 256, 18, 2, '#a7aeb6');
   return toTexture(canvas);
 }
 
@@ -247,19 +256,22 @@ export function buildFameBuilding3D(): Building3DResult {
   const mainX1 = 6;
   const mainW = mainX1 - mainX0; // 16
   const mainCx = (mainX0 + mainX1) / 2;
-  const depth = 12;
-  const frontZ = depth / 2; // 6
+  const depth = 36; // 300% length (extended 3x from 12m to 36m)
+  const frontZ = 6;
+  const backZ = frontZ - depth; // -30
+  const mainCz = (frontZ + backZ) / 2; // -12
 
   const beigeX0 = 6;
   const beigeX1 = 13;
   const beigeW = beigeX1 - beigeX0;
   const beigeCx = (beigeX0 + beigeX1) / 2;
   const beigeFrontZ = 4.5;
-  const beigeD = beigeFrontZ + depth / 2;
-  const beigeCz = (beigeFrontZ - depth / 2) / 2;
+  const beigeD = beigeFrontZ - backZ; // 34.5
+  const beigeCz = (beigeFrontZ + backZ) / 2; // -12.75
 
   // Materials
-  const panelMat = new THREE.MeshStandardMaterial({ map: createPanelGridTexture(), roughness: 0.4, metalness: 0.35 });
+  const sideMat = new THREE.MeshStandardMaterial({ map: createSidePanelGridTexture(), roughness: 0.4, metalness: 0.35 });
+  const backMat = new THREE.MeshStandardMaterial({ map: createPanelGridTexture(), roughness: 0.4, metalness: 0.35 });
   const roofMat = new THREE.MeshStandardMaterial({ color: 0x9aa1a9, roughness: 0.8 });
   const meshFrontMat = new THREE.MeshStandardMaterial({ map: createMeshFloorTexture(), roughness: 0.45, metalness: 0.3 });
   const groundFrontMat = new THREE.MeshStandardMaterial({ map: createGroundFloorTexture(), roughness: 0.45, metalness: 0.25 });
@@ -277,22 +289,22 @@ export function buildFameBuilding3D(): Building3DResult {
   const whiteLine = new THREE.MeshBasicMaterial({ color: 0xf1f5f9 });
 
   // Face order for BoxGeometry: +x, -x, +y, -y, +z (front), -z (back)
-  const mainFloorMats = (front: THREE.Material) => [panelMat, panelMat, roofMat, roofMat, front, panelMat];
+  const mainFloorMats = (front: THREE.Material) => [sideMat, sideMat, roofMat, roofMat, front, backMat];
 
   // ── Ground floor (site, entrance, stairs, canopy, fence) ──────────────────
   const ground = new THREE.Group();
   ground.name = 'FAME_Ground_Floor';
 
   // Site: lawn, sidewalk, road
-  ground.add(box(40, 0.3, 26, concrete, 4, -0.15, 2, false));
+  ground.add(box(48, 0.3, 56, concrete, 4, -0.15, -11, false));
   ground.add(box(20, 0.08, 5.6, lawn, -4, 0.04, 9.4, false));
   ground.add(box(9, 0.08, 5.6, lawn, 19.5, 0.04, 9.4, false));
-  ground.add(box(40, 0.12, 3.4, concrete, 4, 0.06, 14, false));
-  ground.add(box(40, 0.05, 8, asphalt, 4, 0.0, 19.8, false));
-  for (let x = -14; x < 24; x += 4) ground.add(box(2, 0.02, 0.18, whiteLine, x, 0.04, 19.8, false));
+  ground.add(box(48, 0.12, 3.4, concrete, 4, 0.06, 14, false));
+  ground.add(box(48, 0.05, 8, asphalt, 4, 0.0, 19.8, false));
+  for (let x = -18; x < 26; x += 4) ground.add(box(2, 0.02, 0.18, whiteLine, x, 0.04, 19.8, false));
 
   // Main mass ground floor
-  ground.add(box(mainW, FH, depth, mainFloorMats(groundFrontMat), mainCx, FH / 2, 0));
+  ground.add(box(mainW, FH, depth, mainFloorMats(groundFrontMat), mainCx, FH / 2, mainCz));
 
   // Beige block ground floor with glass entrance doors
   ground.add(box(beigeW, FH, beigeD, beige, beigeCx, FH / 2, beigeCz));
@@ -399,7 +411,7 @@ export function buildFameBuilding3D(): Building3DResult {
     const baseY = f * FH;
     const cy = baseY + FH / 2;
 
-    g.add(box(mainW, FH, depth, mainFloorMats(meshFrontMat), mainCx, cy, 0));
+    g.add(box(mainW, FH, depth, mainFloorMats(meshFrontMat), mainCx, cy, mainCz));
     g.add(box(beigeW, FH, beigeD, beige, beigeCx, cy, beigeCz));
 
     const fz = beigeFrontZ + 0.05;
@@ -424,8 +436,20 @@ export function buildFameBuilding3D(): Building3DResult {
       // 4F – jalousie window strip under the cantilever
       g.add(box(5.2, 1.0, 0.08, jalousieMat, beigeCx, baseY + 2.4, fz, false));
     }
-    // Side (+x) windows on the beige block
-    g.add(box(0.08, 1.0, 4.5, darkGlass, beigeX1 + 0.05, baseY + 2.1, -1.5, false));
+
+    // Side (+x) classroom windows along the 34.5m beige block
+    [-2, -8, -14, -20, -26].forEach((wz) => {
+      g.add(box(0.08, 1.1, 4.2, darkGlass, beigeX1 + 0.05, baseY + 2.1, wz, false));
+      g.add(box(0.12, 0.08, 4.3, mats.metalDark, beigeX1 + 0.06, baseY + 1.52, wz, false));
+      g.add(box(0.12, 0.08, 4.3, mats.metalDark, beigeX1 + 0.06, baseY + 2.68, wz, false));
+    });
+
+    // Left-side (-x) classroom windows along the 36m main block
+    [-4, -12, -20, -28].forEach((wz) => {
+      g.add(box(0.08, 1.1, 5.0, darkGlass, mainX0 - 0.05, cy, wz, false));
+      g.add(box(0.12, 0.08, 5.1, mats.metalDark, mainX0 - 0.06, cy - 0.58, wz, false));
+      g.add(box(0.12, 0.08, 5.1, mats.metalDark, mainX0 - 0.06, cy + 0.58, wz, false));
+    });
 
     floorGroups.push(g);
     root.add(g);
@@ -437,23 +461,33 @@ export function buildFameBuilding3D(): Building3DResult {
   const topX0 = mainX0 - 0.3;
   const topX1 = beigeX1 + 1.2;
   const topH = 6.6;
-  const topD = depth + 1.2;
+  const topFrontZ = frontZ + 0.6; // 6.6
+  const topBackZ = backZ - 0.6; // -30.6
+  const topD = topFrontZ - topBackZ; // 37.2
+  const topCz = (topFrontZ + topBackZ) / 2; // -12
   const topSide = new THREE.MeshStandardMaterial({ map: createTopBoxSideTexture(), roughness: 0.35, metalness: 0.4 });
   const topFront = new THREE.MeshStandardMaterial({ map: createTopBoxFrontTexture(), roughness: 0.35, metalness: 0.4 });
+  const topBack = new THREE.MeshStandardMaterial({ map: createSidePanelGridTexture(), roughness: 0.4, metalness: 0.35 });
   const soffit = new THREE.MeshStandardMaterial({ color: 0x4b5158, roughness: 0.6 });
   top.add(
     box(
       topX1 - topX0,
       topH,
       topD,
-      [topSide, topSide, roofMat, soffit, topFront, topSide],
+      [topSide, topSide, roofMat, soffit, topFront, topBack],
       (topX0 + topX1) / 2,
       3 * FH + FH + topH / 2,
-      0.5
+      topCz
     )
   );
   // Rooftop parapet cap
-  top.add(box(topX1 - topX0 + 0.1, 0.2, topD + 0.1, mats.metalSilver, (topX0 + topX1) / 2, 4 * FH + topH + 0.1, 0.5));
+  top.add(box(topX1 - topX0 + 0.1, 0.2, topD + 0.1, mats.metalSilver, (topX0 + topX1) / 2, 4 * FH + topH + 0.1, topCz));
+
+  // Rooftop HVAC units along the extended 36m roof
+  [-6, -16, -24].forEach((acZ) => {
+    top.add(box(3.2, 1.4, 2.4, mats.metalSilver, 0, 4 * FH + topH + 0.9, acZ));
+    top.add(box(3.4, 0.2, 2.6, mats.metalDark, 0, 4 * FH + topH + 1.65, acZ));
+  });
 
   floorGroups.push(top);
   root.add(top);
@@ -461,8 +495,8 @@ export function buildFameBuilding3D(): Building3DResult {
   return {
     root,
     floorGroups,
-    defaultCameraPos: new THREE.Vector3(14, 13, 44),
-    targetLookAt: new THREE.Vector3(2, 9.5, 2),
-    explodeSpacing: 4,
+    defaultCameraPos: new THREE.Vector3(22, 17, 44),
+    targetLookAt: new THREE.Vector3(2, 9.5, -4),
+    explodeSpacing: 4.5,
   };
 }
