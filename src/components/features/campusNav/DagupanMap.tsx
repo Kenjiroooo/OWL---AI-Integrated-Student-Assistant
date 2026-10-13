@@ -29,11 +29,11 @@ export default function DagupanMap() {
     }
   };
 
-  const handleExplore = (position: [number, number]) => {
+  const handleExplore = (position: [number, number], route = 'maincampus') => {
     if (mapRef.current) {
       mapRef.current.flyTo(position, 18, { duration: 1.5 });
       setTimeout(() => {
-        navigate('maincampus');
+        navigate(route);
       }, 1500);
     }
   };
@@ -64,13 +64,14 @@ export default function DagupanMap() {
             title="Universidad de Dagupan"
             subtitle="Main Campus • Dagupan City"
             description="Formerly known as Colegio de Dagupan. A premier institution of higher learning in North Luzon, providing quality education and modern facilities."
-            onExplore={() => handleExplore(UDD_MAIN_LOCATION)}
+            onExplore={() => handleExplore(UDD_MAIN_LOCATION, 'maincampus')}
           />
           <UniversityMarker 
             position={UDD_FAME_LOCATION}
             title="Universidad de Dagupan"
             subtitle="Fame Building • Dagupan City"
             description="The Fame Building campus of Universidad de Dagupan."
+            onExplore={() => handleExplore(UDD_FAME_LOCATION, 'famecampus')}
           />
           <UniversityMarker 
             position={LCR_ARZADON_LOCATION}

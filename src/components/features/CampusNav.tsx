@@ -7,6 +7,7 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import DagupanMap from './campusNav/DagupanMap';
 import MainCampusInteractiveMap from './campusNav/MainCampusInteractiveMap';
+import FameCampusInteractiveMap from './campusNav/FameCampusInteractiveMap';
 
 // Leaflet CSS is required for the map to render correctly
 import 'leaflet/dist/leaflet.css';
@@ -18,6 +19,7 @@ export default function CampusNav() {
       <Routes>
         <Route index element={<DagupanMap />} />
         <Route path="maincampus" element={<MainCampusInteractiveMap />} />
+        <Route path="famecampus" element={<FameCampusInteractiveMap />} />
       </Routes>
     </div>
   );
