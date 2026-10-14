@@ -393,6 +393,118 @@ function createBasketballCourtTexture(): THREE.CanvasTexture {
   return toTexture(canvas);
 }
 
+/** Rooftop banner for Student Services Hall: "COLEGIO DE DAGUPAN". */
+function createServicesRoofSignTexture(): THREE.CanvasTexture {
+  const W = 1536;
+  const H = 256;
+  const { canvas, ctx } = makeCanvas(W, H);
+  ctx.fillStyle = '#0b4da2';
+  ctx.fillRect(0, 0, W, H);
+
+  // White border
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 10;
+  ctx.strokeRect(10, 10, W - 20, H - 20);
+
+  // Bold white text
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '900 108px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('COLEGIO DE DAGUPAN', W / 2, H / 2);
+
+  return toTexture(canvas);
+}
+
+/** Ground floor student services storefronts with signage & warm lights. */
+function createServicesOfficeTexture(): THREE.CanvasTexture {
+  const W = 1024;
+  const H = 256;
+  const { canvas, ctx } = makeCanvas(W, H);
+
+  // Dark reflective glass
+  ctx.fillStyle = '#111a24';
+  ctx.fillRect(0, 0, W, H);
+
+  // Warm interior lights glow in upper half
+  const glow = ctx.createLinearGradient(0, 0, 0, H);
+  glow.addColorStop(0, 'rgba(255, 230, 180, 0.45)');
+  glow.addColorStop(0.6, 'rgba(255, 220, 160, 0.15)');
+  glow.addColorStop(1, 'rgba(0, 0, 0, 0.6)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, W, H);
+
+  // Storefront divisions: 4 offices
+  const offices = ['REGISTRAR', 'CASHIER', 'INFORMATION', 'STUDENT SERVICES'];
+  const bayW = W / 4;
+  for (let i = 0; i < 4; i++) {
+    const bx = i * bayW;
+    // Signage plate
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(bx + 16, 20, bayW - 32, 44);
+    ctx.strokeStyle = '#0b4da2';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(bx + 16, 20, bayW - 32, 44);
+
+    ctx.fillStyle = '#0b4da2';
+    ctx.font = '900 24px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(offices[i], bx + bayW / 2, 42);
+
+    // Aluminum vertical door/window frames
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(bx + 8, 4, bayW - 16, H - 8);
+    // Double glass door division
+    ctx.strokeRect(bx + 30, 75, bayW - 60, H - 80);
+    ctx.beginPath();
+    ctx.moveTo(bx + bayW / 2, 75);
+    ctx.lineTo(bx + bayW / 2, H - 5);
+    ctx.stroke();
+  }
+
+  return toTexture(canvas);
+}
+
+/** Curtain wall glass panel texture with vertical aluminum mullions. */
+function createCurtainGlassTexture(): THREE.CanvasTexture {
+  const W = 512;
+  const H = 512;
+  const { canvas, ctx } = makeCanvas(W, H);
+
+  // Deep tinted architectural glass
+  ctx.fillStyle = '#172a3e';
+  ctx.fillRect(0, 0, W, H);
+
+  // Diagonal sky reflection gradient
+  const ref = ctx.createLinearGradient(0, 0, W, H);
+  ref.addColorStop(0, 'rgba(120, 180, 240, 0.25)');
+  ref.addColorStop(0.5, 'rgba(80, 140, 200, 0.08)');
+  ref.addColorStop(1, 'rgba(20, 50, 80, 0.35)');
+  ctx.fillStyle = ref;
+  ctx.fillRect(0, 0, W, H);
+
+  // Aluminum frame lines
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(0, 0, W, H);
+  for (let x = 128; x < W; x += 128) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, H);
+    ctx.stroke();
+  }
+  for (let y = 170; y < H; y += 170) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(W, y);
+    ctx.stroke();
+  }
+
+  return toTexture(canvas);
+}
+
 // ── Geometry helpers ────────────────────────────────────────────────────────
 function box(
   w: number,
@@ -455,6 +567,13 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   const asphalt = new THREE.MeshStandardMaterial({ color: 0x34383e, roughness: 0.95 });
   const grassMat = new THREE.MeshStandardMaterial({ color: 0x3d7a31, roughness: 1 });
   const shrubMat = new THREE.MeshStandardMaterial({ color: 0x2e6b29, roughness: 0.9 });
+  const shrubDark = new THREE.MeshStandardMaterial({ color: 0x1f5426, roughness: 0.85 });
+  const shrubLight = new THREE.MeshStandardMaterial({ color: 0x2e7d32, roughness: 0.8 });
+  const planterMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.7 });
+  const finMat = new THREE.MeshStandardMaterial({ color: 0xc8c3b7, roughness: 0.6, metalness: 0.15 });
+  const servicesSignMat = new THREE.MeshStandardMaterial({ map: createServicesRoofSignTexture(), roughness: 0.35 });
+  const officeGlassMat = new THREE.MeshStandardMaterial({ map: createServicesOfficeTexture(), roughness: 0.2, metalness: 0.5 });
+  const curtainGlassMat = new THREE.MeshStandardMaterial({ map: createCurtainGlassTexture(), roughness: 0.15, metalness: 0.6 });
   const carWhite = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.2, metalness: 0.5 });
   const carDark = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.25, metalness: 0.6 });
   const carBlue = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.2, metalness: 0.5 });
@@ -668,6 +787,64 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   ball.castShadow = true;
   ground.add(ball);
 
+  // 7. UDD Student Services & Administrative Hall (Rear campus building - SZD Design Studio)
+  // Relocated to the exact rear lot area behind the basketball court (facing +X towards court)
+  const admCx = -24.5;
+  const admD = 13.0; // depth along X (from x = -18.0 back to x = -31.0)
+  const admFrontX = -18.0;
+  const admBackX = -31.0;
+  const admW = 34.0; // width along Z (from z = -20.0 to z = -54.0)
+  const admCz = -37.0;
+
+  // Paved pedestrian apron connecting basketball court to services building
+  ground.add(box(4.0, 0.08, admW + 2, concrete, -16.0, 0.04, admCz, false));
+
+  // Ground concourse foundation slab
+  ground.add(box(admD, 0.3, admW, concrete, admCx, 0.15, admCz, false));
+
+  // Rear and left perimeter walls (crisp white ACP cladding)
+  ground.add(box(0.4, FH, admW, whiteMat, admBackX, FH / 2, admCz));
+  ground.add(box(admD, FH, 0.4, whiteMat, admCx, FH / 2, -20.0));
+
+  // Recessed ground-floor glass storefronts (Cashier, Registrar, Information, Student Services)
+  ground.add(box(0.1, FH - 0.4, admW - 2.0, [officeGlassMat, darkGlass, whiteMat, whiteMat, whiteMat, whiteMat], admFrontX - 1.2, FH / 2, admCz));
+
+  // White structural colonnade along the front concourse line (facing court)
+  const colZs = [-22.0, -28.0, -34.0, -40.0, -46.0, -52.0];
+  colZs.forEach((cz) => {
+    ground.add(box(0.65, FH, 0.65, whiteMat, admFrontX, FH / 2, cz));
+  });
+
+  // Green landscape planter boxes along the concourse
+  [-25.0, -37.0, -49.0].forEach((pz) => {
+    ground.add(box(0.8, 0.5, 4.5, planterMat, admFrontX + 1.2, 0.25, pz));
+    ground.add(box(0.6, 0.35, 4.3, shrubDark, admFrontX + 1.2, 0.6, pz));
+  });
+
+  // Parked cars in the courtyard plaza (as seen in SZD render)
+  ground.add(createCar(-22.0, -26.0, carWhite));
+  ground.add(createCar(-14.0, -38.0, carBlue));
+  ground.add(createCar(-14.0, -48.0, carDark));
+
+  // Right-Side Connecting Wing (L0) - frames the right side of the basketball court
+  const rwZ0 = -46.0;
+  const rwZ1 = -54.0;
+  const rwW = rwZ0 - rwZ1; // 8.0m along Z
+  const rwCz = (rwZ0 + rwZ1) / 2; // -50.0m
+  const rwFrontX = -12.0;
+  const rwBackX = -31.0;
+  const rwD = rwFrontX - rwBackX; // 19.0m along X
+  const rwCx = (rwFrontX + rwBackX) / 2; // -21.5m
+
+  ground.add(box(rwD, 0.3, rwW, concrete, rwCx, 0.15, rwCz, false));
+  ground.add(box(0.4, FH, rwW, whiteMat, rwFrontX, FH / 2, rwCz)); // front facade
+  ground.add(box(rwD, FH, 0.4, whiteMat, rwCx, FH / 2, rwZ1)); // outer wall
+  // Inner courtyard colonnade and walkway facing court (+Z)
+  [-16, -22, -28].forEach((cx) => {
+    ground.add(box(0.6, FH, 0.6, whiteMat, cx, FH / 2, rwZ0 - 0.4));
+  });
+  ground.add(box(rwD - 2, FH - 0.4, 0.12, darkGlass, rwCx, FH / 2, rwZ0 - 1.5));
+
   floorGroups.push(ground);
   root.add(ground);
 
@@ -718,6 +895,124 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       const ring = new THREE.Mesh(new THREE.TorusGeometry(sealRadius + 0.1, 0.16, 16, 64), blueWall);
       ring.position.set(mainCx, baseY + FH / 2 + 0.1, frontZ + 0.25);
       g.add(ring);
+    }
+
+    // ── Upper Tiers of Student Services & Administrative Hall (Rear Building) ──
+    const admCx = -24.5;
+    const admD = 13.0;
+    const admFrontX = -18.0;
+    const admBackX = -31.0;
+    const admW = 34.0;
+    const admCz = -37.0;
+
+    const rwZ0 = -46.0;
+    const rwZ1 = -54.0;
+    const rwW = rwZ0 - rwZ1;
+    const rwCz = (rwZ0 + rwZ1) / 2;
+    const rwFrontX = -12.0;
+    const rwBackX = -31.0;
+    const rwD = rwFrontX - rwBackX;
+    const rwCx = (rwFrontX + rwBackX) / 2;
+
+    if (f === 1) {
+      // 2F Level:
+      // Floor slab & perimeter walls
+      g.add(box(admD, 0.28, admW, roofMat, admCx, baseY + 0.14, admCz));
+      g.add(box(0.4, FH, admW, whiteMat, admBackX, cy, admCz));
+      g.add(box(admD, FH, 0.4, whiteMat, admCx, cy, -20.0));
+
+      // Left 2-Storey Royal Blue Portal Box (2F portion, facing +X towards court)
+      g.add(box(1.4, FH, 0.65, blueWall, admFrontX + 0.6, cy, -21.35));
+      g.add(box(1.4, FH, 0.65, blueWall, admFrontX + 0.6, cy, -31.65));
+      g.add(box(1.4, 0.45, 11.0, blueWall, admFrontX + 0.6, baseY + 0.225, -26.5)); // bottom sill
+      g.add(box(0.08, FH - 0.6, 9.7, [curtainGlassMat, darkGlass, whiteMat, whiteMat, whiteMat, whiteMat], admFrontX + 1.0, cy, -26.5));
+      g.add(box(0.5, FH, 0.4, whiteMat, admFrontX + 0.7, cy, -24.5));
+      g.add(box(0.5, FH, 0.4, whiteMat, admFrontX + 0.7, cy, -28.5));
+
+      // Center Vertical Slatted Bay (2F portion)
+      g.add(box(0.3, FH, 5.0, whiteMat, admFrontX - 0.2, cy, -34.5));
+      for (let sz = -32.4; sz >= -36.6; sz -= 0.42) {
+        g.add(box(0.4, FH, 0.12, finMat, admFrontX, cy, sz));
+      }
+
+      // Right Dynamic Blue Frame (2F portion)
+      g.add(box(0.3, 1.2, 11.0, whiteMat, admFrontX, baseY + 0.6, -42.5));
+      g.add(box(0.08, 2.3, 10.6, darkGlass, admFrontX + 0.05, baseY + 2.35, -42.5));
+      g.add(box(0.5, FH, 0.6, blueWall, admFrontX, cy, -47.7));
+
+      // Right Wing 2F
+      g.add(box(rwD, 0.28, rwW, roofMat, rwCx, baseY + 0.14, rwCz));
+      g.add(box(rwD, FH, 0.4, whiteMat, rwCx, cy, rwZ1));
+      g.add(box(0.4, FH, rwW, whiteMat, rwFrontX, cy, rwCz));
+      g.add(box(rwD - 4, 1.8, 0.12, darkGlass, rwCx, cy + 0.3, rwZ0 - 0.1));
+      g.add(box(rwD - 4, 0.9, 0.15, blueWall, rwCx, baseY + 0.45, rwZ0 - 0.1));
+    } else if (f === 2) {
+      // 3F Level:
+      // Floor slab & perimeter walls
+      g.add(box(admD, 0.28, admW, roofMat, admCx, baseY + 0.14, admCz));
+      g.add(box(0.4, FH, admW, whiteMat, admBackX, cy, admCz));
+      g.add(box(admD, FH, 0.4, whiteMat, admCx, cy, -20.0));
+
+      // Left 2-Storey Royal Blue Portal Box (3F portion)
+      g.add(box(1.4, FH, 0.65, blueWall, admFrontX + 0.6, cy, -21.35));
+      g.add(box(1.4, FH, 0.65, blueWall, admFrontX + 0.6, cy, -31.65));
+      g.add(box(1.4, 0.6, 11.0, blueWall, admFrontX + 0.6, baseY + FH - 0.3, -26.5)); // top header lintel
+      g.add(box(0.08, FH - 0.6, 9.7, [curtainGlassMat, darkGlass, whiteMat, whiteMat, whiteMat, whiteMat], admFrontX + 1.0, cy, -26.5));
+      g.add(box(0.5, FH, 0.4, whiteMat, admFrontX + 0.7, cy, -24.5));
+      g.add(box(0.5, FH, 0.4, whiteMat, admFrontX + 0.7, cy, -28.5));
+
+      // Center Vertical Slatted Bay & Circular University Seal (3F portion)
+      g.add(box(0.3, FH, 5.0, whiteMat, admFrontX - 0.2, cy, -34.5));
+      for (let sz = -32.4; sz >= -36.6; sz -= 0.42) {
+        g.add(box(0.4, FH, 0.12, finMat, admFrontX, cy, sz));
+      }
+      // Circular Universidad de Dagupan Seal Medallion (facing +X)
+      const sSeal = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.15, 0.18, 48), emblemMat);
+      sSeal.rotation.z = Math.PI / 2;
+      sSeal.position.set(admFrontX + 0.25, baseY + 1.9, -34.5);
+      sSeal.castShadow = true;
+      g.add(sSeal);
+      const sRing = new THREE.Mesh(new THREE.TorusGeometry(1.22, 0.1, 16, 48), blueWall);
+      sRing.rotation.y = Math.PI / 2;
+      sRing.position.set(admFrontX + 0.28, baseY + 1.9, -34.5);
+      g.add(sRing);
+
+      // Right Dynamic Blue Frame (3F portion)
+      g.add(box(1.2, 0.7, 11.0, blueWall, admFrontX + 0.4, baseY + FH - 0.35, -42.5));
+      g.add(box(1.2, FH, 0.7, blueWall, admFrontX + 0.4, cy, -47.65));
+      g.add(box(0.08, 2.5, 10.6, darkGlass, admFrontX + 0.05, baseY + 1.6, -42.5));
+
+      // Right Wing 3F
+      g.add(box(rwD, 0.28, rwW, roofMat, rwCx, baseY + 0.14, rwCz));
+      g.add(box(rwD, FH, 0.4, whiteMat, rwCx, cy, rwZ1));
+      g.add(box(0.4, FH, rwW, whiteMat, rwFrontX, cy, rwCz));
+      g.add(box(rwD - 4, 1.8, 0.12, darkGlass, rwCx, cy + 0.3, rwZ0 - 0.1));
+      g.add(box(rwD - 4, 0.9, 0.15, blueWall, rwCx, baseY + 0.45, rwZ0 - 0.1));
+    } else if (f === 3) {
+      // 4F Level: Student Services Roof Deck, Garden Terrace & Parapet Signage
+      g.add(box(admD, 0.3, admW, concrete, admCx, baseY + 0.15, admCz));
+      // Perimeter parapet walls
+      g.add(box(0.3, 1.1, admW, whiteMat, admFrontX, baseY + 0.55, admCz));
+      g.add(box(0.3, 1.1, admW, whiteMat, admBackX, baseY + 0.55, admCz));
+      g.add(box(admD, 1.1, 0.3, whiteMat, admCx, baseY + 0.55, -20.0));
+      g.add(box(0.4, 0.12, admW + 0.2, mats.metalSilver, admFrontX, baseY + 1.15, admCz)); // coping
+
+      // Rooftop Collegiate Signage: "COLEGIO DE DAGUPAN" (Facing +X)
+      g.add(box(0.25, 1.4, 13.5, [servicesSignMat, mats.metalDark, mats.metalDark, mats.metalDark, mats.metalDark, mats.metalDark], admFrontX + 0.15, baseY + 1.8, -35.0));
+
+      // Rooftop Garden Terrace planters & ornamental trees (as seen in SZD render)
+      [-24, -29, -40, -46].forEach((rz) => {
+        g.add(box(0.8, 0.5, 3.8, planterMat, admFrontX - 0.8, baseY + 0.4, rz));
+        g.add(box(0.6, 0.4, 3.6, shrubDark, admFrontX - 0.8, baseY + 0.8, rz));
+        const tree = new THREE.Mesh(new THREE.DodecahedronGeometry(0.75, 1), shrubLight);
+        tree.position.set(admFrontX - 0.8, baseY + 1.6, rz);
+        tree.castShadow = true;
+        g.add(tree);
+      });
+
+      // Right Wing Roof Deck
+      g.add(box(rwD, 0.3, rwW, concrete, rwCx, baseY + 0.15, rwCz));
+      g.add(box(rwD + 0.2, 0.8, rwW + 0.2, blueWall, rwCx, baseY + 0.55, rwCz));
     }
 
     floorGroups.push(g);
