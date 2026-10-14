@@ -724,7 +724,6 @@ function createDeansListBoardTexture(): THREE.CanvasTexture {
   return toTexture(canvas);
 }
 
-
 // ── Geometry helpers ────────────────────────────────────────────────────────
 function box(
   w: number,
@@ -838,7 +837,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   const ground = new THREE.Group();
   ground.name = 'MainCampus_L0_Ground';
 
-  // 1. Site base, street, sidewalk & markings (extended to cover rear basketball court)
+  // 1. Site base, street, sidewalk & markings (extended to cover rear basketball court & student services building)
   ground.add(box(84, 0.3, 102, concrete, 2, -0.15, -28, false));
   ground.add(box(56, 0.08, 12, asphalt, 2, 0.0, 16, false));
   ground.add(box(56, 0.14, 4.5, concrete, 2, 0.07, 7.8, false)); // sidewalk
@@ -848,6 +847,69 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
 
   // 2. Main building ground floor core & classrooms
   ground.add(box(mainW, FH, depth, [whiteMat, whiteMat, roofMat, roofMat, whiteMat, whiteMat], mainCx, FH / 2, mainCz));
+
+  // Driveway side ground windows & accent band (x = mainX1)
+  ground.add(box(0.25, 0.45, depth + 0.2, blueWall, mainX1 + 0.12, FH - 0.225, mainCz));
+  ground.add(box(0.08, 2.2, 5.0, darkGlass, mainX1 + 0.05, 1.8, -3.5, false));
+  ground.add(box(0.08, 2.2, 5.0, darkGlass, mainX1 + 0.05, 1.8, -12.5, false));
+
+  // ── Rear Facade & Covered Canopy facing Basketball Court (from udd-main-tower.JPG) ──
+  // A. Tower Core Base (x = 2.0 to 8.0, center x = 5.0)
+  ground.add(box(towerW0, FH, 0.5, whiteMat, towerCx, FH / 2, rearTowerZ));
+  ground.add(box(0.35, FH, 0.6, blueWall, towerX0 + 0.18, FH / 2, rearTowerZ));
+  ground.add(box(0.35, FH, 0.6, blueWall, towerX1 - 0.18, FH / 2, rearTowerZ));
+  ground.add(box(2.2, 2.6, 0.1, darkGlass, towerCx, 1.4, rearTowerZ - 0.22, false));
+  ground.add(box(2.3, 0.08, 0.12, mats.metalSilver, towerCx, 2.75, rearTowerZ - 0.22, false));
+
+  // B. Classroom Ground Floor Wall (x = -16.0 to 2.0, center x = -7.0)
+  ground.add(box(classW - 1.0, 2.8, 0.1, darkGlass, classCx, 1.6, backZ - 0.05, false));
+  ground.add(box(classW, 0.45, 0.35, blueWall, classCx, FH - 0.225, backZ - 0.15));
+
+  // C. Concrete Bleachers & Stepped Entrance Terrace under Canopy
+  ground.add(box(classW + 1.0, 0.25, 4.6, concrete, classCx, 0.125, backZ - 2.5, false));
+  ground.add(box(classW - 0.5, 0.25, 3.6, concrete, classCx, 0.375, backZ - 2.0, false));
+  ground.add(box(classW - 1.5, 0.25, 2.6, concrete, classCx, 0.625, backZ - 1.5, false));
+
+  // D. Covered Entrance Awning / Canopy with Arched Steel Trusses (udd-main-tower.JPG)
+  const canopyZ0 = backZ; // -22.0
+  const canopyZ1 = backZ - 4.8; // -26.8
+  const canopyL = canopyZ0 - canopyZ1; // 4.8m projection
+  const canopyCz = (canopyZ0 + canopyZ1) / 2; // -24.4
+  const canopyY0 = 4.2;
+  const canopyY1 = 3.3;
+  const canopyYmid = (canopyY0 + canopyY1) / 2; // 3.75
+
+  const canopyRoof = box(classW + 0.6, 0.12, canopyL, mats.metalDark, classCx, canopyYmid, canopyCz);
+  canopyRoof.rotation.x = Math.atan2(canopyY0 - canopyY1, canopyL);
+  ground.add(canopyRoof);
+
+  // Fascia trim
+  ground.add(box(classW + 0.7, 0.25, 0.1, mats.metalSilver, classCx, canopyY1, canopyZ1));
+  ground.add(box(0.1, 0.25, canopyL, mats.metalSilver, classX0 - 0.3, canopyYmid, canopyCz));
+  ground.add(box(0.1, 0.25, canopyL, mats.metalSilver, classX1 + 0.3, canopyYmid, canopyCz));
+
+  // Canopy Tubular Columns & Arched Brackets
+  const canopyColXs = [-8.5, -3.5, 2.5, 7.5];
+  canopyColXs.forEach((cx) => {
+    ground.add(rod(new THREE.Vector3(cx, 0, canopyZ1 + 0.15), new THREE.Vector3(cx, canopyY1, canopyZ1 + 0.15), 0.12, mats.metalSilver));
+    ground.add(rod(new THREE.Vector3(cx, canopyY1 - 0.9, canopyZ1 + 0.15), new THREE.Vector3(cx - 1.4, canopyY1 - 0.05, canopyZ1 + 0.15), 0.06, mats.metalSilver));
+    ground.add(rod(new THREE.Vector3(cx, canopyY1 - 0.9, canopyZ1 + 0.15), new THREE.Vector3(cx + 1.4, canopyY1 - 0.05, canopyZ1 + 0.15), 0.06, mats.metalSilver));
+    ground.add(rod(new THREE.Vector3(cx, canopyY1 - 0.9, canopyZ1 + 0.15), new THREE.Vector3(cx, canopyYmid, canopyCz), 0.07, mats.metalSilver));
+  });
+
+  // E. Dean's List Announcement Board (mounted under canopy)
+  ground.add(box(2.4, 1.25, 0.08, [mats.metalDark, mats.metalDark, mats.metalDark, mats.metalDark, mats.metalDark, deansListMat], -0.5, 1.9, canopyZ1 + 0.45));
+  ground.add(rod(new THREE.Vector3(-0.5, 0, canopyZ1 + 0.45), new THREE.Vector3(-0.5, 1.3, canopyZ1 + 0.45), 0.05, mats.metalDark));
+
+  // F. Stainless Steel Flagpole with Philippine Flag
+  const flagX = 7.8;
+  const flagZ = canopyZ1 - 0.3;
+  ground.add(rod(new THREE.Vector3(flagX, 0, flagZ), new THREE.Vector3(flagX, 7.5, flagZ), 0.06, mats.metalSilver));
+  const flagFinial = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 12), new THREE.MeshStandardMaterial({ color: 0xeab308, metalness: 0.8, roughness: 0.2 }));
+  flagFinial.position.set(flagX, 7.55, flagZ);
+  ground.add(flagFinial);
+  const flagMat = new THREE.MeshStandardMaterial({ color: 0x0038a8, roughness: 0.6 });
+  ground.add(box(0.9, 0.55, 0.02, flagMat, flagX + 0.48, 6.8, flagZ));
 
   // Ground floor horizontal blue canopy
   ground.add(box(16, 0.25, 2.8, blueWall, -8, FH - 0.2, frontZ + 1.2));
@@ -1122,8 +1184,8 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       metalness: 0.35,
     });
 
-    // Main floor volume
-    g.add(box(mainW, FH, depth, [tierSideMat, tierSideMat, roofMat, roofMat, tierFrontMat, whiteMat], mainCx, cy, mainCz));
+    // Main floor volume (with crisp white ACP wall on +X face matching udd-main-tower.JPG)
+    g.add(box(mainW, FH, depth, [whiteMat, tierSideMat, roofMat, roofMat, tierFrontMat, whiteMat], mainCx, cy, mainCz));
 
     // Left-side classroom ribbon windows (-x wall)
     for (let wz = -4; wz >= -18; wz -= 6) {
@@ -1132,11 +1194,63 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       g.add(box(0.12, 0.08, 4.5, blueWall, mainX0 - 0.06, cy + 0.65, wz, false)); // lintel
     }
 
-    // Right-side windows (+x wall overlooking entrance driveway)
-    for (let wz = -2; wz >= -16; wz -= 5) {
-      g.add(box(0.08, 1.2, 3.8, darkGlass, mainX1 + 0.05, cy, wz, false));
-      g.add(box(0.12, 0.08, 3.9, blueWall, mainX1 + 0.06, cy - 0.65, wz, false));
-    }
+    // ── Driveway side (x = mainX1) ─────────────────────────────────────────────
+    g.add(box(0.25, 0.45, depth + 0.2, blueWall, mainX1 + 0.12, baseY + 0.225, mainCz));
+    g.add(box(0.35, 0.22, depth + 0.4, whiteMat, mainX1 + 0.16, baseY + 0.45, mainCz));
+    [-7.5, -13.0, -18.5].forEach((wz) => {
+      g.add(box(0.08, 1.5, 4.4, darkGlass, mainX1 + 0.05, cy + 0.2, wz, false));
+    });
+
+    // ── Rear Facade facing Basketball Court (from udd-main-tower.JPG) ──────────
+    // 1. Tower Core Section (x = 2.0 to 8.0, center x = 5.0)
+    g.add(box(towerW0, FH, 0.5, whiteMat, towerCx, cy, rearTowerZ));
+    g.add(box(0.35, FH, 0.6, blueWall, towerX0 + 0.18, cy, rearTowerZ));
+    g.add(box(0.35, FH, 0.6, blueWall, towerX1 - 0.18, cy, rearTowerZ));
+
+    // Multi-pane square grid windows on Tower (f = 1, 2, 3, 4)
+    g.add(box(2.2, 1.8, 0.08, [whiteMat, whiteMat, whiteMat, whiteMat, whiteMat, towerSquareMat], towerCx, cy + 0.15, rearTowerZ - 0.22));
+    g.add(box(2.4, 0.1, 0.15, mats.whiteWall, towerCx, cy - 0.8, rearTowerZ - 0.22));
+    g.add(box(2.4, 0.1, 0.15, mats.whiteWall, towerCx, cy + 1.1, rearTowerZ - 0.22));
+
+    // 2. Academic Classroom Block with Balconies & AC Units (x = -16.0 to 2.0)
+
+    // A. Continuous Royal Blue Horizontal Floor Accent Band
+    g.add(box(classW, 0.45, 0.35, blueWall, classCx, baseY + 0.225, backZ - 0.15));
+    // Cantilevered white floor slab directly above the blue band
+    g.add(box(classW + 0.2, 0.22, 0.45, whiteMat, classCx, baseY + 0.45, backZ - 0.2));
+
+    // B. Classroom Multi-Pane Ribbon Windows (recessed behind balconies)
+    const ribbonBays = [-7.0, -1.0, 5.0];
+    ribbonBays.forEach((rx) => {
+      g.add(box(4.6, 1.6, 0.08, [whiteMat, whiteMat, whiteMat, whiteMat, whiteMat, towerRibbonMat], rx, cy + 0.25, backZ - 0.06));
+      g.add(box(0.08, 1.65, 0.1, whiteMat, rx - 1.15, cy + 0.25, backZ - 0.08));
+      g.add(box(0.08, 1.65, 0.1, whiteMat, rx + 1.15, cy + 0.25, backZ - 0.08));
+    });
+
+    // C. Cantilevered Concrete Balconies
+    const balcD = 1.15;
+    const balcZ = backZ - balcD / 2; // -22.575
+    const balcFrontZ = backZ - balcD; // -23.15
+    g.add(box(classW - 0.2, 0.2, balcD, whiteMat, classCx, baseY + 0.55, balcZ));
+    g.add(box(classW - 0.2, 0.85, 0.12, whiteMat, classCx, baseY + 1.05, balcFrontZ));
+    g.add(box(classW, 0.12, 0.18, blueWall, classCx, baseY + 1.52, balcFrontZ));
+    g.add(box(0.15, 0.85, balcD, whiteMat, classX0 + 0.1, baseY + 1.05, balcZ));
+    g.add(box(0.15, 0.85, balcD, whiteMat, classX1 - 0.1, baseY + 1.05, balcZ));
+
+    // D. Wall-Mounted Air Conditioner Outdoor Compressor Units on Brackets (udd-main-tower.JPG)
+    const acConfigs: Record<number, number[]> = {
+      1: [-7.0, -1.0],
+      2: [-7.5, -1.5, 4.5],
+      3: [-6.8, -0.8, 5.2],
+      4: [-7.0, -1.2, 5.0],
+    };
+    (acConfigs[f] || []).forEach((acX) => {
+      const acY = baseY + 1.85;
+      const acZ = balcFrontZ + 0.15;
+      g.add(box(0.85, 0.62, 0.38, [mats.metalSilver, mats.metalSilver, mats.metalSilver, mats.metalSilver, mats.metalSilver, acUnitMat], acX, acY, acZ));
+      g.add(box(0.04, 0.45, 0.42, mats.metalDark, acX - 0.28, acY - 0.35, acZ));
+      g.add(box(0.04, 0.45, 0.42, mats.metalDark, acX + 0.28, acY - 0.35, acZ));
+    });
 
     // Level 4 (Top Tier): Mount the large circular Universidad de Dagupan Seal
     if (f === 4) {
@@ -1154,22 +1268,6 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     }
 
     // ── Upper Tiers of Student Services & Administrative Hall (Rear Building) ──
-    const admCx = -24.5;
-    const admD = 13.0;
-    const admFrontX = -18.0;
-    const admBackX = -31.0;
-    const admW = 34.0;
-    const admCz = -37.0;
-
-    const rwZ0 = -46.0;
-    const rwZ1 = -54.0;
-    const rwW = rwZ0 - rwZ1;
-    const rwCz = (rwZ0 + rwZ1) / 2;
-    const rwFrontX = -12.0;
-    const rwBackX = -31.0;
-    const rwD = rwFrontX - rwBackX;
-    const rwCx = (rwFrontX + rwBackX) / 2;
-
     if (f === 1) {
       // 2F Level:
       // Floor slab & perimeter walls
@@ -1284,15 +1382,59 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   roof.add(box(mainW + 0.4, 0.8, depth + 0.4, mats.metalSilver, mainCx, roofBaseY + 0.4, mainCz));
 
   // 2. Elevator & Stair Core Penthouse Tower (rises above roofline)
-  const towerW = 7.0;
-  const towerH = 6.8;
-  const towerD = 8.5;
-  const towerX = -10.5;
-  const towerZ = -7.5;
-  roof.add(box(towerW, towerH, towerD, whiteMat, towerX, roofBaseY + towerH / 2, towerZ));
-  roof.add(box(towerW + 0.2, 0.3, towerD + 0.2, mats.metalSilver, towerX, roofBaseY + towerH + 0.15, towerZ)); // tower cap
+  const pentW = 7.0;
+  const pentH = 6.8;
+  const pentD = 8.5;
+  const pentX = 1.0;
+  const pentZ = -7.5;
+  roof.add(box(pentW, pentH, pentD, whiteMat, pentX, roofBaseY + pentH / 2, pentZ));
+  roof.add(box(pentW + 0.2, 0.3, pentD + 0.2, mats.metalSilver, pentX, roofBaseY + pentH + 0.15, pentZ)); // tower cap
 
-  // 3. Rooftop 3D Lettering Sign: "UNIVERSIDAD DE DAGUPAN" (Along right roof edge)
+  // 3. Main Tower Rooftop Extension, Vertical UDD Sign & Maintenance Cage (from udd-main-tower.JPG)
+  const towerTopY = roofBaseY + 6.8; // 25.8m high
+
+  // Tower penthouse core rising above roofline
+  roof.add(box(towerW0, 6.8, 4.2, whiteMat, towerCx, roofBaseY + 3.4, backZ + 1.6));
+  // Tower Royal Blue Cap Cornice
+  roof.add(box(towerW0 + 0.4, 0.4, 4.6, blueWall, towerCx, towerTopY + 0.2, backZ + 1.6));
+  // Tower vertical corner pilasters
+  roof.add(box(0.35, 6.8, 0.6, blueWall, towerX0 + 0.18, roofBaseY + 3.4, rearTowerZ));
+  roof.add(box(0.35, 6.8, 0.6, blueWall, towerX1 - 0.18, roofBaseY + 3.4, rearTowerZ));
+
+  // The Bold Vertical "UDD" Sign (Mounted on the -Z face of the tower)
+  const uddSignH = 5.2;
+  const uddSignW = 2.6;
+  const uddSignY = roofBaseY + 3.4;
+  roof.add(box(uddSignW, uddSignH, 0.08, [blueWall, blueWall, blueWall, blueWall, blueWall, uddTowerSignMat], towerCx, uddSignY, rearTowerZ - 0.25));
+  roof.add(box(uddSignW + 0.16, uddSignH + 0.16, 0.06, blueWall, towerCx, uddSignY, rearTowerZ - 0.22, false));
+
+  // Rooftop Maintenance Cage Ladder & Platform (from udd-main-tower.JPG corner of tower)
+  const cageX = towerX1 - 1.2;
+  const cageZ = rearTowerZ - 0.1;
+  const platformY = towerTopY + 0.2;
+  roof.add(box(1.4, 0.1, 1.4, mats.metalDark, cageX, platformY + 0.05, cageZ + 0.5));
+  roof.add(rod(new THREE.Vector3(cageX - 0.6, platformY, cageZ), new THREE.Vector3(cageX - 0.6, platformY + 1.1, cageZ), 0.03, mats.metalDark));
+  roof.add(rod(new THREE.Vector3(cageX + 0.6, platformY, cageZ), new THREE.Vector3(cageX + 0.6, platformY + 1.1, cageZ), 0.03, mats.metalDark));
+  roof.add(rod(new THREE.Vector3(cageX - 0.6, platformY + 1.1, cageZ), new THREE.Vector3(cageX + 0.6, platformY + 1.1, cageZ), 0.03, mats.metalDark));
+
+  roof.add(rod(new THREE.Vector3(cageX - 0.22, platformY, cageZ), new THREE.Vector3(cageX - 0.22, platformY + 2.4, cageZ), 0.025, mats.metalDark));
+  roof.add(rod(new THREE.Vector3(cageX + 0.22, platformY, cageZ), new THREE.Vector3(cageX + 0.22, platformY + 2.4, cageZ), 0.025, mats.metalDark));
+  for (let ly = platformY + 0.3; ly <= platformY + 2.3; ly += 0.3) {
+    roof.add(box(0.44, 0.03, 0.03, mats.metalDark, cageX, ly, cageZ));
+  }
+  [platformY + 1.0, platformY + 1.6, platformY + 2.2].forEach((hy) => {
+    const hoop = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.02, 8, 16, Math.PI), mats.metalDark);
+    hoop.rotation.x = Math.PI / 2;
+    hoop.position.set(cageX, hy, cageZ - 0.05);
+    roof.add(hoop);
+  });
+
+  // Rooftop Parapet Banner: "UNIVERSIDAD DE DAGUPAN" (Facing Basketball Court / -Z)
+  roof.add(box(classW, 1.2, 0.3, whiteMat, classCx, roofBaseY + 0.6, backZ - 0.15));
+  roof.add(box(classW - 1.0, 1.0, 0.08, [blueWall, blueWall, blueWall, blueWall, blueWall, roofLettersMat], classCx, roofBaseY + 0.6, backZ - 0.32));
+  roof.add(box(classW, 0.12, 0.4, blueWall, classCx, roofBaseY + 1.25, backZ - 0.15));
+
+  // 4. Rooftop Lettering Sign along right driveway edge
   const signLen = 22.0;
   const signH = 1.4;
   roof.add(box(0.12, signH, signLen, roofLettersMat, mainX1 - 0.2, roofBaseY + 0.8 + signH / 2, mainCz));
@@ -1308,7 +1450,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     roof.add(box(3.4, 0.2, 2.6, mats.metalDark, 2.5, roofBaseY + 1.65, az));
   });
   // Communication mast
-  roof.add(rod(new THREE.Vector3(towerX, roofBaseY + towerH, towerZ), new THREE.Vector3(towerX, roofBaseY + towerH + 5.5, towerZ), 0.08, mats.metalSilver));
+  roof.add(rod(new THREE.Vector3(pentX, roofBaseY + pentH, pentZ), new THREE.Vector3(pentX, roofBaseY + pentH + 5.5, pentZ), 0.08, mats.metalSilver));
 
   floorGroups.push(roof);
   root.add(roof);
@@ -1316,8 +1458,8 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   return {
     root,
     floorGroups,
-    defaultCameraPos: new THREE.Vector3(26, 22, 46),
-    targetLookAt: new THREE.Vector3(0, 8.0, -12),
+    defaultCameraPos: new THREE.Vector3(34, 28, 52),
+    targetLookAt: new THREE.Vector3(-4.0, 7.0, -22.0),
     explodeSpacing: 4.5,
   };
 }
