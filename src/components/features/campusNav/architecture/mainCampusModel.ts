@@ -463,8 +463,8 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   const ground = new THREE.Group();
   ground.name = 'MainCampus_L0_Ground';
 
-  // 1. Site base, street, sidewalk & markings (extended to cover rear basketball arena)
-  ground.add(box(64, 0.3, 76, concrete, 4, -0.15, -16, false));
+  // 1. Site base, street, sidewalk & markings (extended to cover rear basketball court)
+  ground.add(box(84, 0.3, 102, concrete, 2, -0.15, -28, false));
   ground.add(box(56, 0.08, 12, asphalt, 2, 0.0, 16, false));
   ground.add(box(56, 0.14, 4.5, concrete, 2, 0.07, 7.8, false)); // sidewalk
   for (let x = -24; x <= 28; x += 4) {
@@ -615,12 +615,10 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   ground.add(createCar(-17, 15.5, carDark));
   ground.add(createCar(15, 15.5, carBlue));
 
-  // 6. UDD Covered Basketball Court Arena (Rear campus athletic arena)
+  // 6. UDD Outdoor Basketball Court (Rear campus athletic court - open-air)
   const courtMat = new THREE.MeshStandardMaterial({ map: createBasketballCourtTexture(), roughness: 0.35, metalness: 0.08 });
   const hoopOrange = new THREE.MeshStandardMaterial({ color: 0xff5500, roughness: 0.3, metalness: 0.4 });
   const netMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.8 });
-  const trussSilver = new THREE.MeshStandardMaterial({ color: 0xc4cbd4, roughness: 0.4, metalness: 0.5 });
-  const courtRoofBlue = new THREE.MeshStandardMaterial({ color: 0x0e4ea6, roughness: 0.45, metalness: 0.35 });
 
   const courtX = 2.0;
   const courtZ = -38.0;
@@ -663,68 +661,12 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   addHoop(courtX - 14.5, 1);  // Left basket facing right
   addHoop(courtX + 14.5, -1); // Right basket facing left
 
-  // Covered Court Steel Arched Canopy (Collegiate sports arena shelter)
-  const roofH = 9.8;
-  const colRadius = 0.22;
-  const colZs = [courtZ - 9.5, courtZ, courtZ + 9.5];
-  const colXs = [courtX - 16.2, courtX + 16.2];
-
-  colXs.forEach((cx) => {
-    colZs.forEach((cz) => {
-      // Robust structural steel columns
-      ground.add(rod(new THREE.Vector3(cx, 0, cz), new THREE.Vector3(cx, roofH, cz), colRadius, mats.metalDark));
-      // Base footing
-      ground.add(box(0.8, 0.6, 0.8, concrete, cx, 0.3, cz));
-    });
-  });
-
-  // Longitudinal side truss beams
-  colXs.forEach((cx) => {
-    ground.add(box(0.35, 0.5, 20.0, trussSilver, cx, roofH, courtZ));
-  });
-
-  // 3 Transverse arched steel roof trusses spanning over the court (width 32.8m)
-  const trussRadius = 17.5;
-  colZs.forEach((cz) => {
-    const archCenter = new THREE.Vector3(courtX, roofH - 4.5, cz);
-    const archGeo = new THREE.TorusGeometry(trussRadius, 0.18, 12, 40, Math.PI * 0.76);
-    const archMesh = new THREE.Mesh(archGeo, trussSilver);
-    archMesh.rotation.z = Math.PI * 0.12;
-    archMesh.position.copy(archCenter);
-    ground.add(archMesh);
-
-    // Inner parallel chord truss
-    const innerGeo = new THREE.TorusGeometry(trussRadius - 0.7, 0.12, 12, 40, Math.PI * 0.76);
-    const innerMesh = new THREE.Mesh(innerGeo, trussSilver);
-    innerMesh.rotation.z = Math.PI * 0.12;
-    innerMesh.position.copy(archCenter);
-    ground.add(innerMesh);
-
-    // Suspended industrial sports LED floodlight fixture in the center
-    const lightBank = box(2.4, 0.25, 0.8, mats.metalDark, courtX, roofH + 2.5, cz);
-    ground.add(lightBank);
-    const lightLens = box(2.2, 0.05, 0.7, mats.whiteWall, courtX, roofH + 2.35, cz, false);
-    ground.add(lightLens);
-  });
-
-  // Barrel-vault standing seam roof cover
-  const barrelW = 33.0;
-  const barrelD = 20.2;
-  const barrelY = roofH + 2.9;
-  ground.add(box(barrelW, 0.25, barrelD, courtRoofBlue, courtX, barrelY, courtZ));
-  // Fascia
-  ground.add(box(barrelW + 0.2, 0.5, 0.15, mats.metalSilver, courtX, barrelY, courtZ - barrelD / 2));
-  ground.add(box(barrelW + 0.2, 0.5, 0.15, mats.metalSilver, courtX, barrelY, courtZ + barrelD / 2));
-
-  // Sideline player team benches & scorer table
-  [-6, 6].forEach((bx) => {
-    // Blue team benches
-    ground.add(box(4.5, 0.45, 0.5, blueWall, courtX + bx, 0.45, courtZ + 8.2));
-    ground.add(box(4.5, 0.5, 0.1, blueWall, courtX + bx, 0.85, courtZ + 8.45)); // backrest
-  });
-  // Official scorer's table
-  ground.add(box(2.8, 0.75, 0.9, blueWall, courtX, 0.55, courtZ + 8.2));
-  ground.add(box(2.6, 0.4, 0.08, mats.whiteWall, courtX, 0.55, courtZ + 8.68, false));
+  // Official Basketball ball on court
+  const ballMat = new THREE.MeshStandardMaterial({ color: 0xee5d1a, roughness: 0.55, metalness: 0.05 });
+  const ball = new THREE.Mesh(new THREE.SphereGeometry(0.24, 20, 20), ballMat);
+  ball.position.set(courtX + 0.9, 0.48, courtZ - 0.6);
+  ball.castShadow = true;
+  ground.add(ball);
 
   floorGroups.push(ground);
   root.add(ground);
