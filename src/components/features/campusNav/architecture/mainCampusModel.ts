@@ -505,6 +505,226 @@ function createCurtainGlassTexture(): THREE.CanvasTexture {
   return toTexture(canvas);
 }
 
+/** Vertical "UDD" Tower Sign texture (from udd-main-tower.JPG). */
+function createVerticalUddSignTexture(): THREE.CanvasTexture {
+  const { canvas, ctx } = makeCanvas(512, 1024);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, 512, 1024);
+
+  // University Blue border accents matching the reference photo
+  ctx.fillStyle = '#0f4ba3';
+  ctx.fillRect(0, 0, 512, 24);
+  ctx.fillRect(0, 1000, 512, 24);
+  ctx.strokeStyle = '#0a3273';
+  ctx.lineWidth = 12;
+  ctx.strokeRect(10, 10, 492, 1004);
+
+  // Bold vertical "U D D" lettering with subtle shadow/bevel for 3D effect
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  const letters = [
+    { char: 'U', y: 260 },
+    { char: 'D', y: 512 },
+    { char: 'D', y: 764 },
+  ];
+
+  letters.forEach(({ char, y }) => {
+    // Drop shadow
+    ctx.fillStyle = 'rgba(0, 20, 60, 0.4)';
+    ctx.font = '900 230px sans-serif';
+    ctx.fillText(char, 264, y + 8);
+
+    // Deep blue bevel
+    ctx.fillStyle = '#072e6b';
+    ctx.fillText(char, 260, y + 4);
+
+    // Primary vibrant blue letter face
+    ctx.fillStyle = '#0066cc';
+    ctx.fillText(char, 256, y);
+
+    // Highlight sheen
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.font = '900 220px sans-serif';
+    ctx.fillText(char, 252, y - 4);
+  });
+
+  return toTexture(canvas);
+}
+
+/** Multi-pane square grid window texture for Tower facade (from udd-main-tower.JPG). */
+function createTowerSquareWindowTexture(): THREE.CanvasTexture {
+  const S = 512;
+  const { canvas, ctx } = makeCanvas(S, S);
+
+  // Deep tinted architectural glass
+  ctx.fillStyle = '#142232';
+  ctx.fillRect(0, 0, S, S);
+
+  // Sky reflection gradient
+  const ref = ctx.createLinearGradient(0, 0, S, S);
+  ref.addColorStop(0, 'rgba(130, 190, 250, 0.35)');
+  ref.addColorStop(0.5, 'rgba(70, 130, 190, 0.1)');
+  ref.addColorStop(1, 'rgba(15, 30, 50, 0.4)');
+  ctx.fillStyle = ref;
+  ctx.fillRect(0, 0, S, S);
+
+  // Outer white window frame
+  ctx.strokeStyle = '#f1f5f9';
+  ctx.lineWidth = 14;
+  ctx.strokeRect(7, 7, S - 14, S - 14);
+
+  // Grid mullions (4 cols x 3 rows)
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.lineWidth = 6;
+  const cols = 4;
+  const rows = 3;
+  for (let c = 1; c < cols; c++) {
+    const x = (S / cols) * c;
+    ctx.beginPath();
+    ctx.moveTo(x, 14);
+    ctx.lineTo(x, S - 14);
+    ctx.stroke();
+  }
+  for (let r = 1; r < rows; r++) {
+    const y = (S / rows) * r;
+    ctx.beginPath();
+    ctx.moveTo(14, y);
+    ctx.lineTo(S - 14, y);
+    ctx.stroke();
+  }
+
+  return toTexture(canvas);
+}
+
+/** Multi-pane window grid texture for classroom ribbon windows (from udd-main-tower.JPG). */
+function createTowerWindowGridTexture(): THREE.CanvasTexture {
+  const W = 1024;
+  const H = 384;
+  const { canvas, ctx } = makeCanvas(W, H);
+
+  // Tinted reflective glass
+  ctx.fillStyle = '#142232';
+  ctx.fillRect(0, 0, W, H);
+
+  // Reflection
+  const ref = ctx.createLinearGradient(0, 0, W, H);
+  ref.addColorStop(0, 'rgba(140, 195, 255, 0.3)');
+  ref.addColorStop(0.5, 'rgba(80, 140, 200, 0.08)');
+  ref.addColorStop(1, 'rgba(15, 30, 50, 0.4)');
+  ctx.fillStyle = ref;
+  ctx.fillRect(0, 0, W, H);
+
+  // Outer frame
+  ctx.strokeStyle = '#f8fafc';
+  ctx.lineWidth = 8;
+  ctx.strokeRect(4, 4, W - 8, H - 8);
+
+  // Vertical mullions (8 panels)
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.lineWidth = 6;
+  for (let x = W / 8; x < W; x += W / 8) {
+    ctx.beginPath();
+    ctx.moveTo(x, 8);
+    ctx.lineTo(x, H - 8);
+    ctx.stroke();
+  }
+
+  // Horizontal transom division (upper transom vs lower slider)
+  ctx.lineWidth = 8;
+  ctx.beginPath();
+  ctx.moveTo(8, H * 0.35);
+  ctx.lineTo(W - 8, H * 0.35);
+  ctx.stroke();
+
+  return toTexture(canvas);
+}
+
+/** Air Conditioner Outdoor Compressor Unit texture (from udd-main-tower.JPG). */
+function createAcUnitTexture(): THREE.CanvasTexture {
+  const W = 256;
+  const H = 256;
+  const { canvas, ctx } = makeCanvas(W, H);
+  ctx.fillStyle = '#d9e2ec';
+  ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = '#9fb3c8';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(4, 4, W - 8, H - 8);
+
+  // Fan grille circle
+  const cx = 150;
+  const cy = 135;
+  const r = 80;
+  ctx.fillStyle = '#243b53';
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Grille rings
+  ctx.strokeStyle = '#627d98';
+  ctx.lineWidth = 3;
+  [25, 48, 70].forEach((gr) => {
+    ctx.beginPath();
+    ctx.arc(cx, cy, gr, 0, Math.PI * 2);
+    ctx.stroke();
+  });
+
+  // Vent slits on left
+  ctx.fillStyle = '#627d98';
+  for (let y = 50; y <= 210; y += 14) {
+    ctx.fillRect(20, y, 32, 5);
+  }
+
+  // Small brand label
+  ctx.fillStyle = '#0f4ba3';
+  ctx.fillRect(20, 24, 42, 14);
+
+  return toTexture(canvas);
+}
+
+/** Announcement & Dean's List Notice Board (from udd-main-tower.JPG). */
+function createDeansListBoardTexture(): THREE.CanvasTexture {
+  const W = 512;
+  const H = 256;
+  const { canvas, ctx } = makeCanvas(W, H);
+  ctx.fillStyle = '#1e293b';
+  ctx.fillRect(0, 0, W, H);
+
+  // Header band
+  ctx.fillStyle = '#0f4ba3';
+  ctx.fillRect(10, 10, W - 20, 48);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '900 24px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText("COLLEGE DEAN'S LIST & ANNOUNCEMENTS", W / 2, 34);
+
+  // Notice papers grid
+  const papers = [
+    { x: 20, y: 70, w: 90, h: 165 },
+    { x: 120, y: 70, w: 90, h: 165 },
+    { x: 220, y: 70, w: 90, h: 165 },
+    { x: 320, y: 70, w: 90, h: 165 },
+    { x: 420, y: 70, w: 75, h: 165 },
+  ];
+  papers.forEach((p) => {
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(p.x, p.y, p.w, p.h);
+    ctx.fillStyle = '#94a3b8';
+    for (let ly = p.y + 16; ly < p.y + p.h - 10; ly += 12) {
+      ctx.fillRect(p.x + 8, ly, p.w - 16, 4);
+    }
+  });
+
+  // Aluminum frame
+  ctx.strokeStyle = '#94a3b8';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(3, 3, W - 6, H - 6);
+
+  return toTexture(canvas);
+}
+
+
 // ── Geometry helpers ────────────────────────────────────────────────────────
 function box(
   w: number,
@@ -553,6 +773,18 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   const depth = frontZ - backZ; // 26m deep
   const mainCz = (frontZ + backZ) / 2; // -9m
 
+  // Tower & Academic block division along rear (-Z) facade (from udd-main-tower.JPG)
+  // Tower moved to right side as requested by user (x = -16.0 to -10.0, blue square):
+  const towerX0 = -16.0;
+  const towerX1 = -10.0;
+  const towerW0 = towerX1 - towerX0; // 6.0m
+  const towerCx = (towerX0 + towerX1) / 2; // -13.0m
+  const rearTowerZ = backZ - 0.25; // -22.25
+  const classX0 = towerX1; // -10.0m
+  const classX1 = mainX1; // 8.0m
+  const classW = classX1 - classX0; // 18.0m
+  const classCx = (classX0 + classX1) / 2; // -1.0m
+
   // Shared materials
   const roofMat = new THREE.MeshStandardMaterial({ color: 0x8b939c, roughness: 0.85 });
   const whiteMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.5 });
@@ -577,6 +809,30 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   const carWhite = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.2, metalness: 0.5 });
   const carDark = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.25, metalness: 0.6 });
   const carBlue = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.2, metalness: 0.5 });
+  const uddTowerSignMat = new THREE.MeshStandardMaterial({
+    map: createVerticalUddSignTexture(),
+    roughness: 0.35,
+    metalness: 0.2,
+  });
+  const towerSquareMat = new THREE.MeshStandardMaterial({
+    map: createTowerSquareWindowTexture(),
+    roughness: 0.2,
+    metalness: 0.5,
+  });
+  const towerRibbonMat = new THREE.MeshStandardMaterial({
+    map: createTowerWindowGridTexture(),
+    roughness: 0.2,
+    metalness: 0.5,
+  });
+  const acUnitMat = new THREE.MeshStandardMaterial({
+    map: createAcUnitTexture(),
+    roughness: 0.4,
+    metalness: 0.3,
+  });
+  const deansListMat = new THREE.MeshStandardMaterial({
+    map: createDeansListBoardTexture(),
+    roughness: 0.3,
+  });
 
   // ── LEVEL 0: GROUND CONCOURSE, CHAPEL, PORTAL GATE & STREET ────────────────
   const ground = new THREE.Group();
