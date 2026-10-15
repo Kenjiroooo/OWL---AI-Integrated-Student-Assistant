@@ -73,7 +73,7 @@ export const CAMPUS_BUILDINGS: readonly CampusBuilding[] = [
       'Collegiate outdoor basketball court',
       'Student Services Hall with 2-storey blue portal box',
       'Vertical architectural louvers with CDD/UDD seal',
-      'Rooftop garden terrace with "COLEGIO DE DAGUPAN" signage',
+      'Rooftop garden terrace with "UNIVERSIDAD DE DAGUPAN" signage',
       'Grand blue entrance portal & arched truss',
       'Right-side multi-storey connecting wing',
       'Roadside digital billboard & rooftop signage',

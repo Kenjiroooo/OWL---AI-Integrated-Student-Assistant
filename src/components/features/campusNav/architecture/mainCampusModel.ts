@@ -393,7 +393,7 @@ function createBasketballCourtTexture(): THREE.CanvasTexture {
   return toTexture(canvas);
 }
 
-/** Rooftop banner for Student Services Hall: "COLEGIO DE DAGUPAN". */
+/** Rooftop banner for Student Services Hall: "UNIVERSIDAD DE DAGUPAN". */
 function createServicesRoofSignTexture(): THREE.CanvasTexture {
   const W = 1536;
   const H = 256;
@@ -408,10 +408,10 @@ function createServicesRoofSignTexture(): THREE.CanvasTexture {
 
   // Bold white text
   ctx.fillStyle = '#ffffff';
-  ctx.font = '900 108px sans-serif';
+  ctx.font = '900 90px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('COLEGIO DE DAGUPAN', W / 2, H / 2);
+  ctx.fillText('UNIVERSIDAD DE DAGUPAN', W / 2, H / 2);
 
   return toTexture(canvas);
 }
@@ -1351,8 +1351,8 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       g.add(box(admD, 1.1, 0.3, whiteMat, admCx, baseY + 0.55, -20.0));
       g.add(box(0.4, 0.12, admW + 0.2, mats.metalSilver, admFrontX, baseY + 1.15, admCz)); // coping
 
-      // Rooftop Collegiate Signage: "COLEGIO DE DAGUPAN" (Facing +X)
-      g.add(box(0.25, 1.4, 13.5, [servicesSignMat, mats.metalDark, mats.metalDark, mats.metalDark, mats.metalDark, mats.metalDark], admFrontX + 0.15, baseY + 1.8, -35.0));
+      // Rooftop Collegiate Signage: "UNIVERSIDAD DE DAGUPAN" (Facing +X)
+      g.add(box(0.25, 1.45, 14.5, [servicesSignMat, mats.metalDark, mats.metalDark, mats.metalDark, mats.metalDark, mats.metalDark], admFrontX + 0.15, baseY + 1.8, -35.0));
 
       // Rooftop Garden Terrace planters & ornamental trees (as seen in SZD render)
       [-24, -29, -40, -46].forEach((rz) => {
