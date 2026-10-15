@@ -1536,24 +1536,63 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   ground.add(createCar(-14.0, -38.0, carBlue));
   ground.add(createCar(-14.0, -48.0, carDark));
 
-  // Right-Side Connecting Wing (L0) - frames the right side of the basketball court
-  const rwZ0 = -46.0;
-  const rwZ1 = -54.0;
-  const rwW = rwZ0 - rwZ1; // 8.0m along Z
-  const rwCz = (rwZ0 + rwZ1) / 2; // -50.0m
-  const rwFrontX = -12.0;
-  const rwBackX = -31.0;
-  const rwD = rwFrontX - rwBackX; // 19.0m along X
-  const rwCx = (rwFrontX + rwBackX) / 2; // -21.5m
-
-  ground.add(box(rwD, 0.3, rwW, concrete, rwCx, 0.15, rwCz, false));
-  ground.add(box(0.4, FH, rwW, whiteMat, rwFrontX, FH / 2, rwCz)); // front facade
-  ground.add(box(rwD, FH, 0.4, whiteMat, rwCx, FH / 2, rwZ1)); // outer wall
-  // Inner courtyard colonnade and walkway facing court (+Z)
-  [-16, -22, -28].forEach((cx) => {
-    ground.add(box(0.6, FH, 0.6, whiteMat, cx, FH / 2, rwZ0 - 0.4));
+  // ── 8. 6-Storey L-Shaped Courtyard Building (Level 0 / 1F: North Wing & East Wing) ──
+  // A. North Wing 1F (Long wing along X on north of basketball court)
+  ground.add(box(nWingW, 0.3, nWingD, concrete, nWingCx, 0.15, nWingCz, false));
+  ground.add(box(nWingW, FH, 0.4, creamWall, nWingCx, FH / 2, nWingZBack)); // back wall (-Z)
+  ground.add(box(0.4, FH, nWingD, creamWall, nWingX0, FH / 2, nWingCz)); // west end wall (-X)
+  ground.add(box(33.0, FH - 0.4, 0.15, [creamWall, creamWall, creamWall, creamWall, officeGlassMat, darkGlass], 1.25, FH / 2, nWingZFront - 2.2));
+  // Colonnade along corridor line (facing court, +Z)
+  [-14.0, -8.0, -2.0, 4.0, 10.0, 16.0].forEach((cx) => {
+    ground.add(box(0.6, FH, 0.6, creamWall, cx, FH / 2, nWingZFront));
   });
-  ground.add(box(rwD - 2, FH - 0.4, 0.12, darkGlass, rwCx, FH / 2, rwZ0 - 1.5));
+  // Corrugated entrance canopy along North Wing front
+  ground.add(box(14.0, 0.15, 1.8, mats.metalDark, 3.0, 3.2, nWingZFront + 0.9));
+
+  // B. East Wing 1F (Short wing along Z on opposite/east of basketball court)
+  ground.add(box(eWingW, 0.3, eWingL, concrete, eWingCx, 0.15, eWingCz, false));
+  ground.add(box(0.4, FH, eWingL, creamWall, eWingXBack, FH / 2, eWingCz)); // back wall (+X)
+  ground.add(box(eWingW, FH, 0.4, creamWall, eWingCx, FH / 2, eWingZ0)); // south end wall (+Z)
+  // Ground floor glass storefronts (facing -X into court)
+  ground.add(box(0.15, FH - 0.4, 22.0, [darkGlass, officeGlassMat, creamWall, creamWall, creamWall, creamWall], eWingXFront + 2.2, FH / 2, -34.25));
+  // Colonnade along corridor line (facing court, -X)
+  [-24.0, -29.0, -34.0, -39.0, -44.0].forEach((cz) => {
+    ground.add(box(0.6, FH, 0.6, creamWall, eWingXFront, FH / 2, cz));
+  });
+
+  // C. External Concrete Staircase with Blue Handrails (in courtyard along East corridor)
+  const stairZ0 = -38.0;
+  const stairX = eWingXFront - 1.2; // in courtyard
+  for (let s = 0; s <= 12; s++) {
+    const stepT = s / 12;
+    const sz = stairZ0 + stepT * 6.0; // rises towards z = -32.0
+    const sy = stepT * FH;
+    ground.add(box(1.4, 0.22, 0.55, concrete, stairX, sy + 0.11, sz));
+    if (s % 3 === 0) {
+      ground.add(box(0.04, 0.9, 0.04, blueWall, stairX - 0.65, sy + 0.55, sz));
+      ground.add(box(0.04, 0.9, 0.04, blueWall, stairX + 0.65, sy + 0.55, sz));
+    }
+  }
+  ground.add(rod(new THREE.Vector3(stairX - 0.65, 0.9, stairZ0), new THREE.Vector3(stairX - 0.65, FH + 0.9, stairZ0 + 6.0), 0.025, blueWall));
+  ground.add(rod(new THREE.Vector3(stairX + 0.65, 0.9, stairZ0), new THREE.Vector3(stairX + 0.65, FH + 0.9, stairZ0 + 6.0), 0.025, blueWall));
+
+  // Courtyard corner garden planter (from reference photo)
+  ground.add(box(2.2, 0.4, 3.2, planterMat, eWingXFront - 2.0, 0.2, -26.0));
+  ground.add(box(2.0, 0.25, 3.0, grassMat, eWingXFront - 2.0, 0.45, -26.0));
+  const gardenTree = new THREE.Mesh(new THREE.DodecahedronGeometry(0.8, 1), shrubLight);
+  gardenTree.position.set(eWingXFront - 2.0, 1.3, -26.0);
+  gardenTree.castShadow = true;
+  ground.add(gardenTree);
+
+  // D. Parked Courtyard Vehicles (White van & cars from reference photo)
+  const van = new THREE.Group();
+  van.add(box(4.8, 2.0, 2.2, mats.whiteWall, 0, 1.1, 0));
+  van.add(box(1.8, 0.85, 2.22, darkGlass, 1.2, 1.35, 0));
+  van.add(box(2.4, 0.75, 2.22, darkGlass, -0.9, 1.35, 0));
+  van.position.set(eWingXFront - 4.0, 0.1, -28.0);
+  ground.add(van);
+  ground.add(createCar(eWingXFront - 4.0, -34.0, carDark));
+  ground.add(createCar(eWingXFront - 4.0, -40.0, carWhite));
 
   floorGroups.push(ground);
   root.add(ground);
@@ -1686,12 +1725,6 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       g.add(box(0.08, 2.3, 10.6, darkGlass, admFrontX + 0.05, baseY + 2.35, -42.5));
       g.add(box(0.5, FH, 0.6, blueWall, admFrontX, cy, -47.7));
 
-      // Right Wing 2F
-      g.add(box(rwD, 0.28, rwW, roofMat, rwCx, baseY + 0.14, rwCz));
-      g.add(box(rwD, FH, 0.4, whiteMat, rwCx, cy, rwZ1));
-      g.add(box(0.4, FH, rwW, whiteMat, rwFrontX, cy, rwCz));
-      g.add(box(rwD - 4, 1.8, 0.12, darkGlass, rwCx, cy + 0.3, rwZ0 - 0.1));
-      g.add(box(rwD - 4, 0.9, 0.15, blueWall, rwCx, baseY + 0.45, rwZ0 - 0.1));
     } else if (f === 2) {
       // 3F Level:
       // Floor slab & perimeter walls
@@ -1728,12 +1761,6 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       g.add(box(1.2, FH, 0.7, blueWall, admFrontX + 0.4, cy, -47.65));
       g.add(box(0.08, 2.5, 10.6, darkGlass, admFrontX + 0.05, baseY + 1.6, -42.5));
 
-      // Right Wing 3F
-      g.add(box(rwD, 0.28, rwW, roofMat, rwCx, baseY + 0.14, rwCz));
-      g.add(box(rwD, FH, 0.4, whiteMat, rwCx, cy, rwZ1));
-      g.add(box(0.4, FH, rwW, whiteMat, rwFrontX, cy, rwCz));
-      g.add(box(rwD - 4, 1.8, 0.12, darkGlass, rwCx, cy + 0.3, rwZ0 - 0.1));
-      g.add(box(rwD - 4, 0.9, 0.15, blueWall, rwCx, baseY + 0.45, rwZ0 - 0.1));
     } else if (f === 3) {
       // ── 4F Level: Garden Terrace & Storey 1 of New Innovation Wing ──────────
       // Foundation / Floor slab (spans both terrace and new wing)

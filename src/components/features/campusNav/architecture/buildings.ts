@@ -77,6 +77,7 @@ export const CAMPUS_BUILDINGS: readonly CampusBuilding[] = [
       '2-Storey Innovation & Research Wing on terrace',
       'Observation viewing balcony & panoramic glazing',
       'Rooftop solar pergola & dual HVAC chillers',
+      'External concrete staircase with blue safety railings',
       'Grand blue entrance portal & arched truss',
       'Right-side multi-storey connecting wing',
       'Roadside digital billboard & rooftop signage',
@@ -86,7 +87,7 @@ export const CAMPUS_BUILDINGS: readonly CampusBuilding[] = [
       'Architectural rendering of the unified UDD Main Campus: perforated mesh facade with chevron motifs, main tower facade with blue floor bands, top seal, A-frame chapel with cross, entrance portal, basketball court, and student services building.',
     modelPath: 'procedural-3d',
     floors: [
-      { level: 0, label: 'Ground Concourse, Chapel, Entrance Canopy, Basketball Court & Admin Lobby' },
+      { level: 0, label: 'Ground Concourse, Chapel, Basketball Court, Courtyard Parking & Colonnade' },
       { level: 1, label: '2nd Floor Lecture Rooms (Main Tower) & Student Services 2F' },
       { level: 2, label: '3rd Floor Academic Laboratories (Main Tower) & University Seal' },
       { level: 3, label: '4th Floor Classrooms, Innovation Wing 1F & Admin Roof Terrace' },
