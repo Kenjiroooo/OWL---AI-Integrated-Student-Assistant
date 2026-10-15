@@ -1933,6 +1933,80 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       g.add(box(0.14, 1.1, 9.5, [newWingSignMat, mats.metalDark, mats.metalDark, mats.metalDark, mats.metalDark, mats.metalDark], wingFrontX + 0.18, baseY + 3.1, -33.0));
     }
 
+    // ── 6-Storey L-Shaped Courtyard Building (Floors 2 to 5: North Wing & East Wing) ──
+    if (f >= 1 && f <= 3) {
+      // Levels 1, 2, 3: Open-Air Corridors with Warm Cream Balustrades (2F, 3F, 4F)
+      // A. North Wing Open Corridor & Classrooms (Long wing along X, facing +Z towards court)
+      g.add(box(nWingW, 0.28, nWingD, concrete, nWingCx, baseY + 0.14, nWingCz, false));
+      // North Wing rear wall (facing -Z)
+      g.add(box(nWingW, FH, 0.4, creamWall, nWingCx, cy, nWingZBack));
+      // North Wing rear windows
+      [-8.0, -2.0, 4.0, 10.0, 16.0].forEach((wx) => {
+        g.add(box(3.2, 1.4, 0.08, darkGlass, wx, cy + 0.2, nWingZBack - 0.05, false));
+        g.add(box(3.4, 0.08, 0.12, creamWall, wx, cy - 0.6, nWingZBack - 0.06, false));
+      });
+      // West end wall
+      g.add(box(0.4, FH, nWingD, creamWall, nWingX0, cy, nWingCz));
+
+      // Recessed classroom wall facing open courtyard corridor (at z = -48.7, facing +Z)
+      const nRecessW = 34.5;
+      const nRecessCx = 1.25;
+      g.add(box(nRecessW, FH, 0.2, [creamWall, creamWall, creamWall, creamWall, corridorWallMat, creamWall], nRecessCx, cy, -48.7));
+      // Open corridor ceiling soffit
+      g.add(box(nRecessW, 0.15, 2.2, creamWall, nRecessCx, baseY + FH - 0.08, -47.6));
+      // Solid cream balustrade along corridor front edge (z = nWingZFront = -46.5)
+      g.add(box(nRecessW, 1.05, 0.25, creamWall, nRecessCx, baseY + 0.525, nWingZFront));
+      g.add(box(nRecessW + 0.1, 0.08, 0.32, creamWall, nRecessCx, baseY + 1.09, nWingZFront)); // coping
+      // Concrete lintel beam along front ceiling
+      g.add(box(nRecessW, 0.5, 0.3, creamWall, nRecessCx, baseY + FH - 0.25, nWingZFront));
+      // Colonnade columns along corridor front edge
+      [-14.0, -8.0, -2.0, 4.0, 10.0, 16.0].forEach((cx) => {
+        g.add(box(0.6, FH, 0.6, creamWall, cx, cy, nWingZFront));
+      });
+
+      // B. East Wing Open Corridor & Classrooms (Short wing along Z on opposite side, facing -X towards court)
+      g.add(box(eWingW, 0.28, eWingL, concrete, eWingCx, baseY + 0.14, eWingCz, false));
+      // East Wing rear wall (facing +X)
+      g.add(box(0.4, FH, eWingL, creamWall, eWingXBack, cy, eWingCz));
+      // East Wing rear windows
+      [-26.0, -32.0, -38.0, -44.0].forEach((wz) => {
+        g.add(box(0.08, 1.4, 3.2, darkGlass, eWingXBack + 0.05, cy + 0.2, wz, false));
+        g.add(box(0.12, 0.08, 3.4, creamWall, eWingXBack + 0.06, cy - 0.6, wz, false));
+      });
+      // South end wall
+      g.add(box(eWingW, FH, 0.4, creamWall, eWingCx, cy, eWingZ0));
+
+      // Recessed classroom wall facing open courtyard corridor (at x = 20.7, facing -X)
+      const eRecessL = 24.5;
+      const eRecessCz = -34.25;
+      g.add(box(0.2, FH, eRecessL, [creamWall, corridorWallMat, creamWall, creamWall, creamWall, creamWall], 20.7, cy, eRecessCz));
+      // Open corridor ceiling soffit
+      g.add(box(2.2, 0.15, eRecessL, creamWall, 19.6, baseY + FH - 0.08, eRecessCz));
+      // Solid cream balustrade along corridor front edge (x = eWingXFront = 18.5)
+      g.add(box(0.25, 1.05, eRecessL, creamWall, eWingXFront, baseY + 0.525, eRecessCz));
+      g.add(box(0.32, 0.08, eRecessL + 0.1, creamWall, eWingXFront, baseY + 1.09, eRecessCz)); // coping
+      // Concrete lintel beam along front ceiling
+      g.add(box(0.3, 0.5, eRecessL, creamWall, eWingXFront, baseY + FH - 0.25, eRecessCz));
+      // Colonnade columns along corridor line
+      [-24.0, -29.0, -34.0, -39.0, -44.0].forEach((cz) => {
+        g.add(box(0.6, FH, 0.6, creamWall, eWingXFront, cy, cz));
+      });
+
+      // Air Conditioner Outdoor Compressor Units mounted on balustrades (from reference photo)
+      [-6.0, 6.0, 14.0].forEach((acX) => {
+        const acY = baseY + 1.35;
+        g.add(box(0.85, 0.62, 0.38, [mats.metalSilver, mats.metalSilver, mats.metalSilver, mats.metalSilver, acUnitMat, mats.metalSilver], acX, acY, nWingZFront + 0.22));
+        g.add(box(0.04, 0.45, 0.42, mats.metalDark, acX - 0.28, acY - 0.35, nWingZFront + 0.22));
+        g.add(box(0.04, 0.45, 0.42, mats.metalDark, acX + 0.28, acY - 0.35, nWingZFront + 0.22));
+      });
+      [-28.0, -38.0].forEach((acZ) => {
+        const acY = baseY + 1.35;
+        g.add(box(0.38, 0.62, 0.85, [mats.metalSilver, acUnitMat, mats.metalSilver, mats.metalSilver, mats.metalSilver, mats.metalSilver], eWingXFront - 0.22, acY, acZ));
+        g.add(box(0.42, 0.45, 0.04, mats.metalDark, eWingXFront - 0.22, acY - 0.35, acZ - 0.28));
+        g.add(box(0.42, 0.45, 0.04, mats.metalDark, eWingXFront - 0.22, acY - 0.35, acZ + 0.28));
+      });
+    }
+
     floorGroups.push(g);
     root.add(g);
   }
