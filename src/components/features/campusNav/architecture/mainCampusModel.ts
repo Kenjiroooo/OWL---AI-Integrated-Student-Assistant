@@ -1190,7 +1190,6 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     metalness: 0.2,
   });
 
-
   // ── 6-STOREY L-SHAPED COURTYARD BUILDING (North Wing & East Wing) ──
   // A. North Wing (long wing along the north/far side of basketball court):
   // Inner corridor edge at z = -46.5 (facing +Z into the court)
@@ -1230,7 +1229,6 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   });
   const latticeSteel = new THREE.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.35, metalness: 0.8 });
   const latticeRed = new THREE.MeshStandardMaterial({ color: 0xd9381e, roughness: 0.45, metalness: 0.4 });
-
 
   // ── LEVEL 0: GROUND CONCOURSE, CHAPEL, PORTAL GATE & STREET ────────────────
   const ground = new THREE.Group();
@@ -1506,6 +1504,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
 
   // 7. UDD Student Services & Administrative Hall (Rear campus building - SZD Design Studio)
   // Relocated to the exact rear lot area behind the basketball court (facing +X towards court)
+
   // Paved pedestrian apron connecting basketball court to services building
   ground.add(box(4.0, 0.08, admW + 2, concrete, -16.0, 0.04, admCz, false));
 
@@ -1724,7 +1723,6 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       g.add(box(0.3, 1.2, 11.0, whiteMat, admFrontX, baseY + 0.6, -42.5));
       g.add(box(0.08, 2.3, 10.6, darkGlass, admFrontX + 0.05, baseY + 2.35, -42.5));
       g.add(box(0.5, FH, 0.6, blueWall, admFrontX, cy, -47.7));
-
     } else if (f === 2) {
       // 3F Level:
       // Floor slab & perimeter walls
@@ -1760,7 +1758,6 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       g.add(box(1.2, 0.7, 11.0, blueWall, admFrontX + 0.4, baseY + FH - 0.35, -42.5));
       g.add(box(1.2, FH, 0.7, blueWall, admFrontX + 0.4, cy, -47.65));
       g.add(box(0.08, 2.5, 10.6, darkGlass, admFrontX + 0.05, baseY + 1.6, -42.5));
-
     } else if (f === 3) {
       // ── 4F Level: Garden Terrace & Storey 1 of New Innovation Wing ──────────
       // Foundation / Floor slab (spans both terrace and new wing)
@@ -2050,8 +2047,6 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       g.add(cornerRing);
     }
 
-
-
     floorGroups.push(g);
     root.add(g);
   }
@@ -2204,6 +2199,149 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     roof.add(box(2.8, 0.16, 2.0, mats.metalDark, wingCx - 0.4, roofBaseY + 1.55, chZ)); // fan top
     roof.add(box(2.5, 0.1, 1.6, mats.metalDark, wingCx - 0.4, roofBaseY + 0.25, chZ)); // base pad
   });
+
+  // ── 7. 6-Storey Building Floor 6 & Rooftop (North & East Courtyard Wings with 12m Tower) ─
+  const sixTopY = roofBaseY + FH; // 22.8m (top of Floor 6 / roof deck)
+
+  // 6F Floor Slabs
+  roof.add(box(eWingW, 0.28, eWingL, concrete, eWingCx, roofBaseY + 0.14, eWingCz, false));
+  roof.add(box(nWingW, 0.28, nWingD, concrete, nWingCx, roofBaseY + 0.14, nWingCz, false));
+
+  // 6F Outer & Back Walls
+  roof.add(box(nWingW, FH, 0.4, creamWall, nWingCx, roofBaseY + FH / 2, nWingZBack));
+  roof.add(box(0.4, FH, nWingD, creamWall, nWingX0, roofBaseY + FH / 2, nWingCz));
+  roof.add(box(0.4, FH, eWingL, creamWall, eWingXBack, roofBaseY + FH / 2, eWingCz));
+  roof.add(box(eWingW, FH, 0.4, creamWall, eWingCx, roofBaseY + FH / 2, eWingZ0));
+
+  // 6F Courtyard Facades (Ribbon windows + Ochre header band)
+  const eRecessL6 = 24.5;
+  const eRecessCz6 = -34.25;
+  roof.add(box(0.2, FH - 0.8, eRecessL6, [creamWall, ribbon5FMat, creamWall, creamWall, creamWall, creamWall], eWingXFront, roofBaseY + FH / 2 - 0.1, eRecessCz6));
+  roof.add(box(0.35, 0.7, eRecessL6, ochreWall, eWingXFront, roofBaseY + FH - 0.35, eRecessCz6));
+  roof.add(box(0.3, 0.4, eRecessL6, creamWall, eWingXFront, roofBaseY + 0.2, eRecessCz6));
+
+  const nRecessW6 = 34.5;
+  const nRecessCx6 = 1.25;
+  roof.add(box(nRecessW6, FH - 0.8, 0.2, [creamWall, creamWall, creamWall, creamWall, ribbon5FMat, creamWall], nRecessCx6, roofBaseY + FH / 2 - 0.1, nWingZFront));
+  roof.add(box(nRecessW6, 0.7, 0.35, ochreWall, nRecessCx6, roofBaseY + FH - 0.35, nWingZFront));
+  roof.add(box(nRecessW6, 0.4, 0.3, creamWall, nRecessCx6, roofBaseY + 0.2, nWingZFront));
+
+  // Rooftop Slabs (at sixTopY = 22.8m)
+  roof.add(box(eWingW + 0.4, 0.35, eWingL + 0.4, concrete, eWingCx, sixTopY + 0.175, eWingCz));
+  roof.add(box(nWingW + 0.4, 0.35, nWingD + 0.4, concrete, nWingCx, sixTopY + 0.175, nWingCz));
+
+  // Rooftop Parapets (1.1m high)
+  // Courtyard-facing parapet (ochre finish as seen in photo)
+  roof.add(box(0.35, 1.1, eRecessL6 + 0.4, ochreWall, eWingXFront, sixTopY + 0.55, eRecessCz6));
+  roof.add(box(nRecessW6 + 0.4, 1.1, 0.35, ochreWall, nRecessCx6, sixTopY + 0.55, nWingZFront));
+  roof.add(box(0.42, 0.12, eRecessL6 + 0.5, creamWall, eWingXFront, sixTopY + 1.15, eRecessCz6));
+  roof.add(box(nRecessW6 + 0.5, 0.12, 0.42, creamWall, nRecessCx6, sixTopY + 1.15, nWingZFront));
+
+  // Outer boundary parapets
+  roof.add(box(0.35, 1.1, eWingL + 0.4, creamWall, eWingXBack, sixTopY + 0.55, eWingCz));
+  roof.add(box(eWingW + 0.4, 1.1, 0.35, creamWall, eWingCx, sixTopY + 0.55, eWingZ0));
+  roof.add(box(nWingW + 0.4, 1.1, 0.35, creamWall, nWingCx, sixTopY + 0.55, nWingZBack));
+  roof.add(box(0.35, 1.1, nWingD + 0.4, creamWall, nWingX0, sixTopY + 0.55, nWingCz));
+
+  // Rooftop Stair & Service Penthouse (North Wing)
+  const spW = 5.2;
+  const spD = 4.0;
+  const spH = 2.6;
+  const spX = 6.0;
+  const spZ = nWingCz;
+  roof.add(box(spW, spH, spD, creamWall, spX, sixTopY + spH / 2, spZ));
+  roof.add(box(spW + 0.3, 0.2, spD + 0.3, ochreWall, spX, sixTopY + spH + 0.1, spZ));
+  roof.add(box(0.9, 2.0, 0.08, mats.metalDark, spX, sixTopY + 1.0, spZ + spD / 2 + 0.05)); // door
+
+  // Rooftop HVAC units on North Wing roof
+  [-4.0, 12.0].forEach((hx) => {
+    roof.add(box(2.8, 1.3, 1.8, mats.metalSilver, hx, sixTopY + 0.85, nWingCz));
+    roof.add(box(3.0, 0.15, 2.0, mats.metalDark, hx, sixTopY + 1.55, nWingCz));
+  });
+
+  // ── Prominent 12-Meter Steel Lattice Telecommunications Antenna Tower ───────
+  // Situated on the roof directly above the North-East (corner junction)
+  const towerBaseX = eWingCx; // 22.25
+  const towerBaseZ = nWingCz; // -50.25
+  const towerBaseY = sixTopY + 0.35; // 23.15m
+  const towerH = 12.0; // rises to 35.15m
+  const baseSpan = 3.2; // 3.2m base footprint
+  const topSpan = 1.3; // tapered to 1.3m at top
+  const halfBase = baseSpan / 2;
+  const halfTop = topSpan / 2;
+
+  // 4 Corner Leg Columns (Tapered from base to top)
+  const legB0 = new THREE.Vector3(towerBaseX - halfBase, towerBaseY, towerBaseZ - halfBase);
+  const legB1 = new THREE.Vector3(towerBaseX + halfBase, towerBaseY, towerBaseZ - halfBase);
+  const legB2 = new THREE.Vector3(towerBaseX + halfBase, towerBaseY, towerBaseZ + halfBase);
+  const legB3 = new THREE.Vector3(towerBaseX - halfBase, towerBaseY, towerBaseZ + halfBase);
+
+  const legT0 = new THREE.Vector3(towerBaseX - halfTop, towerBaseY + towerH, towerBaseZ - halfTop);
+  const legT1 = new THREE.Vector3(towerBaseX + halfTop, towerBaseY + towerH, towerBaseZ - halfTop);
+  const legT2 = new THREE.Vector3(towerBaseX + halfTop, towerBaseY + towerH, towerBaseZ + halfTop);
+  const legT3 = new THREE.Vector3(towerBaseX - halfTop, towerBaseY + towerH, towerBaseZ + halfTop);
+
+  roof.add(rod(legB0, legT0, 0.08, latticeSteel));
+  roof.add(rod(legB1, legT1, 0.08, latticeSteel));
+  roof.add(rod(legB2, legT2, 0.08, latticeSteel));
+  roof.add(rod(legB3, legT3, 0.08, latticeSteel));
+
+  // 4 Horizontal Tiers with alternating Steel & Red Warning Bands and Cross-Bracing
+  const tiers = 4;
+  for (let ti = 1; ti <= tiers; ti++) {
+    const tFracPrev = (ti - 1) / tiers;
+    const tFrac = ti / tiers;
+    const tierMat = ti % 2 === 0 ? latticeRed : latticeSteel;
+
+    const p0 = legB0.clone().lerp(legT0, tFrac);
+    const p1 = legB1.clone().lerp(legT1, tFrac);
+    const p2 = legB2.clone().lerp(legT2, tFrac);
+    const p3 = legB3.clone().lerp(legT3, tFrac);
+
+    const prev0 = legB0.clone().lerp(legT0, tFracPrev);
+    const prev1 = legB1.clone().lerp(legT1, tFracPrev);
+    const prev2 = legB2.clone().lerp(legT2, tFracPrev);
+    const prev3 = legB3.clone().lerp(legT3, tFracPrev);
+
+    // Horizontal frame ring
+    roof.add(rod(p0, p1, 0.05, tierMat));
+    roof.add(rod(p1, p2, 0.05, tierMat));
+    roof.add(rod(p2, p3, 0.05, tierMat));
+    roof.add(rod(p3, p0, 0.05, tierMat));
+
+    // Diagonal X-Cross Bracing on all 4 faces
+    roof.add(rod(prev0, p1, 0.035, latticeSteel));
+    roof.add(rod(prev1, p0, 0.035, latticeSteel));
+    roof.add(rod(prev1, p2, 0.035, latticeSteel));
+    roof.add(rod(prev2, p1, 0.035, latticeSteel));
+    roof.add(rod(prev2, p3, 0.035, latticeSteel));
+    roof.add(rod(prev3, p2, 0.035, latticeSteel));
+    roof.add(rod(prev3, p0, 0.035, latticeSteel));
+    roof.add(rod(prev0, p3, 0.035, latticeSteel));
+  }
+
+  // Central Top Antenna Mast rising above the lattice tower
+  const mastBase = new THREE.Vector3(towerBaseX, towerBaseY + towerH, towerBaseZ);
+  const mastTip = new THREE.Vector3(towerBaseX, towerBaseY + towerH + 3.6, towerBaseZ);
+  roof.add(rod(mastBase, mastTip, 0.06, mats.metalSilver));
+
+  // Horizontal dipole and folded antenna elements
+  [towerBaseY + towerH + 1.2, towerBaseY + towerH + 2.2].forEach((dy) => {
+    roof.add(box(1.2, 0.04, 0.04, mats.metalSilver, towerBaseX, dy, towerBaseZ));
+    roof.add(box(0.04, 0.5, 0.04, mats.metalSilver, towerBaseX + 0.6, dy, towerBaseZ));
+    roof.add(box(0.04, 0.5, 0.04, mats.metalSilver, towerBaseX - 0.6, dy, towerBaseZ));
+  });
+
+  // Flashing Red Aircraft Warning Beacon at the summit
+  const beaconMat = new THREE.MeshStandardMaterial({
+    color: 0xff1100,
+    emissive: 0xff0000,
+    emissiveIntensity: 0.9,
+    roughness: 0.2,
+  });
+  const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 16), beaconMat);
+  beacon.position.copy(mastTip);
+  roof.add(beacon);
 
   floorGroups.push(roof);
   root.add(roof);
