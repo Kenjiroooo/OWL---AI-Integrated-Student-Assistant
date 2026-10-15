@@ -2005,7 +2005,52 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
         g.add(box(0.42, 0.45, 0.04, mats.metalDark, eWingXFront - 0.22, acY - 0.35, acZ - 0.28));
         g.add(box(0.42, 0.45, 0.04, mats.metalDark, eWingXFront - 0.22, acY - 0.35, acZ + 0.28));
       });
+    } else if (f === 4) {
+      // Level 4: 5th Floor Enclosed Floor with Continuous Ribbon Glass & Ochre Header Band
+      // A. North Wing 5F (Long wing)
+      g.add(box(nWingW, 0.28, nWingD, concrete, nWingCx, baseY + 0.14, nWingCz, false));
+      g.add(box(nWingW, FH, 0.4, creamWall, nWingCx, cy, nWingZBack));
+      g.add(box(0.4, FH, nWingD, creamWall, nWingX0, cy, nWingCz));
+      [-8.0, -2.0, 4.0, 10.0, 16.0].forEach((wx) => {
+        g.add(box(3.2, 1.4, 0.08, darkGlass, wx, cy + 0.2, nWingZBack - 0.05, false));
+      });
+      const nRecessW = 34.5;
+      const nRecessCx = 1.25;
+      g.add(box(nRecessW, FH - 0.8, 0.2, [creamWall, creamWall, creamWall, creamWall, ribbon5FMat, creamWall], nRecessCx, cy - 0.1, nWingZFront));
+      g.add(box(nRecessW, 0.7, 0.35, ochreWall, nRecessCx, baseY + FH - 0.35, nWingZFront));
+      g.add(box(nRecessW, 0.4, 0.3, creamWall, nRecessCx, baseY + 0.2, nWingZFront));
+
+      // B. East Wing 5F (Short wing on opposite side)
+      g.add(box(eWingW, 0.28, eWingL, concrete, eWingCx, baseY + 0.14, eWingCz, false));
+      g.add(box(0.4, FH, eWingL, creamWall, eWingXBack, cy, eWingCz));
+      g.add(box(eWingW, FH, 0.4, creamWall, eWingCx, cy, eWingZ0));
+      [-26.0, -32.0, -38.0, -44.0].forEach((wz) => {
+        g.add(box(0.08, 1.4, 3.2, darkGlass, eWingXBack + 0.05, cy + 0.2, wz, false));
+      });
+      const eRecessL = 24.5;
+      const eRecessCz = -34.25;
+      g.add(box(0.2, FH - 0.8, eRecessL, [creamWall, ribbon5FMat, creamWall, creamWall, creamWall, creamWall], eWingXFront, cy - 0.1, eRecessCz));
+      g.add(box(0.35, 0.7, eRecessL, ochreWall, eWingXFront, baseY + FH - 0.35, eRecessCz));
+      g.add(box(0.3, 0.4, eRecessL, creamWall, eWingXFront, baseY + 0.2, eRecessCz));
+
+      // C. Circular Universidad de Dagupan Seal Medallion at 90° Inner Corner
+      // Positioned right at the inner corner junction (x = 18.1, z = -46.1), angled at 45° facing into the court (-X, +Z)!
+      const cornerSealX = 18.1;
+      const cornerSealZ = -46.1;
+      const sealY = baseY + FH - 0.4;
+      const cornerSeal = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.3, 0.22, 48), emblemMat);
+      cornerSeal.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(-1, 0, 1).normalize());
+      cornerSeal.position.set(cornerSealX, sealY, cornerSealZ);
+      cornerSeal.castShadow = true;
+      g.add(cornerSeal);
+
+      const cornerRing = new THREE.Mesh(new THREE.TorusGeometry(1.36, 0.12, 16, 48), blueWall);
+      cornerRing.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), new THREE.Vector3(-1, 0, 1).normalize());
+      cornerRing.position.set(cornerSealX, sealY, cornerSealZ);
+      g.add(cornerRing);
     }
+
+
 
     floorGroups.push(g);
     root.add(g);
