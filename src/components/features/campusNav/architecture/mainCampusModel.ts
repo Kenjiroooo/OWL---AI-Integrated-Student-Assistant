@@ -912,6 +912,141 @@ function createNewWingSignTexture(): THREE.CanvasTexture {
   return toTexture(canvas);
 }
 
+/** Recessed classroom wall along open corridors: ivory wall, dark timber doors & ribbon transom windows. */
+function createCourtyardCorridorTexture(): THREE.CanvasTexture {
+  const W = 1024;
+  const H = 256;
+  const { canvas, ctx } = makeCanvas(W, H);
+
+  // Warm ivory/cream wall background
+  ctx.fillStyle = '#ded6be';
+  ctx.fillRect(0, 0, W, H);
+
+  // 4 classroom modules per texture repeat
+  const moduleW = W / 4;
+  for (let i = 0; i < 4; i++) {
+    const mx = i * moduleW;
+
+    // Dark timber classroom door on left of module
+    const doorX = mx + 20;
+    const doorW = 50;
+    const doorH = 190;
+    const doorY = H - doorH;
+
+    // Door frame
+    ctx.fillStyle = '#422814';
+    ctx.fillRect(doorX - 3, doorY - 3, doorW + 6, doorH + 3);
+
+    // Door leaf
+    ctx.fillStyle = '#5c3a21';
+    ctx.fillRect(doorX, doorY, doorW, doorH);
+
+    // Vision glass panel in upper door
+    ctx.fillStyle = '#17283c';
+    ctx.fillRect(doorX + 12, doorY + 25, doorW - 24, 55);
+    ctx.strokeStyle = '#e2e8f0';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(doorX + 12, doorY + 25, doorW - 24, 55);
+
+    // Silver door handle
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillRect(doorX + doorW - 10, doorY + 105, 6, 14);
+
+    // Classroom multi-pane window on right of door
+    const winX = doorX + doorW + 25;
+    const winW = moduleW - doorW - 55;
+    const winH = 110;
+    const winY = doorY + 20;
+
+    // Window frame
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(winX - 3, winY - 3, winW + 6, winH + 6);
+
+    // Window glass
+    ctx.fillStyle = '#152538';
+    ctx.fillRect(winX, winY, winW, winH);
+
+    // Warm interior illumination gradient
+    const glow = ctx.createLinearGradient(winX, winY, winX, winY + winH);
+    glow.addColorStop(0, 'rgba(255, 235, 180, 0.45)');
+    glow.addColorStop(0.7, 'rgba(255, 220, 160, 0.15)');
+    glow.addColorStop(1, 'rgba(0, 0, 0, 0.5)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(winX, winY, winW, winH);
+
+    // Window mullions (3 panes)
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 3;
+    const paneW = winW / 3;
+    for (let p = 1; p < 3; p++) {
+      ctx.beginPath();
+      ctx.moveTo(winX + p * paneW, winY);
+      ctx.lineTo(winX + p * paneW, winY + winH);
+      ctx.stroke();
+    }
+    // Horizontal transom bar
+    ctx.beginPath();
+    ctx.moveTo(winX, winY + winH * 0.4);
+    ctx.lineTo(winX + winW, winY + winH * 0.4);
+    ctx.stroke();
+  }
+
+  // Base skirting board along bottom
+  ctx.fillStyle = '#a89f88';
+  ctx.fillRect(0, H - 8, W, 8);
+
+  return toTexture(canvas);
+}
+
+/** 5F Continuous Ribbon Glass texture: dark tinted architectural glass with white mullions and ochre top band. */
+function createRibbonWindow5FTexture(): THREE.CanvasTexture {
+  const W = 1024;
+  const H = 256;
+  const { canvas, ctx } = makeCanvas(W, H);
+
+  // Dark tinted reflective glass
+  ctx.fillStyle = '#132233';
+  ctx.fillRect(0, 0, W, H);
+
+  // Sky reflection
+  const ref = ctx.createLinearGradient(0, 0, W, H);
+  ref.addColorStop(0, 'rgba(130, 190, 255, 0.32)');
+  ref.addColorStop(0.5, 'rgba(75, 135, 195, 0.10)');
+  ref.addColorStop(1, 'rgba(15, 30, 50, 0.45)');
+  ctx.fillStyle = ref;
+  ctx.fillRect(0, 0, W, H);
+
+  // Top ochre/sand header band (from photo)
+  ctx.fillStyle = '#c89a3c';
+  ctx.fillRect(0, 0, W, 28);
+
+  // White frame
+  ctx.strokeStyle = '#f8fafc';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(3, 28, W - 6, H - 31);
+
+  // Vertical white mullions (8 bays)
+  const bays = 8;
+  const bayW = W / bays;
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.lineWidth = 4;
+  for (let i = 1; i < bays; i++) {
+    const x = i * bayW;
+    ctx.beginPath();
+    ctx.moveTo(x, 28);
+    ctx.lineTo(x, H - 3);
+    ctx.stroke();
+  }
+
+  // Horizontal transom bar
+  ctx.beginPath();
+  ctx.moveTo(3, 28 + (H - 28) * 0.35);
+  ctx.lineTo(W - 3, 28 + (H - 28) * 0.35);
+  ctx.stroke();
+
+  return toTexture(canvas);
+}
+
 // ── Geometry helpers ────────────────────────────────────────────────────────
 function box(
   w: number,
@@ -1054,6 +1189,47 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     roughness: 0.35,
     metalness: 0.2,
   });
+
+
+  // ── 6-STOREY L-SHAPED COURTYARD BUILDING (North Wing & East Wing) ──
+  // A. North Wing (long wing along the north/far side of basketball court):
+  // Inner corridor edge at z = -46.5 (facing +Z into the court)
+  // Outer back wall at z = -54.0 (facing -Z)
+  const nWingZFront = -46.5;
+  const nWingZBack = -54.0;
+  const nWingD = Math.abs(nWingZBack - nWingZFront); // 7.5m
+  const nWingCz = (nWingZFront + nWingZBack) / 2; // -50.25m
+  const nWingX0 = -16.0; // west end
+  const nWingX1 = 26.0; // east end (meets East Wing back wall at corner)
+  const nWingW = Math.abs(nWingX1 - nWingX0); // 42.0m
+  const nWingCx = (nWingX0 + nWingX1) / 2; // 5.0m
+
+  // B. East Wing (short wing on the opposite/east side of basketball court):
+  // Inner corridor edge at x = 18.5 (facing -X into the court)
+  // Outer back wall at x = 26.0 (facing +X)
+  const eWingXFront = 18.5;
+  const eWingXBack = 26.0;
+  const eWingW = Math.abs(eWingXBack - eWingXFront); // 7.5m
+  const eWingCx = (eWingXFront + eWingXBack) / 2; // 22.25m
+  const eWingZ0 = -22.0; // south end
+  const eWingZ1 = -54.0; // north end (meets North Wing back wall at corner)
+  const eWingL = Math.abs(eWingZ1 - eWingZ0); // 32.0m
+  const eWingCz = (eWingZ0 + eWingZ1) / 2; // -38.0m
+
+  // Materials for 6-Storey Building
+  const creamWall = new THREE.MeshStandardMaterial({ color: 0xded6be, roughness: 0.65 });
+  const ochreWall = new THREE.MeshStandardMaterial({ color: 0xc89a3c, roughness: 0.7 });
+  const corridorWallMat = new THREE.MeshStandardMaterial({
+    map: createCourtyardCorridorTexture(),
+    roughness: 0.5,
+  });
+  const ribbon5FMat = new THREE.MeshStandardMaterial({
+    map: createRibbonWindow5FTexture(),
+    roughness: 0.2,
+    metalness: 0.5,
+  });
+  const latticeSteel = new THREE.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.35, metalness: 0.8 });
+  const latticeRed = new THREE.MeshStandardMaterial({ color: 0xd9381e, roughness: 0.45, metalness: 0.4 });
 
 
   // ── LEVEL 0: GROUND CONCOURSE, CHAPEL, PORTAL GATE & STREET ────────────────
