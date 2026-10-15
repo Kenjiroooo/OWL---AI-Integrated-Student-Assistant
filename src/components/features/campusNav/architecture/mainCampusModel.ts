@@ -724,6 +724,194 @@ function createDeansListBoardTexture(): THREE.CanvasTexture {
   return toTexture(canvas);
 }
 
+/** Storey 1 curtain wall glazing with warm interior & computing/engineering lab bays. */
+function createNewWingCurtainWallTexture(): THREE.CanvasTexture {
+  const W = 1024;
+  const H = 512;
+  const { canvas, ctx } = makeCanvas(W, H);
+
+  // Deep tinted architectural glass
+  ctx.fillStyle = '#111a24';
+  ctx.fillRect(0, 0, W, H);
+
+  // Warm interior ambient illumination gradient
+  const glow = ctx.createLinearGradient(0, 0, 0, H);
+  glow.addColorStop(0, 'rgba(255, 235, 190, 0.40)');
+  glow.addColorStop(0.55, 'rgba(255, 220, 160, 0.15)');
+  glow.addColorStop(1, 'rgba(10, 20, 35, 0.65)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, W, H);
+
+  // Sky reflection gradient
+  const ref = ctx.createLinearGradient(0, 0, W, H);
+  ref.addColorStop(0, 'rgba(120, 185, 255, 0.28)');
+  ref.addColorStop(0.5, 'rgba(70, 130, 200, 0.08)');
+  ref.addColorStop(1, 'rgba(15, 35, 60, 0.35)');
+  ctx.fillStyle = ref;
+  ctx.fillRect(0, 0, W, H);
+
+  // Outer frame
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.lineWidth = 10;
+  ctx.strokeRect(5, 5, W - 10, H - 10);
+
+  // Vertical aluminum structural mullions (8 bays)
+  const bays = 8;
+  const bayW = W / bays;
+  ctx.strokeStyle = '#cbd5e1';
+  ctx.lineWidth = 6;
+  for (let i = 1; i < bays; i++) {
+    const x = i * bayW;
+    ctx.beginPath();
+    ctx.moveTo(x, 10);
+    ctx.lineTo(x, H - 10);
+    ctx.stroke();
+  }
+
+  // Horizontal transoms
+  ctx.lineWidth = 6;
+  [H * 0.28, H * 0.72].forEach((y) => {
+    ctx.beginPath();
+    ctx.moveTo(10, y);
+    ctx.lineTo(W - 10, y);
+    ctx.stroke();
+  });
+
+  // Intermediate vertical glazing bars
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+  ctx.lineWidth = 2.5;
+  for (let i = 0; i < bays; i++) {
+    const midX = i * bayW + bayW / 2;
+    ctx.beginPath();
+    ctx.moveTo(midX, H * 0.28);
+    ctx.lineTo(midX, H * 0.72);
+    ctx.stroke();
+  }
+
+  // Academic Room Identification Tags
+  const labs = [
+    'AI & ROBOTICS LAB',
+    'SOFTWARE STUDIO',
+    'CYBER RESEARCH',
+    'MULTIMEDIA SUITE',
+  ];
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for (let i = 0; i < 4; i++) {
+    const cx = (i * 2 + 1) * bayW;
+    ctx.fillStyle = '#0b4da2';
+    ctx.fillRect(cx - 95, 26, 190, 36);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(cx - 95, 26, 190, 36);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 15px sans-serif';
+    ctx.fillText(labs[i], cx, 44);
+  }
+
+  return toTexture(canvas);
+}
+
+/** Storey 2 facade texture: high-tech ribbon glass, blue accent spandrel & engineering research labs. */
+function createNewWingUpperFacadeTexture(): THREE.CanvasTexture {
+  const W = 1024;
+  const H = 512;
+  const { canvas, ctx } = makeCanvas(W, H);
+
+  // Tinted reflective glass
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, W, H);
+
+  // Sky reflection
+  const ref = ctx.createLinearGradient(0, 0, W, H);
+  ref.addColorStop(0, 'rgba(135, 205, 255, 0.35)');
+  ref.addColorStop(0.5, 'rgba(80, 145, 215, 0.12)');
+  ref.addColorStop(1, 'rgba(15, 30, 50, 0.45)');
+  ctx.fillStyle = ref;
+  ctx.fillRect(0, 0, W, H);
+
+  // Spandrel top band
+  ctx.fillStyle = '#1153b6';
+  ctx.fillRect(0, 0, W, 48);
+
+  // Spandrel bottom band
+  ctx.fillStyle = '#0b3c82';
+  ctx.fillRect(0, H - 48, W, 48);
+
+  // Crisp white border
+  ctx.strokeStyle = '#f8fafc';
+  ctx.lineWidth = 8;
+  ctx.strokeRect(4, 4, W - 8, H - 8);
+
+  // Vertical structural mullions (6 bays)
+  const bays = 6;
+  const bayW = W / bays;
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.lineWidth = 6;
+  for (let i = 1; i < bays; i++) {
+    const x = i * bayW;
+    ctx.beginPath();
+    ctx.moveTo(x, 48);
+    ctx.lineTo(x, H - 48);
+    ctx.stroke();
+  }
+
+  // Horizontal window division
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(8, H * 0.42);
+  ctx.lineTo(W - 8, H * 0.42);
+  ctx.stroke();
+
+  // Subtle interior laboratory desks / warm lighting
+  ctx.fillStyle = 'rgba(255, 240, 200, 0.12)';
+  for (let i = 0; i < bays; i++) {
+    ctx.fillRect(i * bayW + 12, H * 0.45, bayW - 24, H * 0.45);
+  }
+
+  return toTexture(canvas);
+}
+
+/** Prominent architectural signage plate: "UNIVERSIDAD DE DAGUPAN - INNOVATION & RESEARCH WING". */
+function createNewWingSignTexture(): THREE.CanvasTexture {
+  const W = 1024;
+  const H = 256;
+  const { canvas, ctx } = makeCanvas(W, H);
+
+  // Deep royal blue background
+  ctx.fillStyle = '#0b4da2';
+  ctx.fillRect(0, 0, W, H);
+
+  // Gold metallic border
+  ctx.strokeStyle = '#e2b342';
+  ctx.lineWidth = 10;
+  ctx.strokeRect(10, 10, W - 20, H - 20);
+
+  // Inner white accent border
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(18, 18, W - 36, H - 36);
+
+  // Subtitle
+  ctx.fillStyle = '#e2b342';
+  ctx.font = '900 28px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('UNIVERSIDAD DE DAGUPAN', W / 2, 58);
+
+  // Main title
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '900 56px sans-serif';
+  ctx.fillText('INNOVATION & RESEARCH WING', W / 2, 130);
+
+  // Bottom secondary text
+  ctx.fillStyle = '#cbd5e1';
+  ctx.font = '700 24px sans-serif';
+  ctx.fillText('ACADEMIC & TECHNOLOGY COMPLEX', W / 2, 195);
+
+  return toTexture(canvas);
+}
+
 // ── Geometry helpers ────────────────────────────────────────────────────────
 function box(
   w: number,
@@ -832,6 +1020,41 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     map: createDeansListBoardTexture(),
     roughness: 0.3,
   });
+
+  // ── Student Services & New 2-Storey Wing Footprint Dimensions ─────────────
+  const admFrontX = -18.0;
+  const admBackX = -31.0;
+  const admD = admFrontX - admBackX; // 13.0m
+  const admCx = (admFrontX + admBackX) / 2; // -24.5m
+  const admW = 34.0;
+  const admCz = -37.0;
+
+  // New 2-Storey Wing Footprint (Reduced 30% from the front, expanding the front terrace promenade)
+  const wingFrontX = -23.44; // Was -20.2 (stepped back 3.24m / 30% of 10.8m depth)
+  const wingBackX = admBackX; // -31.0m
+  const wingD = wingFrontX - wingBackX; // 7.56m (was 10.8m)
+  const wingCx = (wingFrontX + wingBackX) / 2; // -27.22m
+  const wingZ0 = -20.0;
+  const wingZ1 = -46.0;
+  const wingW = wingZ0 - wingZ1; // 26.0m
+  const wingCz = (wingZ0 + wingZ1) / 2; // -33.0m
+
+  const newWingCurtainMat = new THREE.MeshStandardMaterial({
+    map: createNewWingCurtainWallTexture(),
+    roughness: 0.18,
+    metalness: 0.55,
+  });
+  const newWingUpperMat = new THREE.MeshStandardMaterial({
+    map: createNewWingUpperFacadeTexture(),
+    roughness: 0.2,
+    metalness: 0.5,
+  });
+  const newWingSignMat = new THREE.MeshStandardMaterial({
+    map: createNewWingSignTexture(),
+    roughness: 0.35,
+    metalness: 0.2,
+  });
+
 
   // ── LEVEL 0: GROUND CONCOURSE, CHAPEL, PORTAL GATE & STREET ────────────────
   const ground = new THREE.Group();
@@ -1107,13 +1330,6 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
 
   // 7. UDD Student Services & Administrative Hall (Rear campus building - SZD Design Studio)
   // Relocated to the exact rear lot area behind the basketball court (facing +X towards court)
-  const admCx = -24.5;
-  const admD = 13.0; // depth along X (from x = -18.0 back to x = -31.0)
-  const admFrontX = -18.0;
-  const admBackX = -31.0;
-  const admW = 34.0; // width along Z (from z = -20.0 to z = -54.0)
-  const admCz = -37.0;
-
   // Paved pedestrian apron connecting basketball court to services building
   ground.add(box(4.0, 0.08, admW + 2, concrete, -16.0, 0.04, admCz, false));
 
@@ -1343,18 +1559,19 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       g.add(box(rwD - 4, 1.8, 0.12, darkGlass, rwCx, cy + 0.3, rwZ0 - 0.1));
       g.add(box(rwD - 4, 0.9, 0.15, blueWall, rwCx, baseY + 0.45, rwZ0 - 0.1));
     } else if (f === 3) {
-      // 4F Level: Student Services Roof Deck, Garden Terrace & Parapet Signage
+      // ── 4F Level: Garden Terrace & Storey 1 of New Innovation Wing ──────────
+      // Foundation / Floor slab (spans both terrace and new wing)
       g.add(box(admD, 0.3, admW, concrete, admCx, baseY + 0.15, admCz));
-      // Perimeter parapet walls
+
+      // 1. Front Garden Terrace & Parapet Signage (facing +X towards court)
+      // Front terrace parapet wall with silver coping
       g.add(box(0.3, 1.1, admW, whiteMat, admFrontX, baseY + 0.55, admCz));
-      g.add(box(0.3, 1.1, admW, whiteMat, admBackX, baseY + 0.55, admCz));
-      g.add(box(admD, 1.1, 0.3, whiteMat, admCx, baseY + 0.55, -20.0));
-      g.add(box(0.4, 0.12, admW + 0.2, mats.metalSilver, admFrontX, baseY + 1.15, admCz)); // coping
+      g.add(box(0.4, 0.12, admW + 0.2, mats.metalSilver, admFrontX, baseY + 1.15, admCz));
 
       // Rooftop Collegiate Signage: "UNIVERSIDAD DE DAGUPAN" (Facing +X)
-      g.add(box(0.25, 1.45, 14.5, [servicesSignMat, mats.metalDark, mats.metalDark, mats.metalDark, mats.metalDark, mats.metalDark], admFrontX + 0.15, baseY + 1.8, -35.0));
+      g.add(box(0.25, 1.45, 14.5, [servicesSignMat, mats.metalDark, mats.metalDark, mats.metalDark, mats.metalDark, mats.metalDark], admFrontX + 0.15, baseY + 1.825, -35.0));
 
-      // Rooftop Garden Terrace planters & ornamental trees (as seen in SZD render)
+      // Garden Terrace Planters & Ornamental Trees
       [-24, -29, -40, -46].forEach((rz) => {
         g.add(box(0.8, 0.5, 3.8, planterMat, admFrontX - 0.8, baseY + 0.4, rz));
         g.add(box(0.6, 0.4, 3.6, shrubDark, admFrontX - 0.8, baseY + 0.8, rz));
@@ -1364,9 +1581,153 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
         g.add(tree);
       });
 
-      // Right Wing Roof Deck
-      g.add(box(rwD, 0.3, rwW, concrete, rwCx, baseY + 0.15, rwCz));
-      g.add(box(rwD + 0.2, 0.8, rwW + 0.2, blueWall, rwCx, baseY + 0.55, rwCz));
+      // Terrace side safety parapets (from front edge x = -18.0 to building front x = -20.2)
+      const terrL = Math.abs(wingFrontX - admFrontX); // 2.2m
+      const terrMidX = (admFrontX + wingFrontX) / 2; // -19.1m
+      g.add(box(terrL, 1.1, 0.3, whiteMat, terrMidX, baseY + 0.55, -20.0));
+      g.add(box(terrL + 0.1, 0.12, 0.38, mats.metalSilver, terrMidX, baseY + 1.15, -20.0));
+      g.add(box(terrL, 1.1, 0.3, whiteMat, terrMidX, baseY + 0.55, -46.0));
+      g.add(box(terrL + 0.1, 0.12, 0.38, mats.metalSilver, terrMidX, baseY + 1.15, -46.0));
+
+      // Paver walkway floor on terrace
+      g.add(box(terrL, 0.04, wingW - 0.2, mats.metalDark, terrMidX, baseY + 0.32, wingCz));
+
+      // 2. STOREY 1 OF THE NEW INNOVATION WING (on squared area: x = -20.2 to -31.0, z = -20.0 to -46.0)
+      // Interior floor finish
+      g.add(box(wingD - 0.4, 0.05, wingW - 0.4, roofMat, wingCx, baseY + 0.32, wingCz));
+
+      // Rear Wall (-X face)
+      g.add(box(0.4, FH, wingW, whiteMat, wingBackX, cy, wingCz));
+      g.add(box(0.08, 1.6, wingW - 4.0, [darkGlass, darkGlass, whiteMat, whiteMat, darkGlass, darkGlass], wingBackX - 0.12, cy + 0.3, wingCz));
+      g.add(box(0.12, 0.08, wingW - 3.8, blueWall, wingBackX - 0.14, cy - 0.55, wingCz));
+      g.add(box(0.12, 0.08, wingW - 3.8, blueWall, wingBackX - 0.14, cy + 1.15, wingCz));
+      // Rear wall AC compressors on brackets
+      [-24.0, -33.0, -42.0].forEach((acZ) => {
+        const acX = wingBackX - 0.38;
+        const acY = cy + 0.4;
+        g.add(box(0.85, 0.62, 0.38, [mats.metalSilver, mats.metalSilver, mats.metalSilver, mats.metalSilver, acUnitMat, mats.metalSilver], acX, acY, acZ));
+        g.add(box(0.04, 0.45, 0.42, mats.metalDark, acX + 0.28, acY - 0.35, acZ));
+        g.add(box(0.04, 0.45, 0.42, mats.metalDark, acX - 0.28, acY - 0.35, acZ));
+      });
+
+      // Left Wall (-Z face, z = wingZ0)
+      g.add(box(wingD, FH, 0.4, whiteMat, wingCx, cy, wingZ0));
+      g.add(box(wingD - 2.0, 1.5, 0.08, darkGlass, wingCx, cy + 0.2, wingZ0 - 0.05));
+      g.add(box(wingD - 1.8, 0.08, 0.12, blueWall, wingCx, cy - 0.6, wingZ0 - 0.06));
+      g.add(box(wingD - 1.8, 0.08, 0.12, blueWall, wingCx, cy + 1.0, wingZ0 - 0.06));
+
+      // Right Wall (+Z face, z = wingZ1)
+      g.add(box(wingD, FH, 0.4, whiteMat, wingCx, cy, wingZ1));
+
+      // Front Facade (+X face, x = wingFrontX)
+      // Corner columns
+      g.add(box(0.65, FH, 0.65, whiteMat, wingFrontX, cy, wingZ0 + 0.32));
+      g.add(box(0.65, FH, 0.65, whiteMat, wingFrontX, cy, wingZ1 - 0.32));
+
+      // Panoramic Curtain Wall Glazing with warm interior lab bays
+      g.add(box(0.12, FH - 0.6, wingW - 1.3, [newWingCurtainMat, darkGlass, whiteMat, whiteMat, whiteMat, whiteMat], wingFrontX, cy, wingCz));
+
+      // Center Double Glass Sliding Door opening to Garden Terrace
+      g.add(box(0.16, 2.5, 2.4, officeGlassMat, wingFrontX + 0.05, baseY + 1.25, -33.0));
+      g.add(box(0.2, 0.1, 2.6, mats.metalSilver, wingFrontX + 0.06, baseY + 2.55, -33.0));
+      g.add(box(0.2, 2.5, 0.1, mats.metalSilver, wingFrontX + 0.06, baseY + 1.25, -33.0 - 1.25));
+      g.add(box(0.2, 2.5, 0.1, mats.metalSilver, wingFrontX + 0.06, baseY + 1.25, -33.0 + 1.25));
+
+      // Cantilevered Entrance Canopy above double doors
+      g.add(box(1.4, 0.12, 3.4, mats.metalSilver, wingFrontX + 0.7, baseY + 2.68, -33.0));
+      g.add(box(1.42, 0.06, 3.44, blueWall, wingFrontX + 0.7, baseY + 2.76, -33.0));
+      g.add(rod(new THREE.Vector3(wingFrontX + 1.3, baseY + 2.7, -33.0 - 1.5), new THREE.Vector3(wingFrontX + 0.1, baseY + 3.5, -33.0 - 1.5), 0.03, mats.metalSilver));
+      g.add(rod(new THREE.Vector3(wingFrontX + 1.3, baseY + 2.7, -33.0 + 1.5), new THREE.Vector3(wingFrontX + 0.1, baseY + 3.5, -33.0 + 1.5), 0.03, mats.metalSilver));
+
+      // Royal Blue Architectural Portal Frame (left bay, z = -26.0)
+      g.add(box(0.45, FH, 0.55, blueWall, wingFrontX + 0.15, cy, -23.5));
+      g.add(box(0.45, FH, 0.55, blueWall, wingFrontX + 0.15, cy, -28.5));
+      g.add(box(0.45, 0.5, 5.55, blueWall, wingFrontX + 0.15, baseY + FH - 0.25, -26.0));
+
+      // Architectural vertical sun fins (right bay)
+      for (let sz = -37.5; sz >= -44.5; sz -= 0.8) {
+        g.add(box(0.5, FH, 0.1, finMat, wingFrontX + 0.12, cy, sz));
+      }
+
+      // Royal Blue Header Band along entire front
+      g.add(box(0.35, 0.45, wingW, blueWall, wingFrontX + 0.08, baseY + FH - 0.225, wingCz));
+
+      // Cantilevered Architectural Eyebrow Sunshade (shelf separating Storey 1 and Storey 2)
+      g.add(box(1.0, 0.18, wingW + 0.6, mats.metalSilver, wingFrontX + 0.45, baseY + FH, wingCz));
+      g.add(box(1.04, 0.08, wingW + 0.65, blueWall, wingFrontX + 0.47, baseY + FH - 0.06, wingCz));
+    } else if (f === 4) {
+      // ── 5F Level: STOREY 2 OF THE NEW INNOVATION WING ───────────────────────
+      // Base elevation: baseY = 4 * FH (15.2m), cy = baseY + FH / 2 (17.1m)
+
+      // Floor slab
+      g.add(box(wingD, 0.28, wingW, roofMat, wingCx, baseY + 0.14, wingCz));
+
+      // Rear Wall (-X face)
+      g.add(box(0.4, FH, wingW, whiteMat, wingBackX, cy, wingCz));
+      g.add(box(0.08, 1.6, wingW - 4.0, [darkGlass, darkGlass, whiteMat, whiteMat, darkGlass, darkGlass], wingBackX - 0.12, cy + 0.3, wingCz));
+      g.add(box(0.12, 0.08, wingW - 3.8, blueWall, wingBackX - 0.14, cy - 0.55, wingCz));
+      g.add(box(0.12, 0.08, wingW - 3.8, blueWall, wingBackX - 0.14, cy + 1.15, wingCz));
+      // AC compressor units on rear
+      [-23.0, -32.0, -41.0].forEach((acZ) => {
+        const acX = wingBackX - 0.38;
+        const acY = cy + 0.4;
+        g.add(box(0.85, 0.62, 0.38, [mats.metalSilver, mats.metalSilver, mats.metalSilver, mats.metalSilver, acUnitMat, mats.metalSilver], acX, acY, acZ));
+        g.add(box(0.04, 0.45, 0.42, mats.metalDark, acX + 0.28, acY - 0.35, acZ));
+        g.add(box(0.04, 0.45, 0.42, mats.metalDark, acX - 0.28, acY - 0.35, acZ));
+      });
+
+      // Left Wall (-Z face, z = wingZ0)
+      g.add(box(wingD, FH, 0.4, whiteMat, wingCx, cy, wingZ0));
+      g.add(box(wingD - 2.0, 1.5, 0.08, darkGlass, wingCx, cy + 0.2, wingZ0 - 0.05));
+      g.add(box(wingD - 1.8, 0.08, 0.12, blueWall, wingCx, cy - 0.6, wingZ0 - 0.06));
+      g.add(box(wingD - 1.8, 0.08, 0.12, blueWall, wingCx, cy + 1.0, wingZ0 - 0.06));
+
+      // Right Wall (+Z face, z = wingZ1, visible above Right Wing 3F roof!)
+      g.add(box(wingD, FH, 0.4, whiteMat, wingCx, cy, wingZ1));
+      g.add(box(wingD - 2.0, 1.5, 0.08, darkGlass, wingCx, cy + 0.2, wingZ1 + 0.05));
+      g.add(box(wingD - 1.8, 0.08, 0.12, blueWall, wingCx, cy - 0.6, wingZ1 + 0.06));
+      g.add(box(wingD - 1.8, 0.08, 0.12, blueWall, wingCx, cy + 1.0, wingZ1 + 0.06));
+
+      // Front Facade (+X face, x = wingFrontX)
+      // Corner columns
+      g.add(box(0.65, FH, 0.65, whiteMat, wingFrontX, cy, wingZ0 + 0.32));
+      g.add(box(0.65, FH, 0.65, whiteMat, wingFrontX, cy, wingZ1 - 0.32));
+
+      // Panoramic Upper Ribbon Glazing with blue accent spandrel
+      g.add(box(0.12, FH - 0.6, wingW - 1.3, [newWingUpperMat, darkGlass, whiteMat, whiteMat, whiteMat, whiteMat], wingFrontX, cy, wingCz));
+
+      // Cantilevered Observation Viewing Balcony (Center, z = -33.0)
+      const balcW = 8.0;
+      const balcD = 1.35;
+      const balcFrontX = wingFrontX + balcD;
+      g.add(box(balcD, 0.22, balcW, concrete, wingFrontX + balcD / 2, baseY + 0.11, -33.0));
+      g.add(box(balcD, 0.08, balcW, blueWall, wingFrontX + balcD / 2, baseY + 0.04, -33.0)); // bottom accent
+      // Glass front balustrade
+      g.add(box(0.06, 1.05, balcW, darkGlass, balcFrontX - 0.03, baseY + 0.65, -33.0));
+      g.add(box(0.1, 0.08, balcW + 0.05, mats.metalSilver, balcFrontX - 0.03, baseY + 1.2, -33.0)); // handrail
+      // Side glass balustrades
+      g.add(box(balcD - 0.1, 1.05, 0.06, darkGlass, wingFrontX + balcD / 2, baseY + 0.65, -33.0 - balcW / 2));
+      g.add(box(balcD - 0.1, 1.05, 0.06, darkGlass, wingFrontX + balcD / 2, baseY + 0.65, -33.0 + balcW / 2));
+      g.add(box(balcD, 0.08, 0.1, mats.metalSilver, wingFrontX + balcD / 2, baseY + 1.2, -33.0 - balcW / 2));
+      g.add(box(balcD, 0.08, 0.1, mats.metalSilver, wingFrontX + balcD / 2, baseY + 1.2, -33.0 + balcW / 2));
+
+      // Double Glass Door opening to Balcony
+      g.add(box(0.14, 2.4, 2.4, officeGlassMat, wingFrontX + 0.04, baseY + 1.2, -33.0));
+
+      // Royal Blue Accent Frames flanking the center bay
+      g.add(box(0.35, FH, 0.6, blueWall, wingFrontX + 0.12, cy, -23.5));
+      g.add(box(0.35, FH, 0.6, blueWall, wingFrontX + 0.12, cy, -42.5));
+
+      // Architectural vertical sun louvers flanking the balcony
+      [-25.5, -27.0, -28.5, -37.5, -39.0, -40.5].forEach((sz) => {
+        g.add(box(0.45, FH - 0.4, 0.1, finMat, wingFrontX + 0.12, cy, sz));
+      });
+
+      // Royal Blue top header band
+      g.add(box(0.38, 0.5, wingW, blueWall, wingFrontX + 0.08, baseY + FH - 0.25, wingCz));
+
+      // Official Signage Plaque mounted prominently above the balcony
+      g.add(box(0.14, 1.1, 9.5, [newWingSignMat, mats.metalDark, mats.metalDark, mats.metalDark, mats.metalDark, mats.metalDark], wingFrontX + 0.18, baseY + 3.1, -33.0));
     }
 
     floorGroups.push(g);
@@ -1451,6 +1812,76 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   });
   // Communication mast
   roof.add(rod(new THREE.Vector3(pentX, roofBaseY + pentH, pentZ), new THREE.Vector3(pentX, roofBaseY + pentH + 5.5, pentZ), 0.08, mats.metalSilver));
+
+  // ── 6. Rooftop of New Innovation & Research Wing ─────────────────────────
+  // Structural roof slab
+  roof.add(box(wingD + 0.4, 0.35, wingW + 0.4, concrete, wingCx, roofBaseY + 0.175, wingCz));
+
+  // Perimeter parapet walls (1.1m high)
+  roof.add(box(0.3, 1.1, wingW + 0.4, whiteMat, wingFrontX + 0.1, roofBaseY + 0.55, wingCz));
+  roof.add(box(0.3, 1.1, wingW + 0.4, whiteMat, wingBackX - 0.1, roofBaseY + 0.55, wingCz));
+  roof.add(box(wingD + 0.4, 1.1, 0.3, whiteMat, wingCx, roofBaseY + 0.55, wingZ0 - 0.1));
+  roof.add(box(wingD + 0.4, 1.1, 0.3, whiteMat, wingCx, roofBaseY + 0.55, wingZ1 + 0.1));
+
+  // Royal blue coping beam all around
+  roof.add(box(0.42, 0.14, wingW + 0.6, blueWall, wingFrontX + 0.1, roofBaseY + 1.15, wingCz));
+  roof.add(box(0.42, 0.14, wingW + 0.6, blueWall, wingBackX - 0.1, roofBaseY + 1.15, wingCz));
+  roof.add(box(wingD + 0.6, 0.14, 0.42, blueWall, wingCx, roofBaseY + 1.15, wingZ0 - 0.1));
+  roof.add(box(wingD + 0.6, 0.14, 0.42, blueWall, wingCx, roofBaseY + 1.15, wingZ1 + 0.1));
+
+  // Rooftop Stair & Elevator Penthouse Core (rises 2.8m above roof)
+  const npW = 4.6;
+  const npD = 3.2;
+  const npH = 2.8;
+  const npX = wingCx - 0.5;
+  const npZ = wingCz + 5.5;
+  roof.add(box(npD, npH, npW, whiteMat, npX, roofBaseY + npH / 2, npZ));
+  roof.add(box(npD + 0.3, 0.22, npW + 0.3, blueWall, npX, roofBaseY + npH + 0.11, npZ)); // penthouse cap
+  roof.add(box(0.08, 2.0, 1.0, blueWall, npX + npD / 2 + 0.02, roofBaseY + 1.0, npZ)); // steel access door
+
+  // Communication / Lightning Mast on penthouse
+  roof.add(rod(new THREE.Vector3(npX, roofBaseY + npH, npZ), new THREE.Vector3(npX, roofBaseY + npH + 4.8, npZ), 0.06, mats.metalSilver));
+
+  // Architectural Solar Canopy Pergola on the front roof deck
+  // 4 Blue steel support pillars
+  const colX0 = wingFrontX - 0.6;
+  const colX1 = wingFrontX - 2.8;
+  const colZ0 = wingCz - 5.5;
+  const colZ1 = wingCz + 1.5;
+  [colZ0, colZ1].forEach((pz) => {
+    [colX0, colX1].forEach((px) => {
+      roof.add(rod(new THREE.Vector3(px, roofBaseY + 0.3, pz), new THREE.Vector3(px, roofBaseY + 2.8, pz), 0.08, blueWall));
+    });
+  });
+  // Overhead steel pergola frame with angled solar louvers
+  const pergD = Math.abs(colX1 - colX0) + 0.8; // 3.0m
+  const pergW = Math.abs(colZ1 - colZ0) + 1.6; // 8.6m
+  const pergCx = (colX0 + colX1) / 2;
+  const pergCz = (colZ0 + colZ1) / 2;
+  roof.add(box(pergD, 0.14, pergW, mats.metalSilver, pergCx, roofBaseY + 2.85, pergCz));
+  // Louver slats inside pergola
+  for (let lz = pergCz - pergW / 2 + 0.5; lz <= pergCz + pergW / 2 - 0.5; lz += 0.75) {
+    roof.add(box(pergD - 0.2, 0.06, 0.35, blueWall, pergCx, roofBaseY + 2.8, lz));
+  }
+
+  // Solar Photovoltaic (PV) Panels Array (2 rows of 3 panels)
+  [-26.5, -29.0].forEach((pvX) => {
+    [-38.0, -40.5, -43.0].forEach((pvZ) => {
+      const panel = box(1.9, 0.06, 1.4, [mats.metalSilver, mats.metalSilver, darkGlass, mats.metalSilver, mats.metalSilver, mats.metalSilver], pvX, roofBaseY + 0.65, pvZ);
+      panel.rotation.z = -0.15; // tilted towards sun
+      roof.add(panel);
+      // Small support frame
+      roof.add(box(0.06, 0.4, 1.2, mats.metalDark, pvX + 0.65, roofBaseY + 0.45, pvZ));
+      roof.add(box(0.06, 0.2, 1.2, mats.metalDark, pvX - 0.65, roofBaseY + 0.35, pvZ));
+    });
+  });
+
+  // Rooftop Dual HVAC Chiller Units on vibration isolation pads
+  [-26.5, -30.0].forEach((chZ) => {
+    roof.add(box(2.6, 1.3, 1.8, mats.metalSilver, wingCx - 0.4, roofBaseY + 0.85, chZ));
+    roof.add(box(2.8, 0.16, 2.0, mats.metalDark, wingCx - 0.4, roofBaseY + 1.55, chZ)); // fan top
+    roof.add(box(2.5, 0.1, 1.6, mats.metalDark, wingCx - 0.4, roofBaseY + 0.25, chZ)); // base pad
+  });
 
   floorGroups.push(roof);
   root.add(roof);
