@@ -1720,9 +1720,9 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       }
 
       // Right Dynamic Blue Frame (2F portion)
-      g.add(box(0.3, 1.2, 11.0, whiteMat, admFrontX, baseY + 0.6, -42.5));
-      g.add(box(0.08, 2.3, 10.6, darkGlass, admFrontX + 0.05, baseY + 2.35, -42.5));
-      g.add(box(0.5, FH, 0.6, blueWall, admFrontX, cy, -47.7));
+      g.add(box(0.3, 1.2, 9.5, whiteMat, admFrontX, baseY + 0.6, -41.75));
+      g.add(box(0.08, 2.3, 9.1, darkGlass, admFrontX + 0.05, baseY + 2.35, -41.75));
+      g.add(box(0.5, FH, 0.6, blueWall, admFrontX, cy, -46.2));
     } else if (f === 2) {
       // 3F Level:
       // Floor slab & perimeter walls
@@ -1755,9 +1755,9 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       g.add(sRing);
 
       // Right Dynamic Blue Frame (3F portion)
-      g.add(box(1.2, 0.7, 11.0, blueWall, admFrontX + 0.4, baseY + FH - 0.35, -42.5));
-      g.add(box(1.2, FH, 0.7, blueWall, admFrontX + 0.4, cy, -47.65));
-      g.add(box(0.08, 2.5, 10.6, darkGlass, admFrontX + 0.05, baseY + 1.6, -42.5));
+      g.add(box(1.2, 0.7, 9.5, blueWall, admFrontX + 0.4, baseY + FH - 0.35, -41.75));
+      g.add(box(1.2, FH, 0.7, blueWall, admFrontX + 0.4, cy, -46.2));
+      g.add(box(0.08, 2.5, 9.1, darkGlass, admFrontX + 0.05, baseY + 1.6, -41.75));
     } else if (f === 3) {
       // ── 4F Level: Garden Terrace & Storey 1 of New Innovation Wing ──────────
       // Foundation / Floor slab (spans both terrace and new wing)
@@ -1772,7 +1772,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       g.add(box(0.25, 1.45, 14.5, [servicesSignMat, mats.metalDark, mats.metalDark, mats.metalDark, mats.metalDark, mats.metalDark], admFrontX + 0.15, baseY + 1.825, -35.0));
 
       // Garden Terrace Planters & Ornamental Trees
-      [-24, -29, -40, -46].forEach((rz) => {
+      [-24, -30, -36, -42].forEach((rz) => {
         g.add(box(0.8, 0.5, 3.8, planterMat, admFrontX - 0.8, baseY + 0.4, rz));
         g.add(box(0.6, 0.4, 3.6, shrubDark, admFrontX - 0.8, baseY + 0.8, rz));
         const tree = new THREE.Mesh(new THREE.DodecahedronGeometry(0.75, 1), shrubLight);
@@ -1781,13 +1781,13 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
         g.add(tree);
       });
 
-      // Terrace side safety parapets (from front edge x = -18.0 to building front x = -20.2)
-      const terrL = Math.abs(wingFrontX - admFrontX); // 2.2m
-      const terrMidX = (admFrontX + wingFrontX) / 2; // -19.1m
+      // Terrace side safety parapets (from front edge x = -18.0 to building front x = -23.44)
+      const terrL = Math.abs(wingFrontX - admFrontX); // 5.44m
+      const terrMidX = (admFrontX + wingFrontX) / 2; // -20.72m
       g.add(box(terrL, 1.1, 0.3, whiteMat, terrMidX, baseY + 0.55, -20.0));
       g.add(box(terrL + 0.1, 0.12, 0.38, mats.metalSilver, terrMidX, baseY + 1.15, -20.0));
-      g.add(box(terrL, 1.1, 0.3, whiteMat, terrMidX, baseY + 0.55, -46.0));
-      g.add(box(terrL + 0.1, 0.12, 0.38, mats.metalSilver, terrMidX, baseY + 1.15, -46.0));
+      g.add(box(terrL, 1.1, 0.3, whiteMat, terrMidX, baseY + 0.55, -46.5));
+      g.add(box(terrL + 0.1, 0.12, 0.38, mats.metalSilver, terrMidX, baseY + 1.15, -46.5));
 
       // Paver walkway floor on terrace
       g.add(box(terrL, 0.04, wingW - 0.2, mats.metalDark, terrMidX, baseY + 0.32, wingCz));
