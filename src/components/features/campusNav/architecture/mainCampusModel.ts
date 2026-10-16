@@ -1359,11 +1359,11 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   const nStraightD = Math.abs(nStraightZBack - nStraightZFront); // 7.5m
   const nStraightCz = (nStraightZFront + nStraightZBack) / 2; // -50.25m
 
-  // C. North Wing - West Angled Dog-Leg Section (rotated forward from bend at x = 0.0, z = -50.25 to connect flush into Student Services at x = -31.0, z = -46.5):
+  // C. North Wing - West Angled Dog-Leg Section (rotated back slightly from bend at x = 0.0, z = -50.25 to connect flush into Student Services without overshoot):
   const nAngledPivotX = 0.0;
   const nAngledPivotZ = -50.25;
-  const nAngledAngle = Math.atan2(7.35, 31.0); // ~ +13.33 deg (+0.2327 rad) - rotated forward to connect directly into Student Services
-  const nAngledLen = Math.hypot(31.0, 7.35); // ~ 31.86m
+  const nAngledAngle = Math.atan2(4.0, 31.0); // ~ +7.35 deg (+0.1283 rad) - rotated back slightly to prevent overshoot
+  const nAngledLen = Math.hypot(31.0, 4.0); // ~ 31.26m
   const nAngledD = 7.5; // depth 7.5m (local z' from -3.75 to +3.75)
   const nAngledZFront = 3.75; // local front edge (+Z' towards court)
   const nAngledZBack = -3.75; // local back edge (-Z' towards rear boundary)
@@ -2178,8 +2178,8 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
 
       if (f === 3) {
         // 4F Level: Grand Architectural Royal Blue Hall Opening Portal connecting Garden Terrace directly into Angled North Wing
-        // Balustrade split around portal opening at local x' = -21.4 (world x ~ -20.0, directly on 4F garden terrace)
-        const portalXPrime = -21.4;
+        // Balustrade split around portal opening at local x' = -20.6 (world x ~ -20.0, directly on 4F garden terrace)
+        const portalXPrime = -20.6;
         const pOpenW = 3.8;
         const leftBalcLen = Math.abs(-nAngledLen - (portalXPrime - pOpenW / 2));
         const leftBalcCx = -nAngledLen + leftBalcLen / 2;
@@ -2211,7 +2211,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
         angledFloor.add(box(3.2, 0.04, 2.6, mats.metalDark, portalXPrime, baseY + 0.32, nAngledZFront - 1.1));
 
         // Flush transition threshold connecting 4F Terrace seamlessly into Portal opening
-        g.add(box(3.8, 0.06, 1.4, mats.metalDark, -20.0, baseY + 0.32, -41.8));
+        g.add(box(3.8, 0.06, 1.4, mats.metalDark, -20.0, baseY + 0.32, -43.9));
       } else {
         // Continuous balustrade on 2F & 3F
         angledFloor.add(box(nAngledLen, 1.05, 0.25, creamWall, -nAngledLen / 2, baseY + 0.525, nAngledZFront));
@@ -2219,11 +2219,11 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
         angledFloor.add(box(nAngledLen, 0.5, 0.3, creamWall, -nAngledLen / 2, baseY + FH - 0.25, nAngledZFront));
 
         // Flush corridor threshold into Student Services rear hallway
-        g.add(box(3.6, 0.28, 1.4, concrete, -20.0, baseY + 0.14, -41.8));
+        g.add(box(3.6, 0.28, 1.4, concrete, -20.0, baseY + 0.14, -43.9));
       }
 
-      // Colonnade columns along angled front (skips cx = -22.0 on 4F to keep portal clear)
-      const colXList = f === 3 ? [-4.0, -10.0, -16.0, -27.0] : [-4.0, -10.0, -16.0, -22.0, -28.0];
+      // Colonnade columns along angled front (skips cx = -21.0 on 4F to keep portal clear)
+      const colXList = f === 3 ? [-4.0, -10.0, -15.5, -26.0] : [-4.0, -10.0, -15.5, -21.0, -26.5];
       colXList.forEach((cx) => {
         angledFloor.add(box(0.6, FH, 0.6, creamWall, cx, cy, nAngledZFront));
       });
