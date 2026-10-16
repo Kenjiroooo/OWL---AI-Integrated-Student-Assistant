@@ -1190,7 +1190,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     metalness: 0.2,
   });
 
-  // ── 6-STOREY L-SHAPED COURTYARD BUILDING (North Wing & East Wing) ──
+  // ── 5-STOREY L-SHAPED COURTYARD BUILDING (North Wing & East Wing) ──
   // A. North Wing (long wing along the north/far side of basketball court, expanded westward behind Student Services to x = -31.0):
   // Inner corridor edge at z = -46.5 (facing +Z into the court)
   // Outer back wall at z = -54.0 (facing -Z)
@@ -1215,7 +1215,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   const eWingL = Math.abs(eWingZ1 - eWingZ0); // 32.0m
   const eWingCz = (eWingZ0 + eWingZ1) / 2; // -38.0m
 
-  // Materials for 6-Storey Building
+  // Materials for 5-Storey Building
   const creamWall = new THREE.MeshStandardMaterial({ color: 0xded6be, roughness: 0.65 });
   const ochreWall = new THREE.MeshStandardMaterial({ color: 0xc89a3c, roughness: 0.7 });
   const corridorWallMat = new THREE.MeshStandardMaterial({
@@ -1535,7 +1535,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   ground.add(createCar(-14.0, -36.0, carBlue));
   ground.add(createCar(-14.0, -44.0, carDark));
 
-  // ── 8. 6-Storey L-Shaped Courtyard Building (Level 0 / 1F: North Wing & East Wing) ──
+  // ── 8. 5-Storey L-Shaped Courtyard Building (Level 0 / 1F: North Wing & East Wing) ──
   // A. North Wing 1F (Long wing along X on north of basketball court)
   ground.add(box(nWingW, 0.3, nWingD, concrete, nWingCx, 0.15, nWingCz, false));
   ground.add(box(nWingW, FH, 0.4, creamWall, nWingCx, FH / 2, nWingZBack)); // back wall (-Z)
@@ -1929,7 +1929,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       g.add(box(0.14, 1.1, 9.5, [newWingSignMat, mats.metalDark, mats.metalDark, mats.metalDark, mats.metalDark, mats.metalDark], wingFrontX + 0.18, baseY + 3.1, -33.0));
     }
 
-    // ── 6-Storey L-Shaped Courtyard Building (Floors 2 to 5: North Wing & East Wing) ──
+    // ── 5-Storey L-Shaped Courtyard Building (Floors 2 to 5: North Wing & East Wing) ──
     if (f >= 1 && f <= 3) {
       // Levels 1, 2, 3: Open-Air Corridors with Warm Cream Balustrades (2F, 3F, 4F)
       // A. North Wing Open Corridor & Classrooms (Long wing along X, facing +Z towards court)
@@ -2247,67 +2247,36 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     roof.add(box(2.5, 0.1, 1.6, mats.metalDark, wingCx - 0.4, roofBaseY + 0.25, chZ)); // base pad
   });
 
-  // ── 7. 6-Storey Building Floor 6 & Rooftop (North & East Courtyard Wings with 12m Tower) ─
-  const sixTopY = roofBaseY + FH; // 22.8m (top of Floor 6 / roof deck)
+  // ── 7. 5-Storey Courtyard Building Rooftop (North & East Wings with 12m Tower) ───────
+  const bldgTopY = roofBaseY; // 19.0m (top of Floor 5 / roof deck)
 
-  // 6F Floor Slabs
-  roof.add(box(eWingW, 0.28, eWingL, concrete, eWingCx, roofBaseY + 0.14, eWingCz, false));
-  roof.add(box(nWingW, 0.28, nWingD, concrete, nWingCx, roofBaseY + 0.14, nWingCz, false));
+  // Rooftop Slabs (at bldgTopY = 19.0m)
+  roof.add(box(eWingW + 0.4, 0.35, eWingL + 0.4, concrete, eWingCx, bldgTopY + 0.175, eWingCz));
+  roof.add(box(nWingW + 0.4, 0.35, nWingD + 0.4, concrete, nWingCx, bldgTopY + 0.175, nWingCz));
 
-  // 6F Outer & Back Walls
-  roof.add(box(nWingW, FH, 0.4, creamWall, nWingCx, roofBaseY + FH / 2, nWingZBack));
-  roof.add(box(0.4, FH, nWingD, creamWall, nWingX0, roofBaseY + FH / 2, nWingCz));
-  roof.add(box(0.4, FH, eWingL, creamWall, eWingXBack, roofBaseY + FH / 2, eWingCz));
-  roof.add(box(eWingW, FH, 0.4, creamWall, eWingCx, roofBaseY + FH / 2, eWingZ0));
-
-  // 6F Rear Windows (along north back wall at z = nWingZBack)
-  [-26.0, -20.0, -14.0, -8.0, -2.0, 4.0, 10.0, 16.0].forEach((wx) => {
-    roof.add(box(3.2, 1.4, 0.08, darkGlass, wx, roofBaseY + FH / 2 + 0.2, nWingZBack - 0.05, false));
-  });
-
-  // 6F Courtyard Facades (Ribbon windows + Ochre header band)
-  const eRecessL6 = 24.5;
-  const eRecessCz6 = -34.25;
-  roof.add(box(0.2, FH - 0.8, eRecessL6, [creamWall, ribbon5FMat, creamWall, creamWall, creamWall, creamWall], eWingXFront, roofBaseY + FH / 2 - 0.1, eRecessCz6));
-  roof.add(box(0.35, 0.7, eRecessL6, ochreWall, eWingXFront, roofBaseY + FH - 0.35, eRecessCz6));
-  roof.add(box(0.3, 0.4, eRecessL6, creamWall, eWingXFront, roofBaseY + 0.2, eRecessCz6));
-
-  const nRecessW6 = 34.5;
-  const nRecessCx6 = 1.25;
-  roof.add(box(nRecessW6, FH - 0.8, 0.2, [creamWall, creamWall, creamWall, creamWall, ribbon5FMat, creamWall], nRecessCx6, roofBaseY + FH / 2 - 0.1, nWingZFront));
-  roof.add(box(nRecessW6, 0.7, 0.35, ochreWall, nRecessCx6, roofBaseY + FH - 0.35, nWingZFront));
-  roof.add(box(nRecessW6, 0.4, 0.3, creamWall, nRecessCx6, roofBaseY + 0.2, nWingZFront));
-
-  // 6F South Facade overlooking Innovation Wing roof (x = -31.0 to -16.0)
-  const nExtW6 = Math.abs(-16.0 - nWingX0); // 15.0m
-  const nExtCx6 = (nWingX0 + -16.0) / 2; // -23.5m
-  roof.add(box(nExtW6, FH, 0.4, creamWall, nExtCx6, roofBaseY + FH / 2, nWingZFront));
-  [-27.0, -23.5, -20.0].forEach((wx) => {
-    roof.add(box(2.8, 1.4, 0.08, darkGlass, wx, roofBaseY + FH / 2 + 0.1, nWingZFront + 0.05));
-    roof.add(box(3.0, 0.1, 0.12, creamWall, wx, roofBaseY + FH / 2 - 0.75, nWingZFront + 0.06));
-  });
-  roof.add(box(nExtW6, 0.7, 0.35, ochreWall, nExtCx6, roofBaseY + FH - 0.35, nWingZFront));
-
-  // Rooftop Slabs (at sixTopY = 22.8m)
-  roof.add(box(eWingW + 0.4, 0.35, eWingL + 0.4, concrete, eWingCx, sixTopY + 0.175, eWingCz));
-  roof.add(box(nWingW + 0.4, 0.35, nWingD + 0.4, concrete, nWingCx, sixTopY + 0.175, nWingCz));
+  const eRecessL5 = 24.5;
+  const eRecessCz5 = -34.25;
+  const nRecessW5 = 34.5;
+  const nRecessCx5 = 1.25;
+  const nExtW5 = Math.abs(-16.0 - nWingX0); // 15.0m
+  const nExtCx5 = (nWingX0 + -16.0) / 2; // -23.5m
 
   // Rooftop Parapets (1.1m high)
   // Courtyard-facing parapet (ochre finish as seen in photo)
-  roof.add(box(0.35, 1.1, eRecessL6 + 0.4, ochreWall, eWingXFront, sixTopY + 0.55, eRecessCz6));
-  roof.add(box(nRecessW6 + 0.4, 1.1, 0.35, ochreWall, nRecessCx6, sixTopY + 0.55, nWingZFront));
-  roof.add(box(0.42, 0.12, eRecessL6 + 0.5, creamWall, eWingXFront, sixTopY + 1.15, eRecessCz6));
-  roof.add(box(nRecessW6 + 0.5, 0.12, 0.42, creamWall, nRecessCx6, sixTopY + 1.15, nWingZFront));
+  roof.add(box(0.35, 1.1, eRecessL5 + 0.4, ochreWall, eWingXFront, bldgTopY + 0.55, eRecessCz5));
+  roof.add(box(nRecessW5 + 0.4, 1.1, 0.35, ochreWall, nRecessCx5, bldgTopY + 0.55, nWingZFront));
+  roof.add(box(0.42, 0.12, eRecessL5 + 0.5, creamWall, eWingXFront, bldgTopY + 1.15, eRecessCz5));
+  roof.add(box(nRecessW5 + 0.5, 0.12, 0.42, creamWall, nRecessCx5, bldgTopY + 1.15, nWingZFront));
 
   // Extended south rooftop parapet above Innovation Wing
-  roof.add(box(nExtW6, 1.1, 0.35, ochreWall, nExtCx6, sixTopY + 0.55, nWingZFront));
-  roof.add(box(nExtW6 + 0.1, 0.12, 0.42, creamWall, nExtCx6, sixTopY + 1.15, nWingZFront));
+  roof.add(box(nExtW5, 1.1, 0.35, ochreWall, nExtCx5, bldgTopY + 0.55, nWingZFront));
+  roof.add(box(nExtW5 + 0.1, 0.12, 0.42, creamWall, nExtCx5, bldgTopY + 1.15, nWingZFront));
 
   // Outer boundary parapets
-  roof.add(box(0.35, 1.1, eWingL + 0.4, creamWall, eWingXBack, sixTopY + 0.55, eWingCz));
-  roof.add(box(eWingW + 0.4, 1.1, 0.35, creamWall, eWingCx, sixTopY + 0.55, eWingZ0));
-  roof.add(box(nWingW + 0.4, 1.1, 0.35, creamWall, nWingCx, sixTopY + 0.55, nWingZBack));
-  roof.add(box(0.35, 1.1, nWingD + 0.4, creamWall, nWingX0, sixTopY + 0.55, nWingCz));
+  roof.add(box(0.35, 1.1, eWingL + 0.4, creamWall, eWingXBack, bldgTopY + 0.55, eWingCz));
+  roof.add(box(eWingW + 0.4, 1.1, 0.35, creamWall, eWingCx, bldgTopY + 0.55, eWingZ0));
+  roof.add(box(nWingW + 0.4, 1.1, 0.35, creamWall, nWingCx, bldgTopY + 0.55, nWingZBack));
+  roof.add(box(0.35, 1.1, nWingD + 0.4, creamWall, nWingX0, bldgTopY + 0.55, nWingCz));
 
   // Rooftop Stair & Service Penthouse (North Wing)
   const spW = 5.2;
@@ -2315,21 +2284,21 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   const spH = 2.6;
   const spX = 6.0;
   const spZ = nWingCz;
-  roof.add(box(spW, spH, spD, creamWall, spX, sixTopY + spH / 2, spZ));
-  roof.add(box(spW + 0.3, 0.2, spD + 0.3, ochreWall, spX, sixTopY + spH + 0.1, spZ));
-  roof.add(box(0.9, 2.0, 0.08, mats.metalDark, spX, sixTopY + 1.0, spZ + spD / 2 + 0.05)); // door
+  roof.add(box(spW, spH, spD, creamWall, spX, bldgTopY + spH / 2, spZ));
+  roof.add(box(spW + 0.3, 0.2, spD + 0.3, ochreWall, spX, bldgTopY + spH + 0.1, spZ));
+  roof.add(box(0.9, 2.0, 0.08, mats.metalDark, spX, bldgTopY + 1.0, spZ + spD / 2 + 0.05)); // door
 
   // Rooftop HVAC units on North Wing roof
   [-22.0, -4.0, 12.0].forEach((hx) => {
-    roof.add(box(2.8, 1.3, 1.8, mats.metalSilver, hx, sixTopY + 0.85, nWingCz));
-    roof.add(box(3.0, 0.15, 2.0, mats.metalDark, hx, sixTopY + 1.55, nWingCz));
+    roof.add(box(2.8, 1.3, 1.8, mats.metalSilver, hx, bldgTopY + 0.85, nWingCz));
+    roof.add(box(3.0, 0.15, 2.0, mats.metalDark, hx, bldgTopY + 1.55, nWingCz));
   });
 
   // ── Prominent 12-Meter Steel Lattice Telecommunications Antenna Tower ───────
   // Situated on the roof directly above the North-East (corner junction)
   const towerBaseX = eWingCx; // 22.25
   const towerBaseZ = nWingCz; // -50.25
-  const towerBaseY = sixTopY + 0.35; // 23.15m
+  const towerBaseY = bldgTopY + 0.35; // 19.35m
   const towerH = 12.0; // rises to 35.15m
   const baseSpan = 3.2; // 3.2m base footprint
   const topSpan = 1.3; // tapered to 1.3m at top

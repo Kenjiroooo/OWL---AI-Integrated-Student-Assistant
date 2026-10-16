@@ -62,7 +62,7 @@ export const CAMPUS_BUILDINGS: readonly CampusBuilding[] = [
     shortName: 'Main Campus',
     campus: 'Main Campus • Dagupan City',
     description:
-      'The unified campus complex of Universidad de Dagupan: featuring the 6-storey academic block with perforated mesh chevron facade, the iconic Main Tower facade with horizontal blue floor bands, balconies and vertical "UDD" sign, circular university seal, modern chapel with monumental cross, grand entrance portal, outdoor collegiate basketball court, the Student Services Hall, the 2-storey Innovation & Research Wing, the 4th floor garden terrace hallway portal, and the new 6-Storey L-Shaped Courtyard Building with open-air corridors, ribbon window facade, corner university crest seal, and 12-meter telecommunications lattice antenna tower.',
+      'The unified campus complex of Universidad de Dagupan: featuring the 6-storey academic block with perforated mesh chevron facade, the iconic Main Tower facade with horizontal blue floor bands, balconies and vertical "UDD" sign, circular university seal, modern chapel with monumental cross, grand entrance portal, outdoor collegiate basketball court, the Student Services Hall, the 2-storey Innovation & Research Wing, the 4th floor garden terrace hallway portal, and the new 5-Storey L-Shaped Courtyard Building with open-air corridors, ribbon window facade, corner university crest seal, and 12-meter telecommunications lattice antenna tower.',
     visibleFeatures: [
       'Perforated mesh facade with chevron arrows',
       'Main Tower facade with blue floor bands & balconies',
@@ -71,7 +71,7 @@ export const CAMPUS_BUILDINGS: readonly CampusBuilding[] = [
       'Circular Universidad de Dagupan seal',
       'Modern A-frame chapel with monumental cross',
       'Collegiate outdoor basketball court',
-      '6-Storey L-shaped courtyard building with open corridors',
+      '5-Storey L-shaped courtyard building with open corridors',
       '5th floor continuous ribbon window facade with ochre header',
       '45° angled Universidad de Dagupan crest seal at inner corner',
       '12-meter rooftop telecommunications lattice tower with beacon',
@@ -88,7 +88,7 @@ export const CAMPUS_BUILDINGS: readonly CampusBuilding[] = [
     ],
     referenceImage: '/campus-buildings/udd-main.jpg',
     referenceImageAlt:
-      'Architectural rendering of the unified UDD Main Campus: perforated mesh facade with chevron motifs, main tower facade with blue floor bands, top seal, A-frame chapel with cross, entrance portal, basketball court, student services building with 2-storey innovation wing, and 6-storey L-shaped courtyard building with telecommunications tower.',
+      'Architectural rendering of the unified UDD Main Campus: perforated mesh facade with chevron motifs, main tower facade with blue floor bands, top seal, A-frame chapel with cross, entrance portal, basketball court, student services building with 2-storey innovation wing, and 5-storey L-shaped courtyard building with telecommunications tower.',
     modelPath: 'procedural-3d',
     floors: [
       { level: 0, label: 'Ground Concourse, Chapel, Basketball Court, Courtyard Parking & Colonnade' },
