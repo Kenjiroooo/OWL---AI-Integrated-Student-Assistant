@@ -1938,12 +1938,17 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       // North Wing rear wall (facing -Z)
       g.add(box(nWingW, FH, 0.4, creamWall, nWingCx, cy, nWingZBack));
       // North Wing rear windows
-      [-8.0, -2.0, 4.0, 10.0, 16.0].forEach((wx) => {
+      [-26.0, -20.0, -14.0, -8.0, -2.0, 4.0, 10.0, 16.0].forEach((wx) => {
         g.add(box(3.2, 1.4, 0.08, darkGlass, wx, cy + 0.2, nWingZBack - 0.05, false));
         g.add(box(3.4, 0.08, 0.12, creamWall, wx, cy - 0.6, nWingZBack - 0.06, false));
       });
       // West end wall
       g.add(box(0.4, FH, nWingD, creamWall, nWingX0, cy, nWingCz));
+
+      // West extension partition wall meeting Student Services
+      const nExtW = Math.abs(-16.0 - nWingX0); // 15.0m
+      const nExtCx = (nWingX0 + -16.0) / 2; // -23.5m
+      g.add(box(nExtW, FH, 0.4, creamWall, nExtCx, cy, nWingZFront));
 
       // Recessed classroom wall facing open courtyard corridor (at z = -48.7, facing +Z)
       const nRecessW = 34.5;
@@ -2008,9 +2013,12 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       g.add(box(nWingW, 0.28, nWingD, concrete, nWingCx, baseY + 0.14, nWingCz, false));
       g.add(box(nWingW, FH, 0.4, creamWall, nWingCx, cy, nWingZBack));
       g.add(box(0.4, FH, nWingD, creamWall, nWingX0, cy, nWingCz));
-      [-8.0, -2.0, 4.0, 10.0, 16.0].forEach((wx) => {
+      [-26.0, -20.0, -14.0, -8.0, -2.0, 4.0, 10.0, 16.0].forEach((wx) => {
         g.add(box(3.2, 1.4, 0.08, darkGlass, wx, cy + 0.2, nWingZBack - 0.05, false));
       });
+      const nExtW = Math.abs(-16.0 - nWingX0); // 15.0m
+      const nExtCx = (nWingX0 + -16.0) / 2; // -23.5m
+      g.add(box(nExtW, FH, 0.4, creamWall, nExtCx, cy, nWingZFront));
       const nRecessW = 34.5;
       const nRecessCx = 1.25;
       g.add(box(nRecessW, FH - 0.8, 0.2, [creamWall, creamWall, creamWall, creamWall, ribbon5FMat, creamWall], nRecessCx, cy - 0.1, nWingZFront));
