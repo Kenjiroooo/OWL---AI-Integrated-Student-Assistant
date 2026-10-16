@@ -1161,8 +1161,8 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   const admBackX = -31.0;
   const admD = admFrontX - admBackX; // 13.0m
   const admCx = (admFrontX + admBackX) / 2; // -24.5m
-  const admW = 34.0;
-  const admCz = -37.0;
+  const admW = 26.5; // spans from z = -20.0 to z = -46.5 where it meets the 6-storey North Wing
+  const admCz = -33.25;
 
   // New 2-Storey Wing Footprint (Reduced 30% from the front, expanding the front terrace promenade)
   const wingFrontX = -23.44; // Was -20.2 (stepped back 3.24m / 30% of 10.8m depth)
@@ -1191,17 +1191,17 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   });
 
   // ── 6-STOREY L-SHAPED COURTYARD BUILDING (North Wing & East Wing) ──
-  // A. North Wing (long wing along the north/far side of basketball court):
+  // A. North Wing (long wing along the north/far side of basketball court, expanded westward behind Student Services to x = -31.0):
   // Inner corridor edge at z = -46.5 (facing +Z into the court)
   // Outer back wall at z = -54.0 (facing -Z)
   const nWingZFront = -46.5;
   const nWingZBack = -54.0;
   const nWingD = Math.abs(nWingZBack - nWingZFront); // 7.5m
   const nWingCz = (nWingZFront + nWingZBack) / 2; // -50.25m
-  const nWingX0 = -16.0; // west end
+  const nWingX0 = -31.0; // west end (expanded westward to align with Student Services back wall)
   const nWingX1 = 26.0; // east end (meets East Wing back wall at corner)
-  const nWingW = Math.abs(nWingX1 - nWingX0); // 42.0m
-  const nWingCx = (nWingX0 + nWingX1) / 2; // 5.0m
+  const nWingW = Math.abs(nWingX1 - nWingX0); // 57.0m
+  const nWingCx = (nWingX0 + nWingX1) / 2; // -2.5m
 
   // B. East Wing (short wing on the opposite/east side of basketball court):
   // Inner corridor edge at x = 18.5 (facing -X into the court)
@@ -1519,21 +1519,21 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   ground.add(box(0.1, FH - 0.4, admW - 2.0, [officeGlassMat, darkGlass, whiteMat, whiteMat, whiteMat, whiteMat], admFrontX - 1.2, FH / 2, admCz));
 
   // White structural colonnade along the front concourse line (facing court)
-  const colZs = [-22.0, -28.0, -34.0, -40.0, -46.0, -52.0];
+  const colZs = [-22.0, -28.0, -34.0, -40.0, -45.5];
   colZs.forEach((cz) => {
     ground.add(box(0.65, FH, 0.65, whiteMat, admFrontX, FH / 2, cz));
   });
 
   // Green landscape planter boxes along the concourse
-  [-25.0, -37.0, -49.0].forEach((pz) => {
+  [-24.0, -33.0, -42.0].forEach((pz) => {
     ground.add(box(0.8, 0.5, 4.5, planterMat, admFrontX + 1.2, 0.25, pz));
     ground.add(box(0.6, 0.35, 4.3, shrubDark, admFrontX + 1.2, 0.6, pz));
   });
 
   // Parked cars in the courtyard plaza (as seen in SZD render)
   ground.add(createCar(-22.0, -26.0, carWhite));
-  ground.add(createCar(-14.0, -38.0, carBlue));
-  ground.add(createCar(-14.0, -48.0, carDark));
+  ground.add(createCar(-14.0, -36.0, carBlue));
+  ground.add(createCar(-14.0, -44.0, carDark));
 
   // ── 8. 6-Storey L-Shaped Courtyard Building (Level 0 / 1F: North Wing & East Wing) ──
   // A. North Wing 1F (Long wing along X on north of basketball court)
