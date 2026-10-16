@@ -1786,8 +1786,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       const terrMidX = (admFrontX + wingFrontX) / 2; // -20.72m
       g.add(box(terrL, 1.1, 0.3, whiteMat, terrMidX, baseY + 0.55, -20.0));
       g.add(box(terrL + 0.1, 0.12, 0.38, mats.metalSilver, terrMidX, baseY + 1.15, -20.0));
-      g.add(box(terrL, 1.1, 0.3, whiteMat, terrMidX, baseY + 0.55, -46.5));
-      g.add(box(terrL + 0.1, 0.12, 0.38, mats.metalSilver, terrMidX, baseY + 1.15, -46.5));
+      // (North end at z = -46.5 opens seamlessly into the 6-storey North Wing corridor via the hall portal)
 
       // Paver walkway floor on terrace
       g.add(box(terrL, 0.04, wingW - 0.2, mats.metalDark, terrMidX, baseY + 0.32, wingCz));
@@ -1945,10 +1944,50 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       // West end wall
       g.add(box(0.4, FH, nWingD, creamWall, nWingX0, cy, nWingCz));
 
-      // West extension partition wall meeting Student Services
-      const nExtW = Math.abs(-16.0 - nWingX0); // 15.0m
-      const nExtCx = (nWingX0 + -16.0) / 2; // -23.5m
-      g.add(box(nExtW, FH, 0.4, creamWall, nExtCx, cy, nWingZFront));
+      // West extension partition wall meeting Student Services & Hallway Portal
+      if (f === 3) {
+        // 4F Level: Grand Architectural Royal Blue Hall Opening Portal connecting Garden Terrace to North Wing
+        // Left solid wall section (behind Innovation Wing)
+        g.add(box(8.63, FH, 0.4, creamWall, -26.685, cy, nWingZFront));
+        // Right solid wall section
+        g.add(box(3.07, FH, 0.4, creamWall, -17.535, cy, nWingZFront));
+        // Overhead lintel wall above the hall portal
+        g.add(box(3.3, FH - 2.7, 0.4, creamWall, -20.72, baseY + 2.7 + (FH - 2.7) / 2, nWingZFront));
+
+        // Architectural Royal Blue Hall Opening Portal Frame (from user sketch)
+        g.add(box(0.35, 2.75, 0.5, blueWall, -22.37, baseY + 0.3 + 1.375, nWingZFront + 0.05));
+        g.add(box(0.35, 2.75, 0.5, blueWall, -19.07, baseY + 0.3 + 1.375, nWingZFront + 0.05));
+        g.add(box(3.65, 0.45, 0.55, blueWall, -20.72, baseY + 2.85, nWingZFront + 0.06));
+
+        // Cantilevered silver eyebrow sunshade / canopy above portal
+        g.add(box(4.0, 0.12, 0.85, mats.metalSilver, -20.72, baseY + 3.12, nWingZFront + 0.42));
+        g.add(box(4.04, 0.06, 0.88, blueWall, -20.72, baseY + 3.06, nWingZFront + 0.43));
+
+        // Commercial glass entrance double doors propped open into the corridor
+        g.add(box(0.06, 2.4, 1.35, [officeGlassMat, darkGlass, mats.metalSilver, mats.metalSilver, mats.metalSilver, mats.metalSilver], -21.4, baseY + 0.3 + 1.2, nWingZFront - 0.25));
+        g.add(box(0.06, 2.4, 1.35, [officeGlassMat, darkGlass, mats.metalSilver, mats.metalSilver, mats.metalSilver, mats.metalSilver], -20.04, baseY + 0.3 + 1.2, nWingZFront - 0.25));
+        g.add(box(0.08, 0.6, 0.04, mats.metalSilver, -21.4, baseY + 1.5, nWingZFront - 0.2));
+        g.add(box(0.08, 0.6, 0.04, mats.metalSilver, -20.04, baseY + 1.5, nWingZFront - 0.2));
+
+        // Walkway paver floor continuing through the portal into corridor
+        g.add(box(3.1, 0.04, 2.6, mats.metalDark, -20.72, baseY + 0.32, nWingZFront - 1.1));
+
+        // Interior warm illumination inside the hall portal
+        const hallLight = new THREE.PointLight(0xffeedd, 1.6, 10);
+        hallLight.position.set(-20.72, baseY + 2.6, nWingZFront - 1.1);
+        g.add(hallLight);
+        g.add(box(2.2, 0.05, 1.2, mats.lightWarm, -20.72, baseY + FH - 0.1, nWingZFront - 1.1));
+      } else {
+        // 2F & 3F: West extension partition wall meeting Student Services with connecting interior doorway
+        g.add(box(8.63, FH, 0.4, creamWall, -26.685, cy, nWingZFront));
+        g.add(box(3.07, FH, 0.4, creamWall, -17.535, cy, nWingZFront));
+        g.add(box(3.3, FH - 2.5, 0.4, creamWall, -20.72, baseY + 2.5 + (FH - 2.5) / 2, nWingZFront));
+        // Connecting doorway frame
+        g.add(box(0.15, 2.5, 0.45, blueWall, -22.25, baseY + 1.25, nWingZFront));
+        g.add(box(0.15, 2.5, 0.45, blueWall, -19.19, baseY + 1.25, nWingZFront));
+        g.add(box(3.2, 0.15, 0.45, blueWall, -20.72, baseY + 2.45, nWingZFront));
+        g.add(box(0.06, 2.3, 2.8, officeGlassMat, -20.72, baseY + 1.2, nWingZFront));
+      }
 
       // Recessed classroom wall facing open courtyard corridor (at z = -48.7, facing +Z)
       const nRecessW = 34.5;
