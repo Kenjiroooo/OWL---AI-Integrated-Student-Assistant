@@ -431,13 +431,6 @@ export default function CampusArchitectureShowcase({
                 </div>
                 <h2 className="text-xl sm:text-2xl font-black mt-0.5">{active.name}</h2>
                 <p className="text-sm text-white/70 mt-1.5 max-w-2xl leading-relaxed">{active.description}</p>
-                <div className="flex flex-wrap gap-1.5 mt-3">
-                  {active.visibleFeatures.map((f) => (
-                    <span key={f} className="text-[11px] px-2.5 py-1 rounded-full bg-white/10 border border-white/10 text-white/80">
-                      {f}
-                    </span>
-                  ))}
-                </div>
                 <p className="flex items-center gap-1.5 text-[11px] text-white/55 mt-3">
                   <Info className="w-3.5 h-3.5 text-blue-400" />
                   {viewMode === '3d'
