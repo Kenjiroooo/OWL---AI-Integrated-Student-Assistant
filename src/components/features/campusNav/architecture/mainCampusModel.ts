@@ -1359,11 +1359,11 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   const nStraightD = Math.abs(nStraightZBack - nStraightZFront); // 7.5m
   const nStraightCz = (nStraightZFront + nStraightZBack) / 2; // -50.25m
 
-  // C. North Wing - West Angled Dog-Leg Section (cranks backwards from bend at x = 0.0, z = -50.25 to x = -31.0, z = -58.25):
+  // C. North Wing - West Angled Dog-Leg Section (rotated forward from bend at x = 0.0, z = -50.25 to connect flush into Student Services at x = -31.0, z = -46.5):
   const nAngledPivotX = 0.0;
   const nAngledPivotZ = -50.25;
-  const nAngledAngle = -Math.atan2(8.0, 31.0); // ~ -14.48 deg (-0.25268 rad)
-  const nAngledLen = Math.hypot(31.0, 8.0); // ~ 32.0156m
+  const nAngledAngle = Math.atan2(7.35, 31.0); // ~ +13.33 deg (+0.2327 rad) - rotated forward to connect directly into Student Services
+  const nAngledLen = Math.hypot(31.0, 7.35); // ~ 31.86m
   const nAngledD = 7.5; // depth 7.5m (local z' from -3.75 to +3.75)
   const nAngledZFront = 3.75; // local front edge (+Z' towards court)
   const nAngledZBack = -3.75; // local back edge (-Z' towards rear boundary)
@@ -2177,8 +2177,8 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       angledFloor.add(box(nAngledLen, 0.15, 2.2, creamWall, -nAngledLen / 2, baseY + FH - 0.08, 2.65));
 
       if (f === 3) {
-        // 4F Level: Grand Architectural Royal Blue Hall Opening Portal connecting Garden Terrace into Angled North Wing
-        // Balustrade split around portal opening at local x' = -21.4 (world x ~ -20.72)
+        // 4F Level: Grand Architectural Royal Blue Hall Opening Portal connecting Garden Terrace directly into Angled North Wing
+        // Balustrade split around portal opening at local x' = -21.4 (world x ~ -20.0, directly on 4F garden terrace)
         const portalXPrime = -21.4;
         const pOpenW = 3.8;
         const leftBalcLen = Math.abs(-nAngledLen - (portalXPrime - pOpenW / 2));
@@ -2210,39 +2210,21 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
         // Walkway paver floor inside
         angledFloor.add(box(3.2, 0.04, 2.6, mats.metalDark, portalXPrime, baseY + 0.32, nAngledZFront - 1.1));
 
-        // Covered Walkway Bridge connecting 4F Terrace (z = -46.0) to Angled Corridor Portal (z ~ -51.8)
-        const connLen = 5.8;
-        const connCz = -48.9;
-        const connCx = -20.72;
-        g.add(box(3.6, 0.28, connLen, concrete, connCx, baseY + 0.14, connCz));
-        g.add(box(3.4, 0.04, connLen - 0.2, mats.metalDark, connCx, baseY + 0.32, connCz));
-        // Bridge safety parapets
-        g.add(box(0.25, 1.05, connLen, whiteMat, connCx - 1.7, baseY + 0.525, connCz));
-        g.add(box(0.32, 0.08, connLen + 0.1, mats.metalSilver, connCx - 1.7, baseY + 1.09, connCz));
-        g.add(box(0.25, 1.05, connLen, whiteMat, connCx + 1.7, baseY + 0.525, connCz));
-        g.add(box(0.32, 0.08, connLen + 0.1, mats.metalSilver, connCx + 1.7, baseY + 1.09, connCz));
-        // Bridge canopy roof
-        g.add(box(4.0, 0.15, connLen + 0.4, mats.metalSilver, connCx, baseY + FH - 0.1, connCz));
-        g.add(box(0.12, FH, 0.12, blueWall, connCx - 1.7, cy, connCz - 1.8));
-        g.add(box(0.12, FH, 0.12, blueWall, connCx + 1.7, cy, connCz - 1.8));
+        // Flush transition threshold connecting 4F Terrace seamlessly into Portal opening
+        g.add(box(3.8, 0.06, 1.4, mats.metalDark, -20.0, baseY + 0.32, -41.8));
       } else {
         // Continuous balustrade on 2F & 3F
         angledFloor.add(box(nAngledLen, 1.05, 0.25, creamWall, -nAngledLen / 2, baseY + 0.525, nAngledZFront));
         angledFloor.add(box(nAngledLen + 0.1, 0.08, 0.32, creamWall, -nAngledLen / 2, baseY + 1.09, nAngledZFront));
         angledFloor.add(box(nAngledLen, 0.5, 0.3, creamWall, -nAngledLen / 2, baseY + FH - 0.25, nAngledZFront));
 
-        // Connecting corridor to Student Services rear at z = -46.0
-        const connLen = 5.8;
-        const connCz = -48.9;
-        const connCx = -20.72;
-        g.add(box(3.6, 0.28, connLen, concrete, connCx, baseY + 0.14, connCz));
-        g.add(box(0.3, FH, connLen, creamWall, connCx - 1.7, cy, connCz));
-        g.add(box(0.3, FH, connLen, creamWall, connCx + 1.7, cy, connCz));
-        g.add(box(3.6, 0.2, connLen, concrete, connCx, baseY + FH - 0.1, connCz));
+        // Flush corridor threshold into Student Services rear hallway
+        g.add(box(3.6, 0.28, 1.4, concrete, -20.0, baseY + 0.14, -41.8));
       }
 
-      // Colonnade columns along angled front
-      [-4.0, -10.0, -16.0, -22.0, -28.0].forEach((cx) => {
+      // Colonnade columns along angled front (skips cx = -22.0 on 4F to keep portal clear)
+      const colXList = f === 3 ? [-4.0, -10.0, -16.0, -27.0] : [-4.0, -10.0, -16.0, -22.0, -28.0];
+      colXList.forEach((cx) => {
         angledFloor.add(box(0.6, FH, 0.6, creamWall, cx, cy, nAngledZFront));
       });
 
@@ -2686,7 +2668,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   roof.add(angledRoof);
 
   // C. Bend Miter Transition Cap at x = 0, z = -50.25
-  roof.add(box(1.6, 0.12, 1.6, terracottaRoofMat, 0.0, ridgeY, -50.25));
+  roof.add(box(2.2, 0.14, 2.2, terracottaRoofMat, 0.0, ridgeY, -50.25));
 
   // ── Prominent 12-Meter Steel Lattice Telecommunications Antenna Tower ───────
   // Situated on the roof directly above the North-East (corner junction)
