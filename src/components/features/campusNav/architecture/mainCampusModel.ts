@@ -2221,6 +2221,11 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   roof.add(box(0.4, FH, eWingL, creamWall, eWingXBack, roofBaseY + FH / 2, eWingCz));
   roof.add(box(eWingW, FH, 0.4, creamWall, eWingCx, roofBaseY + FH / 2, eWingZ0));
 
+  // 6F Rear Windows (along north back wall at z = nWingZBack)
+  [-26.0, -20.0, -14.0, -8.0, -2.0, 4.0, 10.0, 16.0].forEach((wx) => {
+    roof.add(box(3.2, 1.4, 0.08, darkGlass, wx, roofBaseY + FH / 2 + 0.2, nWingZBack - 0.05, false));
+  });
+
   // 6F Courtyard Facades (Ribbon windows + Ochre header band)
   const eRecessL6 = 24.5;
   const eRecessCz6 = -34.25;
@@ -2234,6 +2239,16 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   roof.add(box(nRecessW6, 0.7, 0.35, ochreWall, nRecessCx6, roofBaseY + FH - 0.35, nWingZFront));
   roof.add(box(nRecessW6, 0.4, 0.3, creamWall, nRecessCx6, roofBaseY + 0.2, nWingZFront));
 
+  // 6F South Facade overlooking Innovation Wing roof (x = -31.0 to -16.0)
+  const nExtW6 = Math.abs(-16.0 - nWingX0); // 15.0m
+  const nExtCx6 = (nWingX0 + -16.0) / 2; // -23.5m
+  roof.add(box(nExtW6, FH, 0.4, creamWall, nExtCx6, roofBaseY + FH / 2, nWingZFront));
+  [-27.0, -23.5, -20.0].forEach((wx) => {
+    roof.add(box(2.8, 1.4, 0.08, darkGlass, wx, roofBaseY + FH / 2 + 0.1, nWingZFront + 0.05));
+    roof.add(box(3.0, 0.1, 0.12, creamWall, wx, roofBaseY + FH / 2 - 0.75, nWingZFront + 0.06));
+  });
+  roof.add(box(nExtW6, 0.7, 0.35, ochreWall, nExtCx6, roofBaseY + FH - 0.35, nWingZFront));
+
   // Rooftop Slabs (at sixTopY = 22.8m)
   roof.add(box(eWingW + 0.4, 0.35, eWingL + 0.4, concrete, eWingCx, sixTopY + 0.175, eWingCz));
   roof.add(box(nWingW + 0.4, 0.35, nWingD + 0.4, concrete, nWingCx, sixTopY + 0.175, nWingCz));
@@ -2244,6 +2259,10 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   roof.add(box(nRecessW6 + 0.4, 1.1, 0.35, ochreWall, nRecessCx6, sixTopY + 0.55, nWingZFront));
   roof.add(box(0.42, 0.12, eRecessL6 + 0.5, creamWall, eWingXFront, sixTopY + 1.15, eRecessCz6));
   roof.add(box(nRecessW6 + 0.5, 0.12, 0.42, creamWall, nRecessCx6, sixTopY + 1.15, nWingZFront));
+
+  // Extended south rooftop parapet above Innovation Wing
+  roof.add(box(nExtW6, 1.1, 0.35, ochreWall, nExtCx6, sixTopY + 0.55, nWingZFront));
+  roof.add(box(nExtW6 + 0.1, 0.12, 0.42, creamWall, nExtCx6, sixTopY + 1.15, nWingZFront));
 
   // Outer boundary parapets
   roof.add(box(0.35, 1.1, eWingL + 0.4, creamWall, eWingXBack, sixTopY + 0.55, eWingCz));
@@ -2262,7 +2281,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   roof.add(box(0.9, 2.0, 0.08, mats.metalDark, spX, sixTopY + 1.0, spZ + spD / 2 + 0.05)); // door
 
   // Rooftop HVAC units on North Wing roof
-  [-4.0, 12.0].forEach((hx) => {
+  [-22.0, -4.0, 12.0].forEach((hx) => {
     roof.add(box(2.8, 1.3, 1.8, mats.metalSilver, hx, sixTopY + 0.85, nWingCz));
     roof.add(box(3.0, 0.15, 2.0, mats.metalDark, hx, sixTopY + 1.55, nWingCz));
   });
