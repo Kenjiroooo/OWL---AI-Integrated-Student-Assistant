@@ -1359,11 +1359,11 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   const nStraightD = Math.abs(nStraightZBack - nStraightZFront); // 7.5m
   const nStraightCz = (nStraightZFront + nStraightZBack) / 2; // -50.25m
 
-  // C. North Wing - West Angled Dog-Leg Section (continuation wing after bend at x = -18.0, z = -50.25, connecting flush into Student Services at x = -31.0, z = -46.5):
+  // C. North Wing - West Angled Dog-Leg Section (continuation wing after bend at x = -18.0, z = -50.25, connecting flush into Student Services at x = -31.0 without overshoot):
   const nAngledPivotX = -18.0;
   const nAngledPivotZ = -50.25;
-  const nAngledAngle = Math.atan2(3.75, 13.0); // ~ +16.08 deg (+0.2807 rad) - connects flush into Student Services
-  const nAngledLen = Math.hypot(13.0, 3.75); // ~ 13.53m
+  const nAngledAngle = Math.atan2(1.1, 12.5); // ~ +5.03 deg (+0.0878 rad) - rotated back to prevent overshoot into Student Services
+  const nAngledLen = 12.0; // 12.0m (connects flush into Student Services west wall without overshooting)
   const nAngledD = 7.5; // depth 7.5m (local z' from -3.75 to +3.75)
   const nAngledZFront = 3.75; // local front edge (+Z' towards court)
   const nAngledZBack = -3.75; // local back edge (-Z' towards rear boundary)
@@ -1737,7 +1737,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   angledGround.add(box(nAngledLen, FH, 0.4, creamWall, -nAngledLen / 2, FH / 2, nAngledZBack + 0.2));
   angledGround.add(box(0.4, FH, nAngledD, creamWall, -nAngledLen, FH / 2, 0)); // west end wall
   angledGround.add(box(nAngledLen - 3.0, FH - 0.4, 0.15, [creamWall, creamWall, creamWall, creamWall, officeGlassMat, darkGlass], -nAngledLen / 2, FH / 2, 1.55));
-  [-4.0, -8.5, -13.0].forEach((cx) => {
+  [-3.5, -8.0].forEach((cx) => {
     angledGround.add(box(0.6, FH, 0.6, creamWall, cx, FH / 2, nAngledZFront));
   });
   ground.add(angledGround);
@@ -2167,7 +2167,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       angledFloor.add(box(nAngledLen, FH, 0.4, creamWall, -nAngledLen / 2, cy, nAngledZBack + 0.2));
       angledFloor.add(box(0.4, FH, nAngledD, creamWall, -nAngledLen, cy, 0)); // west end wall
       // Rear windows along local z' = nAngledZBack
-      [-4.0, -9.5].forEach((wx) => {
+      [-3.5, -8.0].forEach((wx) => {
         angledFloor.add(box(3.2, 1.4, 0.08, darkGlass, wx, cy + 0.2, nAngledZBack - 0.05, false));
         angledFloor.add(box(3.4, 0.08, 0.12, creamWall, wx, cy - 0.6, nAngledZBack - 0.06, false));
       });
@@ -2223,12 +2223,12 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       }
 
       // Colonnade columns along angled front
-      [-4.0, -9.0].forEach((cx) => {
+      [-3.5, -8.0].forEach((cx) => {
         angledFloor.add(box(0.6, FH, 0.6, creamWall, cx, cy, nAngledZFront));
       });
 
       // Air Conditioner Units along angled balustrade
-      [-7.5].forEach((acX) => {
+      [-7.0].forEach((acX) => {
         const acY = baseY + 1.35;
         angledFloor.add(box(0.85, 0.62, 0.38, [mats.metalSilver, mats.metalSilver, mats.metalSilver, mats.metalSilver, acUnitMat, mats.metalSilver], acX, acY, nAngledZFront + 0.22));
         angledFloor.add(box(0.04, 0.45, 0.42, mats.metalDark, acX - 0.28, acY - 0.35, nAngledZFront + 0.22));
@@ -2297,7 +2297,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       angledFloor5.add(box(nAngledLen + 0.5, 0.28, nAngledD, concrete, -nAngledLen / 2, baseY + 0.14, 0, false));
       angledFloor5.add(box(nAngledLen, FH, 0.4, creamWall, -nAngledLen / 2, cy, nAngledZBack + 0.2));
       angledFloor5.add(box(0.4, FH, nAngledD, creamWall, -nAngledLen, cy, 0)); // west end wall
-      [-4.0, -9.5].forEach((wx) => {
+      [-3.5, -8.0].forEach((wx) => {
         angledFloor5.add(box(3.2, 1.4, 0.08, darkGlass, wx, cy + 0.2, nAngledZBack - 0.05, false));
       });
       angledFloor5.add(box(nAngledLen - 1.0, FH - 0.8, 0.2, [creamWall, creamWall, creamWall, creamWall, ribbon5FMat, creamWall], -nAngledLen / 2, cy - 0.1, nAngledZFront));
@@ -2645,7 +2645,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   // Solar Panels on Angled Roof (from drone photo: 1 section after the bend)
   // Front slope: sub-arrays
   [
-    { x1: -3.8, w1: 3.6, x2: -7.6, w2: 2.6 },
+    { x1: -3.5, w1: 3.2, x2: -7.2, w2: 2.4 },
   ].forEach((grp) => {
     const a1 = new THREE.Mesh(new THREE.BoxGeometry(grp.w1, 0.05, 3.2), solarPanelMat);
     a1.position.set(grp.x1, pitchY + 0.05, halfSpan);
@@ -2661,8 +2661,8 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   });
 
   // Back slope: 1 large array
-  const bArr = new THREE.Mesh(new THREE.BoxGeometry(7.6, 0.05, 3.2), solarPanelMat);
-  bArr.position.set(-6.0, pitchY + 0.05, -halfSpan);
+  const bArr = new THREE.Mesh(new THREE.BoxGeometry(7.0, 0.05, 3.2), solarPanelMat);
+  bArr.position.set(-5.5, pitchY + 0.05, -halfSpan);
   bArr.rotation.x = roofPitchAngle;
   bArr.castShadow = true;
   angledRoof.add(bArr);
