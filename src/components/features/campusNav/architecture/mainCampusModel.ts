@@ -1349,11 +1349,11 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   const eWingL = Math.abs(eWingZ1 - eWingZ0); // 32.0m
   const eWingCz = (eWingZ0 + eWingZ1) / 2; // -38.0m
 
-  // B. North Wing - East Straight Section (from East Wing corner to bend point):
+  // B. North Wing - Straight Classroom Section (from west face of Corner Atrium at x = 0.0 to bend point at x = -18.0):
   const nStraightX0 = -18.0; // bend point at x = -18.0 (at west corner of basketball court / front of Student Services)
-  const nStraightX1 = 26.0; // east end meeting East Wing corner
-  const nStraightW = Math.abs(nStraightX1 - nStraightX0); // 44.0m
-  const nStraightCx = (nStraightX0 + nStraightX1) / 2; // 4.0m
+  const nStraightX1 = 0.0; // east end meeting Expanded Corner Blue Glass Atrium Tower
+  const nStraightW = Math.abs(nStraightX1 - nStraightX0); // 18.0m
+  const nStraightCx = (nStraightX0 + nStraightX1) / 2; // -9.0m
   const nStraightZFront = -46.5; // inner corridor edge facing +Z into court
   const nStraightZBack = -54.0; // outer rear wall facing -Z
   const nStraightD = Math.abs(nStraightZBack - nStraightZFront); // 7.5m
@@ -1367,6 +1367,18 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   const nAngledD = 7.5; // depth 7.5m (local z' from -3.75 to +3.75)
   const nAngledZFront = 3.75; // local front edge (+Z' towards court)
   const nAngledZBack = -3.75; // local back edge (-Z' towards rear boundary)
+
+  // D. Expanded Corner Blue Glass Atrium Tower (grand junction block expanding from x = 0.0 to x = 26.0 as sketched):
+  const cornerAtriumX0 = 0.0;
+  const cornerAtriumX1 = 26.0;
+  const cornerAtriumW = Math.abs(cornerAtriumX1 - cornerAtriumX0); // 26.0m
+  const cornerAtriumCx = (cornerAtriumX0 + cornerAtriumX1) / 2; // 13.0m
+  const cornerAtriumZFront = nStraightZFront; // -46.5
+  const cornerAtriumZBack = nStraightZBack; // -54.0
+  const cornerAtriumD = nStraightD; // 7.5m
+  const cornerAtriumCz = nStraightCz; // -50.25m
+  const atriumFrontW = 18.5; // court-facing portion (x = 0.0 to 18.5)
+  const atriumFrontCx = atriumFrontW / 2; // 9.25
 
   // Backward compatibility alias variables
   const nWingZFront = nStraightZFront;
@@ -1716,18 +1728,18 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   ground.add(createCar(-14.0, -36.0, carBlue));
   ground.add(createCar(-14.0, -44.0, carDark));
 
-  // ── 8. 5-Storey L-Shaped Courtyard Building (Level 0 / 1F: North Wing & East Wing) ──
-  // A. North Wing 1F - East Straight Section (x = -18.0 to 26.0)
+  // ── 8. 5-Storey L-Shaped Courtyard Building (Level 0 / 1F: North Wing, Corner Atrium & East Wing) ──
+  // A. North Wing 1F - Straight Section (x = -18.0 to 0.0)
   ground.add(box(nStraightW + 0.4, 0.3, nStraightD, concrete, nStraightCx, 0.15, nStraightCz, false));
   ground.add(box(nStraightW + 0.4, FH, 0.4, creamWall, nStraightCx, FH / 2, nStraightZBack)); // back wall (-Z)
-  ground.add(box(nStraightW - 4.0, FH - 0.4, 0.15, [creamWall, creamWall, creamWall, creamWall, officeGlassMat, darkGlass], nStraightCx, FH / 2, nStraightZFront - 2.2));
+  ground.add(box(nStraightW - 1.0, FH - 0.4, 0.15, [creamWall, creamWall, creamWall, creamWall, officeGlassMat, darkGlass], nStraightCx, FH / 2, nStraightZFront - 2.2));
   // Colonnade along corridor line (facing court, +Z)
-  [-12.0, -6.0, 0.0, 6.0, 12.0, 18.0, 22.0].forEach((cx) => {
+  [-12.0, -6.0, 0.0].forEach((cx) => {
     ground.add(box(0.6, FH, 0.6, creamWall, cx, FH / 2, nStraightZFront));
   });
   ground.add(box(0.7, FH, 0.7, creamWall, nAngledPivotX, FH / 2, nStraightZFront)); // bend pillar at x = -18.0
   // Corrugated entrance canopy along North Wing front
-  ground.add(box(26.0, 0.15, 1.8, mats.metalDark, 4.0, 3.2, nStraightZFront + 0.9));
+  ground.add(box(nStraightW, 0.15, 1.8, mats.metalDark, nStraightCx, 3.2, nStraightZFront + 0.9));
 
   // B. North Wing 1F - West Angled Dog-Leg Section (cranks from bend at x = -18.0 towards x = -31.0)
   const angledGround = new THREE.Group();
@@ -1753,8 +1765,18 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     ground.add(box(0.6, FH, 0.6, creamWall, eWingXFront, FH / 2, cz));
   });
 
-  // D. Corner Blue Glass Atrium Foyer (Level 0 / 1F portion)
-  ground.add(box(4.5, FH, 4.5, glassAtriumMat, 19.5, FH / 2, -47.5));
+  // D. Expanded Corner Blue Glass Atrium Foyer (Level 0 / 1F: x = 0.0 to 26.0)
+  ground.add(box(cornerAtriumW + 0.4, 0.3, cornerAtriumD, concrete, cornerAtriumCx, 0.15, cornerAtriumCz, false));
+  ground.add(box(cornerAtriumW, FH, 0.4, creamWall, cornerAtriumCx, FH / 2, cornerAtriumZBack)); // rear wall (-Z)
+  // Grand Glass Curtain Wall Facade facing court
+  ground.add(box(atriumFrontW, FH, 0.2, [creamWall, creamWall, creamWall, creamWall, glassAtriumMat, glassAtriumMat], atriumFrontCx, FH / 2, cornerAtriumZFront));
+  // Royal blue structural columns along front
+  [0.0, 6.0, 12.0, 18.5].forEach((cx) => {
+    ground.add(box(0.6, FH, 0.6, blueWall, cx, FH / 2, cornerAtriumZFront));
+  });
+  // Grand Entrance Portal Doors into Atrium
+  ground.add(box(3.2, 2.4, 0.12, darkGlass, atriumFrontCx, 1.3, cornerAtriumZFront + 0.08));
+  ground.add(box(3.4, 0.15, 0.35, mats.metalSilver, atriumFrontCx, 2.55, cornerAtriumZFront + 0.1));
   ground.add(box(0.35, FH, 0.35, blueWall, 17.25, FH / 2, -45.25));
 
   // C. External Concrete Staircase with Blue Handrails (in courtyard along East corridor)
@@ -2130,28 +2152,28 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     // ── 5-Storey Courtyard Building (Floors 2 to 5: East Wing & Angled Dog-Leg North Wing) ──
     if (f >= 1 && f <= 3) {
       // Levels 1, 2, 3: Open-Air Corridors with Warm Cream Balustrades (2F, 3F, 4F)
-      // A. North Wing - East Straight Section (x = -18.0 to 26.0)
+      // A. North Wing - Straight Section (x = -18.0 to 0.0)
       g.add(box(nStraightW + 0.4, 0.28, nStraightD, concrete, nStraightCx, baseY + 0.14, nStraightCz, false));
       // Rear wall (facing -Z) & windows
       g.add(box(nStraightW + 0.4, FH, 0.4, creamWall, nStraightCx, cy, nStraightZBack));
-      [-14.0, -8.5, -3.0, 2.5, 8.0, 13.5, 19.0].forEach((wx) => {
+      [-14.0, -8.5, -3.0].forEach((wx) => {
         g.add(box(3.2, 1.4, 0.08, darkGlass, wx, cy + 0.2, nStraightZBack - 0.05, false));
         g.add(box(3.4, 0.08, 0.12, creamWall, wx, cy - 0.6, nStraightZBack - 0.06, false));
       });
       // Recessed classroom wall facing open courtyard corridor (at z = -48.7, facing +Z)
-      g.add(box(nStraightW - 2.0, FH, 0.2, [creamWall, creamWall, creamWall, creamWall, corridorWallMat, creamWall], nStraightCx, cy, -48.7));
+      g.add(box(nStraightW - 1.0, FH, 0.2, [creamWall, creamWall, creamWall, creamWall, corridorWallMat, creamWall], nStraightCx, cy, -48.7));
       g.add(box(nStraightW, 0.15, 2.2, creamWall, nStraightCx, baseY + FH - 0.08, -47.6));
       // Solid cream balustrade along corridor front edge (z = nStraightZFront = -46.5)
       g.add(box(nStraightW, 1.05, 0.25, creamWall, nStraightCx, baseY + 0.525, nStraightZFront));
       g.add(box(nStraightW + 0.1, 0.08, 0.32, creamWall, nStraightCx, baseY + 1.09, nStraightZFront));
       g.add(box(nStraightW, 0.5, 0.3, creamWall, nStraightCx, baseY + FH - 0.25, nStraightZFront));
-      [-12.0, -6.0, 0.0, 6.0, 12.0, 18.0, 22.0].forEach((cx) => {
+      [-12.0, -6.0, 0.0].forEach((cx) => {
         g.add(box(0.6, FH, 0.6, creamWall, cx, cy, nStraightZFront));
       });
       g.add(box(0.7, FH, 0.7, creamWall, nAngledPivotX, cy, nStraightZFront)); // bend pillar at x = -18.0
 
       // Air Conditioner Units along straight wing balustrades
-      [-10.0, -2.0, 6.0, 14.0].forEach((acX) => {
+      [-10.0, -3.0].forEach((acX) => {
         const acY = baseY + 1.35;
         g.add(box(0.85, 0.62, 0.38, [mats.metalSilver, mats.metalSilver, mats.metalSilver, mats.metalSilver, acUnitMat, mats.metalSilver], acX, acY, nStraightZFront + 0.22));
         g.add(box(0.04, 0.45, 0.42, mats.metalDark, acX - 0.28, acY - 0.35, nStraightZFront + 0.22));
@@ -2273,21 +2295,35 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
         g.add(box(0.42, 0.45, 0.04, mats.metalDark, eWingXFront - 0.22, acY - 0.35, acZ + 0.28));
       });
 
-      // D. Corner Blue Glass Atrium Tower (Levels 1 to 3)
-      g.add(box(4.5, FH, 4.5, glassAtriumMat, 19.5, cy, -47.5));
+      // D. Expanded Corner Blue Glass Atrium Tower (Levels 1 to 3: x = 0.0 to 26.0)
+      g.add(box(cornerAtriumW + 0.4, 0.28, cornerAtriumD, concrete, cornerAtriumCx, baseY + 0.14, cornerAtriumCz, false));
+      // Rear wall & windows
+      g.add(box(cornerAtriumW, FH, 0.4, creamWall, cornerAtriumCx, cy, cornerAtriumZBack));
+      [6.0, 12.0, 18.0, 23.0].forEach((wx) => {
+        g.add(box(3.2, 1.4, 0.08, darkGlass, wx, cy + 0.2, cornerAtriumZBack - 0.05, false));
+        g.add(box(3.4, 0.08, 0.12, creamWall, wx, cy - 0.6, cornerAtriumZBack - 0.06, false));
+      });
+      // Glass Curtain Wall Facade facing court (x = 0.0 to 18.5)
+      g.add(box(atriumFrontW, FH - 0.2, 0.2, [creamWall, creamWall, creamWall, creamWall, glassAtriumMat, glassAtriumMat], atriumFrontCx, cy, cornerAtriumZFront));
+      g.add(box(atriumFrontW, 0.5, 0.3, blueWall, atriumFrontCx, baseY + FH - 0.25, cornerAtriumZFront));
+      g.add(box(atriumFrontW, 0.3, 0.28, blueWall, atriumFrontCx, baseY + 0.15, cornerAtriumZFront));
+      [0.0, 6.0, 12.0, 18.5].forEach((cx) => {
+        g.add(box(0.6, FH, 0.6, blueWall, cx, cy, cornerAtriumZFront));
+      });
       g.add(box(0.35, FH, 0.35, blueWall, 17.25, cy, -45.25));
     } else if (f === 4) {
       // Level 4: 5th Floor Enclosed Floor with Continuous Ribbon Glass & Ochre Header Band
-      // A. North Wing 5F - East Straight Section (x = -18.0 to 26.0)
+      // A. North Wing 5F - Straight Section (x = -18.0 to 0.0)
       g.add(box(nStraightW + 0.4, 0.28, nStraightD, concrete, nStraightCx, baseY + 0.14, nStraightCz, false));
       g.add(box(nStraightW + 0.4, FH, 0.4, creamWall, nStraightCx, cy, nStraightZBack));
-      [-14.0, -8.5, -3.0, 2.5, 8.0, 13.5, 19.0].forEach((wx) => {
+      [-14.0, -8.5, -3.0].forEach((wx) => {
         g.add(box(3.2, 1.4, 0.08, darkGlass, wx, cy + 0.2, nStraightZBack - 0.05, false));
       });
       g.add(box(nStraightW - 1.0, FH - 0.8, 0.2, [creamWall, creamWall, creamWall, creamWall, ribbon5FMat, creamWall], nStraightCx, cy - 0.1, nStraightZFront));
       g.add(box(nStraightW, 0.7, 0.35, ochreWall, nStraightCx, baseY + FH - 0.35, nStraightZFront));
       g.add(box(nStraightW, 0.4, 0.3, creamWall, nStraightCx, baseY + 0.2, nStraightZFront));
       g.add(box(0.7, FH, 0.7, ochreWall, nAngledPivotX, cy, nStraightZFront)); // bend pillar at x = -18.0
+      g.add(box(0.7, FH, 0.7, ochreWall, 0.0, cy, nStraightZFront)); // demarcation pillar at x = 0.0
 
       // B. North Wing 5F - West Angled Dog-Leg Section
       const angledFloor5 = new THREE.Group();
@@ -2318,8 +2354,18 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       g.add(box(0.35, 0.7, eRecessL, ochreWall, eWingXFront, baseY + FH - 0.35, eRecessCz));
       g.add(box(0.3, 0.4, eRecessL, creamWall, eWingXFront, baseY + 0.2, eRecessCz));
 
-      // D. Corner Blue Glass Atrium & UDD Crest Seal
-      g.add(box(4.5, FH, 4.5, glassAtriumMat, 19.5, cy, -47.5));
+      // D. Expanded Corner Blue Glass Atrium & UDD Crest Seal (Floor 5: x = 0.0 to 26.0)
+      g.add(box(cornerAtriumW + 0.4, 0.28, cornerAtriumD, concrete, cornerAtriumCx, baseY + 0.14, cornerAtriumCz, false));
+      g.add(box(cornerAtriumW, FH, 0.4, creamWall, cornerAtriumCx, cy, cornerAtriumZBack));
+      [6.0, 12.0, 18.0, 23.0].forEach((wx) => {
+        g.add(box(3.2, 1.4, 0.08, darkGlass, wx, cy + 0.2, cornerAtriumZBack - 0.05, false));
+      });
+      g.add(box(atriumFrontW, FH - 0.4, 0.22, [creamWall, creamWall, creamWall, creamWall, glassAtriumMat, glassAtriumMat], atriumFrontCx, cy, cornerAtriumZFront));
+      g.add(box(atriumFrontW, 0.7, 0.35, blueWall, atriumFrontCx, baseY + FH - 0.35, cornerAtriumZFront));
+      g.add(box(atriumFrontW, 0.4, 0.3, blueWall, atriumFrontCx, baseY + 0.2, cornerAtriumZFront));
+      [0.0, 6.0, 12.0, 18.5].forEach((cx) => {
+        g.add(box(0.6, FH, 0.6, blueWall, cx, cy, cornerAtriumZFront));
+      });
       g.add(box(0.35, FH, 0.35, blueWall, 17.25, cy, -45.25));
 
       // Circular Universidad de Dagupan Seal Medallion at 45° Inner Corner
@@ -2496,6 +2542,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
 
   // Concrete Slabs
   roof.add(box(eWingW + 0.4, 0.35, eWingL + 0.4, concrete, eWingCx, bldgTopY + 0.175, eWingCz));
+  roof.add(box(cornerAtriumW + 0.4, 0.35, cornerAtriumD + 0.4, concrete, cornerAtriumCx, bldgTopY + 0.175, cornerAtriumCz));
   roof.add(box(nStraightW + 0.4, 0.35, nStraightD + 0.4, concrete, nStraightCx, bldgTopY + 0.175, nStraightCz));
 
   // East Wing Parapets
@@ -2532,23 +2579,35 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     roof.add(eSolarMesh);
   });
 
-  // Corner Blue Glass Atrium Tower Rooftop Cap (at inner corner)
-  roof.add(box(4.5, 1.6, 4.5, glassAtriumMat, 19.5, bldgTopY + 0.8, -47.5));
-  // Pyramid / Hipped Royal Blue Roof Cap
-  const atriumCap = new THREE.Mesh(new THREE.ConeGeometry(3.3, 1.4, 4), blueWall);
-  atriumCap.position.set(19.5, bldgTopY + 1.6 + 0.7, -47.5);
-  atriumCap.rotation.y = Math.PI / 4;
+  // ── Corner Blue Glass Atrium Tower Rooftop Crown & Deck (Expanded from x = 0.0 to 26.0) ──
+  // Front parapet along court facing (x = 0.0 to 18.5)
+  roof.add(box(atriumFrontW, 1.1, 0.35, blueWall, atriumFrontCx, bldgTopY + 0.55, cornerAtriumZFront));
+  roof.add(box(atriumFrontW + 0.1, 0.12, 0.42, mats.metalSilver, atriumFrontCx, bldgTopY + 1.15, cornerAtriumZFront));
+  // West parapet wall at x = 0.0 (meeting ridge of gabled roof)
+  roof.add(box(0.4, 2.4, cornerAtriumD + 0.4, blueWall, 0.0, bldgTopY + 1.2, cornerAtriumCz));
+  // Rear parapet along -Z
+  roof.add(box(cornerAtriumW + 0.4, 1.1, 0.35, creamWall, cornerAtriumCx, bldgTopY + 0.55, cornerAtriumZBack));
+
+  // Architectural Glass Lantern & Blue Hipped Crown above the Atrium Core
+  roof.add(box(14.0, 1.8, 5.2, glassAtriumMat, 9.25, bldgTopY + 0.9, cornerAtriumCz));
+  const atriumCap = new THREE.Mesh(new THREE.BoxGeometry(14.6, 0.35, 5.8), blueWall);
+  atriumCap.position.set(9.25, bldgTopY + 1.95, cornerAtriumCz);
   atriumCap.castShadow = true;
   roof.add(atriumCap);
+  const atriumTopPyramid = new THREE.Mesh(new THREE.ConeGeometry(3.6, 1.4, 4), blueWall);
+  atriumTopPyramid.position.set(9.25, bldgTopY + 2.8, cornerAtriumCz);
+  atriumTopPyramid.rotation.y = Math.PI / 4;
+  atriumTopPyramid.castShadow = true;
+  roof.add(atriumTopPyramid);
 
-  // ── TERRCOTTA RED GABLED ROOF WITH MONOCRYSTALLINE SOLAR PANELS (North Wing) ──
+  // ── TERRACOTTA RED GABLED ROOF WITH MONOCRYSTALLINE SOLAR PANELS (North Wing Straight: x = -18.0 to 0.0) ──
   const roofPitchAngle = Math.atan2(1.7, 3.75); // ~24.4 deg
   const pitchLen = Math.hypot(3.75, 1.7); // ~4.116m
   const pitchY = bldgTopY + 0.35 + 0.85; // 20.20m
   const ridgeY = bldgTopY + 0.35 + 1.7; // 21.05m
   const halfSpan = 1.875; // 3.75 / 2
 
-  // A. Straight Section Terracotta Red Gabled Roof (x = -18.0 to 26.0)
+  // A. Straight Section Terracotta Red Gabled Roof (x = -18.0 to 0.0)
   // South Pitch (facing court, z > nStraightCz)
   const sPitchStraight = new THREE.Mesh(new THREE.BoxGeometry(nStraightW + 0.4, 0.08, pitchLen), terracottaRoofMat);
   sPitchStraight.position.set(nStraightCx, pitchY, nStraightCz + halfSpan);
@@ -2566,24 +2625,23 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   // Ridge cap along straight section
   roof.add(box(nStraightW + 0.5, 0.09, 0.45, terracottaRoofMat, nStraightCx, ridgeY, nStraightCz));
 
-  // East triangular gable end pediment at x = 26.0
+  // East triangular gable end pediment at x = 0.0 (seals flush against Corner Atrium Tower west wall)
   const eastGableGeom = new THREE.BufferGeometry();
   const eastGableVerts = new Float32Array([
-    26.0, bldgTopY + 0.35, nStraightCz - 3.75,
-    26.0, bldgTopY + 0.35, nStraightCz + 3.75,
-    26.0, ridgeY, nStraightCz,
+    nStraightX1, bldgTopY + 0.35, nStraightCz - 3.75,
+    nStraightX1, bldgTopY + 0.35, nStraightCz + 3.75,
+    nStraightX1, ridgeY, nStraightCz,
   ]);
   eastGableGeom.setAttribute('position', new THREE.BufferAttribute(eastGableVerts, 3));
   eastGableGeom.computeVertexNormals();
   const eastGableMesh = new THREE.Mesh(eastGableGeom, creamWall);
   roof.add(eastGableMesh);
 
-  // Solar Panels on Straight Roof (from drone photo: 3 sections along long side)
-  // South slope: 3 arrays side by side
+  // Solar Panels on Straight Roof (from x = -18.0 to 0.0): 2 arrays along the straight gabled section
+  // South slope: 2 arrays side by side
   [
-    { arrX: 13.5, w: 8.8 },
-    { arrX: 2.0, w: 8.8 },
-    { arrX: -9.5, w: 8.8 },
+    { arrX: -4.5, w: 6.8 },
+    { arrX: -13.5, w: 6.8 },
   ].forEach((arr) => {
     const sArr = new THREE.Mesh(new THREE.BoxGeometry(arr.w, 0.05, 3.2), solarPanelMat);
     sArr.position.set(arr.arrX, pitchY + 0.05, nStraightCz + halfSpan);
@@ -2592,11 +2650,10 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     roof.add(sArr);
   });
 
-  // North slope: 3 arrays matching south slope
+  // North slope: 2 arrays matching south slope
   [
-    { arrX: 13.5, w: 8.8 },
-    { arrX: 2.0, w: 8.8 },
-    { arrX: -9.5, w: 8.8 },
+    { arrX: -4.5, w: 6.8 },
+    { arrX: -13.5, w: 6.8 },
   ].forEach((arr) => {
     const nArr = new THREE.Mesh(new THREE.BoxGeometry(arr.w, 0.05, 3.2), solarPanelMat);
     nArr.position.set(arr.arrX, pitchY + 0.05, nStraightCz - halfSpan);
