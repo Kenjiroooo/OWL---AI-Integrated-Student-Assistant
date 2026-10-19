@@ -20,7 +20,6 @@ import {
   ChevronRight,
   Layers,
   Camera,
-  Info,
   Box,
   Image as ImageIcon,
   Sparkles,
@@ -494,69 +493,40 @@ export default function CampusArchitectureShowcase({
         </button>
       </div>
 
-      {/* ── Bottom: info + selector + actions ──────────────────────────────── */}
-      <footer className="absolute bottom-0 inset-x-0 z-20 p-4 sm:p-6 bg-gradient-to-t from-[#050b18] via-[#050b18]/85 to-transparent">
-        <div className="max-w-6xl mx-auto flex flex-col lg:flex-row lg:items-end gap-4 lg:gap-6">
-          {/* Building info – crossfades with selection */}
-          <div className="flex-1 min-w-0">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={active.id}
-                initial={{ opacity: 0, y: reducedMotion ? 0 : 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: reducedMotion ? 0 : -8 }}
-                transition={{ duration: reducedMotion ? 0.15 : 0.45, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <div className="flex items-center gap-2">
-                  <p className="text-xs font-semibold text-blue-300">{active.campus}</p>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/70 font-mono">
-                    {viewMode === '3d' ? 'Option B: 3D Twin' : 'On-Site Photograph'}
-                  </span>
-                </div>
-                <h2 className="text-xl sm:text-2xl font-black mt-0.5">{active.name}</h2>
-                <p className="text-sm text-white/70 mt-1.5 max-w-2xl leading-relaxed">{active.description}</p>
-                <p className="flex items-center gap-1.5 text-[11px] text-white/55 mt-3">
-                  <Info className="w-3.5 h-3.5 text-blue-400" />
-                  {viewMode === '3d'
-                    ? 'Procedural 3D model with Three.js PBR lighting, materials & vertical exploded view.'
-                    : 'On-site photograph reference view. Toggle "3D Model" in top bar for interactive 3D.'}
-                </p>
-              </motion.div>
-            </AnimatePresence>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            {buildings.length > 1 && (
-              <CampusBuildingSelector buildings={buildings} activeId={activeId} onSelect={handleSelect} />
-            )}
-            <div className="flex gap-2">
-              <button
-                id="arch-play-cinematic"
-                onClick={handlePlay}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 h-[60px] rounded-2xl bg-blue-600 hover:bg-blue-500 font-bold shadow-lg shadow-blue-900/40 active:scale-95 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300"
-              >
-                <Play className="w-5 h-5 fill-current" />
-                Play
-              </button>
-              <button
-                id="arch-exploded-toggle"
-                onClick={() => {
-                  if (viewMode !== '3d') setViewMode('3d');
-                  setExploded((prev) => !prev);
-                }}
-                title="Toggle Exploded Architectural View"
-                className={`flex flex-col items-center justify-center px-4 h-[60px] rounded-2xl border transition-all active:scale-95 ${
-                  exploded && viewMode === '3d'
-                    ? 'bg-blue-600 border-blue-400 text-white shadow-lg shadow-blue-600/40 ring-2 ring-blue-400'
-                    : 'bg-white/10 hover:bg-white/20 border-white/15 text-white'
-                }`}
-              >
-                <Layers className="w-5 h-5" />
-                <span className="text-[10px] mt-0.5 font-bold leading-none">
-                  {exploded && viewMode === '3d' ? 'Collapse' : 'Exploded'}
-                </span>
-              </button>
-            </div>
+      {/* ── Bottom controls: selector + actions (Clean, non-intrusive) ────────── */}
+      <footer className="absolute bottom-0 inset-x-0 z-20 p-4 sm:p-6 pointer-events-none">
+        <div className="max-w-7xl mx-auto flex items-center justify-end gap-3 pointer-events-auto">
+          {buildings.length > 1 && (
+            <CampusBuildingSelector buildings={buildings} activeId={activeId} onSelect={handleSelect} />
+          )}
+          <div className="flex items-center gap-2">
+            <button
+              id="arch-play-cinematic"
+              onClick={handlePlay}
+              title="Play Cinematic Camera Flythrough"
+              className="flex items-center justify-center gap-2 px-5 h-12 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold shadow-lg shadow-blue-900/40 active:scale-95 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300"
+            >
+              <Play className="w-4 h-4 fill-current" />
+              <span className="text-xs">Play Flythrough</span>
+            </button>
+            <button
+              id="arch-exploded-toggle"
+              onClick={() => {
+                if (viewMode !== '3d') setViewMode('3d');
+                setExploded((prev) => !prev);
+              }}
+              title="Toggle Exploded Architectural View"
+              className={`flex items-center gap-2 px-4 h-12 rounded-xl border transition-all active:scale-95 ${
+                exploded && viewMode === '3d'
+                  ? 'bg-blue-600 border-blue-400 text-white shadow-lg shadow-blue-600/40 ring-2 ring-blue-400'
+                  : 'bg-black/50 hover:bg-white/15 border-white/15 text-white backdrop-blur-xl'
+              }`}
+            >
+              <Layers className="w-4 h-4" />
+              <span className="text-xs font-bold">
+                {exploded && viewMode === '3d' ? 'Collapse' : 'Exploded View'}
+              </span>
+            </button>
           </div>
         </div>
       </footer>
