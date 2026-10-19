@@ -24,6 +24,7 @@ import {
   Box,
   Image as ImageIcon,
   Sparkles,
+  PenTool,
 } from 'lucide-react';
 import {
   CAMPUS_BUILDINGS,
@@ -38,6 +39,7 @@ import { useBuildingTransitionController, type TransitionPhase } from './Buildin
 import Campus3DCanvas, { type Campus3DCanvasHandle } from './Campus3DCanvas';
 import CampusBuildingScene from './CampusBuildingScene';
 import CampusBuildingSelector from './CampusBuildingSelector';
+import ShapeTrackerOverlay, { type ShapePoint, type TrackerMode } from './ShapeTrackerOverlay';
 
 interface Props {
   onClose?: () => void;
@@ -88,6 +90,34 @@ export default function CampusArchitectureShowcase({
   const canvas3DRef = useRef<Campus3DCanvasHandle>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
 
+  // Interactive Lasso / Shape Tracker state
+  const [trackerActive, setTrackerActive] = useState<boolean>(false);
+  const [trackerMode, setTrackerMode] = useState<TrackerMode>('polygon');
+  const [trackerSnap, setTrackerSnap] = useState<number>(0.5);
+  const [trackerPoints, setTrackerPoints] = useState<ShapePoint[]>([]);
+  const [hoverCoord, setHoverCoord] = useState<{ x: number; z: number } | null>(null);
+  const [isShapeClosed, setIsShapeClosed] = useState<boolean>(false);
+
+  const handleCloseShape = useCallback(() => {
+    setIsShapeClosed(true);
+  }, []);
+
+  const handleUndoTrackerPoint = useCallback(() => {
+    setTrackerPoints((prev) => {
+      if (prev.length === 0) return prev;
+      const next = prev.slice(0, -1);
+      if (next.length < 3) {
+        setIsShapeClosed(false);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleClearTracker = useCallback(() => {
+    setTrackerPoints([]);
+    setIsShapeClosed(false);
+  }, []);
+
   // Cinematic intro on open
   useEffect(() => {
     if (viewMode === 'photo') {
@@ -106,6 +136,9 @@ export default function CampusArchitectureShowcase({
       }
       if (e.key === 'm' || e.key === 'M') {
         setViewMode((m) => (m === '3d' ? 'photo' : '3d'));
+      }
+      if (e.key === 't' || e.key === 'T' || e.key === 'l' || e.key === 'L') {
+        if (viewMode === '3d') setTrackerActive((a) => !a);
       }
 
       if (viewMode === '3d') {
@@ -229,6 +262,15 @@ export default function CampusArchitectureShowcase({
           activeBuildingId={activeId}
           exploded={exploded}
           cinematicNonce={cinematicNonce}
+          trackerActive={trackerActive}
+          trackerMode={trackerMode}
+          trackerSnap={trackerSnap}
+          trackerPoints={trackerPoints}
+          isShapeClosed={isShapeClosed}
+          hoverCoord={hoverCoord}
+          onPointsChange={setTrackerPoints}
+          onHoverCoord={setHoverCoord}
+          onCloseShape={handleCloseShape}
         />
       ) : (
         <div
@@ -272,7 +314,7 @@ export default function CampusArchitectureShowcase({
           </div>
         </div>
 
-        {/* View Mode Segmented Pill + Close button */}
+        {/* View Mode Segmented Pill + Shape Tracker + Close button */}
         <div className="pointer-events-auto flex items-center gap-2.5 sm:gap-3 self-start md:self-auto">
           {/* 3D vs Photo segmented control */}
           <div className="flex items-center p-1 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/15 shadow-xl">
@@ -291,6 +333,7 @@ export default function CampusArchitectureShowcase({
               onClick={() => {
                 setViewMode('photo');
                 setExploded(false);
+                setTrackerActive(false);
               }}
               className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 ${
                 viewMode === 'photo'
@@ -302,6 +345,27 @@ export default function CampusArchitectureShowcase({
               <span>Photo Reference</span>
             </button>
           </div>
+
+          {/* Interactive Shape / Lasso Tracker Button */}
+          <button
+            onClick={() => {
+              if (viewMode !== '3d') setViewMode('3d');
+              setTrackerActive((prev) => !prev);
+            }}
+            title="Track Real Building Shape / Lasso Coordinates"
+            className={`flex items-center gap-2 px-3.5 h-11 sm:h-12 rounded-xl backdrop-blur-xl border font-bold text-xs shadow-xl transition-all active:scale-95 ${
+              trackerActive && viewMode === '3d'
+                ? 'bg-cyan-500 text-slate-950 border-cyan-300 shadow-[0_0_20px_rgba(6,182,212,0.45)]'
+                : 'bg-black/40 text-cyan-300 hover:text-white hover:bg-white/10 border-cyan-500/30'
+            }`}
+          >
+            <PenTool className="w-4 h-4" />
+            <span className="hidden sm:inline">Track Shape (Lasso)</span>
+            <span className="sm:hidden">Lasso</span>
+            {trackerPoints.length > 0 && (
+              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+            )}
+          </button>
 
           <button
             ref={closeBtnRef}
@@ -316,31 +380,51 @@ export default function CampusArchitectureShowcase({
         </div>
       </header>
 
+      {/* ── Interactive 3D Shape & Lasso Tracker Overlay ── */}
+      {viewMode === '3d' && (
+        <ShapeTrackerOverlay
+          active={trackerActive}
+          onToggle={() => setTrackerActive((prev) => !prev)}
+          mode={trackerMode}
+          onModeChange={setTrackerMode}
+          snap={trackerSnap}
+          onSnapChange={setTrackerSnap}
+          points={trackerPoints}
+          hoverCoord={hoverCoord}
+          isClosed={isShapeClosed}
+          onCloseShape={handleCloseShape}
+          onUndo={handleUndoTrackerPoint}
+          onClear={handleClearTracker}
+        />
+      )}
+
       {/* ── Phase / Hint indicator ────────────────────────────────────────── */}
       <div className="absolute top-28 sm:top-24 left-1/2 -translate-x-1/2 z-20 pointer-events-none" aria-live="polite">
         <AnimatePresence>
-          {viewMode === '3d' ? (
-            <motion.div
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/45 backdrop-blur-md border border-white/10 text-xs font-medium text-white/80 shadow-lg"
-            >
-              <Box className="w-3.5 h-3.5 text-blue-400" />
-              <span>Drag to orbit 360° · Scroll / pinch to zoom · Exploded view ready</span>
-            </motion.div>
-          ) : (
-            busy && PHASE_LABEL[phase] && (
+          {!trackerActive && (
+            viewMode === '3d' ? (
               <motion.div
-                key={phase}
                 initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-xs font-medium text-white/80"
+                className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/45 backdrop-blur-md border border-white/10 text-xs font-medium text-white/80 shadow-lg"
               >
-                <Camera className="w-3.5 h-3.5 text-blue-300" />
-                {PHASE_LABEL[phase]}
+                <Box className="w-3.5 h-3.5 text-blue-400" />
+                <span>Drag to orbit 360° · Scroll / pinch to zoom · Exploded view ready</span>
               </motion.div>
+            ) : (
+              busy && PHASE_LABEL[phase] && (
+                <motion.div
+                  key={phase}
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-xs font-medium text-white/80"
+                >
+                  <Camera className="w-3.5 h-3.5 text-blue-300" />
+                  {PHASE_LABEL[phase]}
+                </motion.div>
+              )
             )
           )}
         </AnimatePresence>
