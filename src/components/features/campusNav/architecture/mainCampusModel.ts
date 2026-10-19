@@ -1359,11 +1359,13 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   const nStraightD = Math.abs(nStraightZBack - nStraightZFront); // 7.5m
   const nStraightCz = (nStraightZFront + nStraightZBack) / 2; // -54.75m
 
-  // C. North Wing - West Angled Dog-Leg Section (continuation wing after bend at x = -18.0, z = -50.25, connecting flush into Student Services at x = -31.0 without overshoot):
+  // C. North Wing - West Angled Elbow Corridor Section:
+  // Slopes from bend at (x = -18.0, z = -54.75) forward to (x = -31.0, z = -50.25)
+  // connecting flush into Student Services at its original place (z = -46.5 front, -54.0 back):
   const nAngledPivotX = -18.0;
-  const nAngledPivotZ = -50.25;
-  const nAngledAngle = Math.atan2(1.1, 12.5); // ~ +5.03 deg (+0.0878 rad) - rotated back to prevent overshoot into Student Services
-  const nAngledLen = 12.0; // 12.0m (connects flush into Student Services west wall without overshooting)
+  const nAngledPivotZ = nStraightCz; // -54.75m (aligned with straight section center)
+  const nAngledAngle = Math.atan2(4.5, 13.0); // ~ +19.08 deg (+0.333 rad) - angles forward 4.5m along Z over 13m along X to meet Student Services
+  const nAngledLen = Math.hypot(13.0, 4.5); // 13.76m
   const nAngledD = 7.5; // depth 7.5m (local z' from -3.75 to +3.75)
   const nAngledZFront = 3.75; // local front edge (+Z' towards court)
   const nAngledZBack = -3.75; // local back edge (-Z' towards rear boundary)
