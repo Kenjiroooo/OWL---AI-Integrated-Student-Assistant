@@ -45,9 +45,9 @@ export type TransitionPhase =
 const EASE_CINE: [number, number, number, number] = [0.65, 0, 0.35, 1];
 const EASE_OUT: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
-const ZOOM_MIN = 0.9;
-const ZOOM_MAX = 1.9;
-const ORBIT_LIMIT = 22;
+const ZOOM_MIN = 0.55;
+const ZOOM_MAX = 2.2;
+const ORBIT_LIMIT = 26;
 
 function createPose(visible: boolean, pose: CameraPose): ScenePose {
   return {

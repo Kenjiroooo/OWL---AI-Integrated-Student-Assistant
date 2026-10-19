@@ -309,7 +309,7 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
       if (!camera || !controls) return;
       const dir = new THREE.Vector3();
       camera.getWorldDirection(dir);
-      camera.position.addScaledVector(dir, 3.5);
+      camera.position.addScaledVector(dir, 6.5);
       controls.update();
     },
     zoomOut: () => {
@@ -317,7 +317,7 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
       if (!camera || !controls) return;
       const dir = new THREE.Vector3();
       camera.getWorldDirection(dir);
-      camera.position.addScaledVector(dir, -3.5);
+      camera.position.addScaledVector(dir, -6.5);
       controls.update();
     },
     orbitLeft: () => {
@@ -438,18 +438,18 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
       // 2. Scene & Fog
       const scene = new THREE.Scene();
       scene.background = new THREE.Color(0x0a1424);
-      scene.fog = new THREE.FogExp2(0x0a1424, 0.009);
+      scene.fog = new THREE.FogExp2(0x0a1424, 0.0018);
 
-      // 3. Camera
-      const camera = new THREE.PerspectiveCamera(45, width / height, 0.5, 300);
+      // 3. Camera (Far plane extended to 1200 for deep panoramic zoom)
+      const camera = new THREE.PerspectiveCamera(45, width / height, 0.5, 1200);
       camera.position.set(28, 24, 42);
 
-      // 4. Controls
+      // 4. Controls (Expanded zoom range: min 5m up to 350m eagle-eye)
       const controls = new OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.06;
-      controls.minDistance = 14;
-      controls.maxDistance = 85;
+      controls.minDistance = 5;
+      controls.maxDistance = 350;
       controls.maxPolarAngle = Math.PI / 2 - 0.02; // Keep camera above ground
       controls.target.set(0, 10, 0);
 
@@ -467,11 +467,11 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
       sunLight.shadow.mapSize.width = 2048;
       sunLight.shadow.mapSize.height = 2048;
       sunLight.shadow.camera.near = 10;
-      sunLight.shadow.camera.far = 150;
-      sunLight.shadow.camera.left = -40;
-      sunLight.shadow.camera.right = 40;
-      sunLight.shadow.camera.top = 40;
-      sunLight.shadow.camera.bottom = -40;
+      sunLight.shadow.camera.far = 320;
+      sunLight.shadow.camera.left = -80;
+      sunLight.shadow.camera.right = 80;
+      sunLight.shadow.camera.top = 80;
+      sunLight.shadow.camera.bottom = -80;
       sunLight.shadow.bias = -0.0004;
       scene.add(sunLight);
 
@@ -479,8 +479,8 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
       fillLight.position.set(-35, 30, -25);
       scene.add(fillLight);
 
-      // 6. Architectural Grid Ground Plane
-      const groundGeo = new THREE.PlaneGeometry(160, 160);
+      // 6. Architectural Grid Ground Plane (Expanded 500x500 for wide panoramic views)
+      const groundGeo = new THREE.PlaneGeometry(500, 500);
       const groundMat = new THREE.MeshStandardMaterial({
         color: 0x07111e,
         roughness: 0.95,
@@ -492,7 +492,7 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
       ground.receiveShadow = true;
       scene.add(ground);
 
-      const grid = new THREE.GridHelper(160, 40, 0x1e3a8a, 0x0f2347);
+      const grid = new THREE.GridHelper(500, 100, 0x1e3a8a, 0x0f2347);
       grid.position.y = -0.48;
       scene.add(grid);
 
