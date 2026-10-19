@@ -1354,10 +1354,10 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   const nStraightX1 = 0.0; // east end meeting Expanded Corner Blue Glass Atrium Tower
   const nStraightW = Math.abs(nStraightX1 - nStraightX0); // 18.0m
   const nStraightCx = (nStraightX0 + nStraightX1) / 2; // -9.0m
-  const nStraightZFront = -46.5; // inner corridor edge facing +Z into court
-  const nStraightZBack = -54.0; // outer rear wall facing -Z
+  const nStraightZFront = -51.0; // inner corridor edge facing +Z into court (moved back 4.5m for basketball court clearance)
+  const nStraightZBack = -58.5; // outer rear wall facing -Z (moved back 4.5m)
   const nStraightD = Math.abs(nStraightZBack - nStraightZFront); // 7.5m
-  const nStraightCz = (nStraightZFront + nStraightZBack) / 2; // -50.25m
+  const nStraightCz = (nStraightZFront + nStraightZBack) / 2; // -54.75m
 
   // C. North Wing - West Angled Dog-Leg Section (continuation wing after bend at x = -18.0, z = -50.25, connecting flush into Student Services at x = -31.0 without overshoot):
   const nAngledPivotX = -18.0;
