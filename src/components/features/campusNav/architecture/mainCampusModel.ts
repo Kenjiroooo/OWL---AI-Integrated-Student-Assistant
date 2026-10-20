@@ -5481,155 +5481,85 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     roof.add(eSolarMesh);
   });
 
-  // Corner Blue Glass Atrium Tower Rooftop Cap (at inner corner)
-  roof.add(box(4.5, 1.6, 4.5, glassAtriumMat, 19.5, bldgTopY + 0.8, nStraightZFront - 1.0));
-  // Pyramid / Hipped Royal Blue Roof Cap
-  const atriumCap = new THREE.Mesh(new THREE.ConeGeometry(3.3, 1.4, 4), blueWall);
-  atriumCap.position.set(19.5, bldgTopY + 1.6 + 0.7, nStraightZFront - 1.0);
-  atriumCap.rotation.y = Math.PI / 4;
-  atriumCap.castShadow = true;
-  roof.add(atriumCap);
+  // ── 7. 5-Storey Courtyard Building Rooftop (Exact 9-Point Boundary Deck & Towers) ─
+  const bldgTopY = roofBaseY; // 19.0m (top of Floor 5 / roof level)
 
-  // ── TERRCOTTA RED GABLED ROOF WITH MONOCRYSTALLINE SOLAR PANELS (North Wing) ──
-  const roofPitchAngle = Math.atan2(1.7, 3.75); // ~24.4 deg
-  const pitchLen = Math.hypot(3.75, 1.7); // ~4.116m
-  const pitchY = bldgTopY + 0.35 + 0.85; // 20.20m
-  const ridgeY = bldgTopY + 0.35 + 1.7; // 21.05m
-  const halfSpan = 1.875; // 3.75 / 2
+  // Structural concrete roof slab extruded to exact 9-point perimeter
+  roof.add(createC5FloorSlab(bldgTopY, 0.35, concrete));
 
-  // A. Straight Section Terracotta Red Gabled Roof (x = -18.0 to 26.0)
-  // South Pitch (facing court, z > nStraightCz)
-  const sPitchStraight = new THREE.Mesh(new THREE.BoxGeometry(nStraightW + 0.4, 0.08, pitchLen), terracottaRoofMat);
-  sPitchStraight.position.set(nStraightCx, pitchY, nStraightCz + halfSpan);
-  sPitchStraight.rotation.x = -roofPitchAngle;
-  sPitchStraight.castShadow = true;
-  roof.add(sPitchStraight);
+  // Perimeter Parapet Walls along ALL 9 segments of the tracked building outline
+  C5_SEGMENTS.forEach((seg) => {
+    const parapetGrp = new THREE.Group();
+    parapetGrp.position.set(seg.cx, bldgTopY, seg.cz);
+    parapetGrp.rotation.y = seg.rotY;
 
-  // North Pitch (facing back, z < nStraightCz)
-  const nPitchStraight = new THREE.Mesh(new THREE.BoxGeometry(nStraightW + 0.4, 0.08, pitchLen), terracottaRoofMat);
-  nPitchStraight.position.set(nStraightCx, pitchY, nStraightCz - halfSpan);
-  nPitchStraight.rotation.x = roofPitchAngle;
-  nPitchStraight.castShadow = true;
-  roof.add(nPitchStraight);
+    // Solid white parapet wall (1.1m high)
+    parapetGrp.add(box(seg.len, 1.1, 0.35, creamWall, 0, 0.55, 0));
+    // Royal blue coping cap along the top
+    parapetGrp.add(box(seg.len + 0.1, 0.12, 0.42, blueWall, 0, 1.15, 0));
 
-  // Ridge cap along straight section
-  roof.add(box(nStraightW + 0.5, 0.09, 0.45, terracottaRoofMat, nStraightCx, ridgeY, nStraightCz));
-
-  // East triangular gable end pediment at x = 26.0
-  const eastGableGeom = new THREE.BufferGeometry();
-  const eastGableVerts = new Float32Array([
-    26.0, bldgTopY + 0.35, nStraightCz - 3.75,
-    26.0, bldgTopY + 0.35, nStraightCz + 3.75,
-    26.0, ridgeY, nStraightCz,
-  ]);
-  eastGableGeom.setAttribute('position', new THREE.BufferAttribute(eastGableVerts, 3));
-  eastGableGeom.computeVertexNormals();
-  const eastGableMesh = new THREE.Mesh(eastGableGeom, creamWall);
-  roof.add(eastGableMesh);
-
-  // Solar Panels on Straight Roof (from drone photo: 3 sections along long side)
-  // South slope: 3 arrays side by side
-  [
-    { arrX: 13.5, w: 8.8 },
-    { arrX: 2.0, w: 8.8 },
-    { arrX: -9.5, w: 8.8 },
-  ].forEach((arr) => {
-    const sArr = new THREE.Mesh(new THREE.BoxGeometry(arr.w, 0.05, 3.2), solarPanelMat);
-    sArr.position.set(arr.arrX, pitchY + 0.05, nStraightCz + halfSpan);
-    sArr.rotation.x = -roofPitchAngle;
-    sArr.castShadow = true;
-    roof.add(sArr);
+    roof.add(parapetGrp);
   });
 
-  // North slope: 3 arrays matching south slope
-  [
-    { arrX: 13.5, w: 8.8 },
-    { arrX: 2.0, w: 8.8 },
-    { arrX: -9.5, w: 8.8 },
-  ].forEach((arr) => {
-    const nArr = new THREE.Mesh(new THREE.BoxGeometry(arr.w, 0.05, 3.2), solarPanelMat);
-    nArr.position.set(arr.arrX, pitchY + 0.05, nStraightCz - halfSpan);
-    nArr.rotation.x = roofPitchAngle;
-    nArr.castShadow = true;
-    roof.add(nArr);
+  // Corner Glass Atrium Flat Silver Aluminium Roof Cap at P3 [17.0, -57.5]
+  const p3Roof = C5_POINTS[2];
+  roof.add(box(5.2, 0.35, 5.2, mats.metalSilver, p3Roof[0], bldgTopY + 0.5, p3Roof[1]));
+
+  // Rooftop Stair & Service Penthouses
+  // Penthouse 1: West North Wing deck (centered on roof deck between front and back parapets)
+  const c5WestDeckCz = (C5_POINTS[0][1] + C5_POINTS[8][1]) / 2; // -54.75
+  roof.add(box(4.5, 2.6, 5.2, creamWall, -20.0, bldgTopY + 1.3, c5WestDeckCz));
+  roof.add(box(4.8, 0.2, 5.5, blueWall, -20.0, bldgTopY + 2.7, c5WestDeckCz));
+  roof.add(box(0.08, 2.0, 0.9, mats.metalDark, -17.7, bldgTopY + 1.0, c5WestDeckCz));
+
+  // Penthouse 2: East Wing deck
+  const c5EastPentZ = -38.5 + C5_SHIFT_Z;
+  roof.add(box(4.2, 2.6, 5.0, creamWall, 27.5, bldgTopY + 1.3, c5EastPentZ));
+  roof.add(box(4.5, 0.2, 5.3, blueWall, 27.5, bldgTopY + 2.7, c5EastPentZ));
+  roof.add(box(0.08, 2.0, 0.9, mats.metalDark, 25.3, bldgTopY + 1.0, c5EastPentZ));
+
+  // Solar Photovoltaic Panel Arrays on flat roof decks (tilted 15° facing south)
+  const solarFrameMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.3, metalness: 0.8 });
+
+  // Arrays on West North Wing deck
+  [-13.0, -26.0].forEach((arrX) => {
+    const arrW = 8.5;
+    const arrL = 4.2;
+    const arrY = bldgTopY + 0.7;
+    for (let lz = c5WestDeckCz - arrL / 2 + 0.4; lz <= c5WestDeckCz + arrL / 2; lz += 1.6) {
+      roof.add(box(0.06, 0.45, 0.06, solarFrameMat, arrX - arrW / 2 + 0.4, arrY - 0.25, lz));
+      roof.add(box(0.06, 0.85, 0.06, solarFrameMat, arrX + arrW / 2 - 0.4, arrY - 0.05, lz));
+    }
+    const sMesh = new THREE.Mesh(new THREE.BoxGeometry(arrW, 0.06, arrL), solarPanelMat);
+    sMesh.position.set(arrX, arrY + 0.15, c5WestDeckCz);
+    sMesh.rotation.x = 0.26; // ~15 deg tilt
+    sMesh.castShadow = true;
+    roof.add(sMesh);
   });
 
-  // B. Angled Dog-Leg Section Terracotta Red Gabled Roof (inside angledRoofGroup)
-  const angledRoof = new THREE.Group();
-  angledRoof.position.set(nAngledPivotX, 0, nAngledPivotZ);
-  angledRoof.rotation.y = nAngledAngle;
-
-  // Angled roof slab
-  angledRoof.add(box(nAngledLen + 0.5, 0.35, nAngledD + 0.4, concrete, -nAngledLen / 2, bldgTopY + 0.175, 0));
-
-  // Front pitch (local z' > 0, facing court side)
-  const sPitchAngled = new THREE.Mesh(new THREE.BoxGeometry(nAngledLen + 0.4, 0.08, pitchLen), terracottaRoofMat);
-  sPitchAngled.position.set(-nAngledLen / 2, pitchY, halfSpan);
-  sPitchAngled.rotation.x = -roofPitchAngle;
-  sPitchAngled.castShadow = true;
-  angledRoof.add(sPitchAngled);
-
-  // Back pitch (local z' < 0, facing outer back)
-  const nPitchAngled = new THREE.Mesh(new THREE.BoxGeometry(nAngledLen + 0.4, 0.08, pitchLen), terracottaRoofMat);
-  nPitchAngled.position.set(-nAngledLen / 2, pitchY, -halfSpan);
-  nPitchAngled.rotation.x = roofPitchAngle;
-  nPitchAngled.castShadow = true;
-  angledRoof.add(nPitchAngled);
-
-  // Ridge cap along angled section
-  angledRoof.add(box(nAngledLen + 0.5, 0.09, 0.45, terracottaRoofMat, -nAngledLen / 2, ridgeY, 0));
-
-  // West triangular gable end pediment at local x' = -nAngledLen
-  const westGableGeom = new THREE.BufferGeometry();
-  const westGableVerts = new Float32Array([
-    -nAngledLen, bldgTopY + 0.35, -3.75,
-    -nAngledLen, bldgTopY + 0.35, 3.75,
-    -nAngledLen, ridgeY, 0,
-  ]);
-  westGableGeom.setAttribute('position', new THREE.BufferAttribute(westGableVerts, 3));
-  westGableGeom.computeVertexNormals();
-  const westGableMesh = new THREE.Mesh(westGableGeom, creamWall);
-  angledRoof.add(westGableMesh);
-
-  // Solar Panels on Angled Roof (from drone photo: 1 section after the bend)
-  // Front slope: sub-arrays
-  [
-    { x1: -3.5, w1: 3.2, x2: -7.2, w2: 2.4 },
-  ].forEach((grp) => {
-    const a1 = new THREE.Mesh(new THREE.BoxGeometry(grp.w1, 0.05, 3.2), solarPanelMat);
-    a1.position.set(grp.x1, pitchY + 0.05, halfSpan);
-    a1.rotation.x = -roofPitchAngle;
-    a1.castShadow = true;
-    angledRoof.add(a1);
-
-    const a2 = new THREE.Mesh(new THREE.BoxGeometry(grp.w2, 0.05, 3.2), solarPanelMat);
-    a2.position.set(grp.x2, pitchY + 0.05, halfSpan);
-    a2.rotation.x = -roofPitchAngle;
-    a2.castShadow = true;
-    angledRoof.add(a2);
+  // Arrays on East Wing deck
+  [-32.5 + C5_SHIFT_Z, -48.5 + C5_SHIFT_Z].forEach((arrZ) => {
+    const arrW = 4.2;
+    const arrL = 7.5;
+    const arrY = bldgTopY + 0.7;
+    const arrX = 28.0;
+    for (let lx = arrX - arrW / 2 + 0.4; lx <= arrX + arrW / 2; lx += 1.7) {
+      roof.add(box(0.06, 0.45, 0.06, solarFrameMat, lx, arrY - 0.25, arrZ - arrL / 2 + 0.4));
+      roof.add(box(0.06, 0.85, 0.06, solarFrameMat, lx, arrY - 0.05, arrZ + arrL / 2 - 0.4));
+    }
+    const eSolarMesh = new THREE.Mesh(new THREE.BoxGeometry(arrW, 0.06, arrL), solarPanelMat);
+    eSolarMesh.position.set(arrX, arrY + 0.15, arrZ);
+    eSolarMesh.rotation.x = 0.26;
+    eSolarMesh.castShadow = true;
+    roof.add(eSolarMesh);
   });
-
-  // Back slope: 1 large array
-  const bArr = new THREE.Mesh(new THREE.BoxGeometry(7.0, 0.05, 3.2), solarPanelMat);
-  bArr.position.set(-5.5, pitchY + 0.05, -halfSpan);
-  bArr.rotation.x = roofPitchAngle;
-  bArr.castShadow = true;
-  angledRoof.add(bArr);
-
-  roof.add(angledRoof);
-
-  // C. Bend Miter Transition Cap at x = -18.0, z = -54.75 (relocated to user's arrow position)
-  roof.add(box(2.8, 0.22, 2.8, terracottaRoofMat, nAngledPivotX, ridgeY, nAngledPivotZ));
-
-  // West junction rooftop cap meeting Student Services
-  roof.add(box(1.2, 0.4, 1.2, whiteMat, admBackX, bldgTopY + 0.55, -50.5));
 
   // ── Prominent 12-Meter Steel Lattice Telecommunications Antenna Tower ───────
-  // Situated on the roof directly above the North-East (corner junction)
-  const towerBaseX = eWingCx; // 22.25
-  const towerBaseZ = nWingCz; // -50.25
+  // Situated on the roof deck near the North-East corner junction
+  const towerBaseX = 22.0;
+  const towerBaseZ = -58.5 + C5_SHIFT_Z;
   const towerBaseY = bldgTopY + 0.35; // 19.35m
-  const towerH = 12.0; // rises to 35.15m
+  const towerH = 12.0; // rises to 31.35m
   const baseSpan = 3.2; // 3.2m base footprint
   const topSpan = 1.3; // tapered to 1.3m at top
   const halfBase = baseSpan / 2;
