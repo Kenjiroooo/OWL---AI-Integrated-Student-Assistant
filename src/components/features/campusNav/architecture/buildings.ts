@@ -62,7 +62,7 @@ export const CAMPUS_BUILDINGS: readonly CampusBuilding[] = [
     shortName: 'Main Campus',
     campus: 'Main Campus • Dagupan City',
     description:
-      'The unified campus complex of Universidad de Dagupan: featuring the 6-storey academic block with perforated mesh chevron facade, the iconic Main Tower facade with horizontal blue floor bands, balconies and vertical "UDD" sign, circular university seal, modern chapel with monumental cross, grand entrance portal, outdoor collegiate basketball court, the Student Services Hall, the 2-storey Innovation & Research Wing, the 4th floor garden terrace hallway portal, and the 5-Storey Courtyard Building with an angled dog-leg North Wing, terracotta red standing-seam gabled roof with monocrystalline solar arrays, East Wing rooftop solar panels, corner blue glass atrium tower, and 12-meter telecommunications lattice antenna tower.',
+      'The unified campus complex of Universidad de Dagupan: featuring the 6-storey academic block with perforated mesh chevron facade, the iconic Main Tower facade with horizontal blue floor bands, balconies and vertical "UDD" sign, circular university seal, modern chapel with monumental cross, grand entrance portal, outdoor collegiate basketball court, the Student Services Hall, the 2-storey Innovation & Research Wing, the 4th floor garden terrace hallway portal, and the 5-Storey Courtyard Building constructed to the exact 9-point pinpointed boundary (773.3m² footprint), featuring signature blue zigzag balcony spandrels, multi-storey corner clear glass atrium tower, 5F louvered academic hall with UDD crest seal, flat solar panel roof decks, and 12-meter telecommunications lattice antenna tower.',
     visibleFeatures: [
       'Perforated mesh facade with chevron arrows',
       'Main Tower facade with blue floor bands & balconies',
@@ -71,12 +71,12 @@ export const CAMPUS_BUILDINGS: readonly CampusBuilding[] = [
       'Circular Universidad de Dagupan seal',
       'Modern A-frame chapel with monumental cross',
       'Collegiate outdoor basketball court',
-      '5-Storey building with angled dog-leg North Wing',
-      'Terracotta red standing seam gabled roof with solar panels',
-      'Dual-slope monocrystalline solar arrays on North Wing',
-      'Rooftop solar panel arrays on East Wing deck',
-      'Multi-storey corner blue glass curtain wall atrium tower',
-      '5th floor continuous ribbon window facade with ochre header',
+      '5-Storey building with exact 9-point boundary (773.3m² footprint)',
+      'Flat roof decks with monocrystalline solar arrays & perimeter parapet',
+      'Multi-storey corner clear glass atrium tower with silver grid',
+      'White facade with signature blue zigzag balcony spandrels',
+      'Blue corridor soffits & corbel brackets on every floor',
+      '5th floor louvered window bays with blue sill band',
       '45° angled Universidad de Dagupan crest seal at inner corner',
       '12-meter rooftop telecommunications lattice tower with beacon',
       'External concrete staircase with blue safety railings',
@@ -92,7 +92,7 @@ export const CAMPUS_BUILDINGS: readonly CampusBuilding[] = [
     ],
     referenceImage: '/campus-buildings/udd-main.jpg',
     referenceImageAlt:
-      'Architectural rendering of the unified UDD Main Campus: perforated mesh facade with chevron motifs, main tower facade with blue floor bands, top seal, A-frame chapel with cross, entrance portal, basketball court, student services building with 2-storey innovation wing, and 5-storey courtyard building with angled dog-leg solar roof and telecommunications tower.',
+      'Architectural rendering of the unified UDD Main Campus: perforated mesh facade with chevron motifs, main tower facade with blue floor bands, top seal, A-frame chapel with cross, entrance portal, basketball court, student services building with 2-storey innovation wing, and 5-storey courtyard building with exact 9-point boundary, solar roof decks, and telecommunications tower.',
     modelPath: 'procedural-3d',
     floors: [
       { level: 0, label: 'Ground Concourse, Chapel, Basketball Court, Courtyard Parking & Colonnade' },
