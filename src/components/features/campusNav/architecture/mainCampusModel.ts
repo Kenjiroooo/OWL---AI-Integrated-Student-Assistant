@@ -5134,210 +5134,146 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       g.add(box(0.14, 1.1, 9.5, [newWingSignMat, mats.metalDark, mats.metalDark, mats.metalDark, mats.metalDark, mats.metalDark], wingFrontX + 0.18, baseY + 3.1, -33.0));
     }
 
-    // ── 5-Storey Courtyard Building (Floors 2 to 5: East Wing & Angled Dog-Leg North Wing) ──
+    // ── 5-Storey Courtyard Building (Floors 2 to 5: Exact 9-Point Boundary) ──
+    // Floor slab extruded to exact 9-point perimeter
+    g.add(createC5FloorSlab(baseY, 0.28, concrete));
+
     if (f >= 1 && f <= 3) {
-      // Levels 1, 2, 3: Open-Air Corridors with Warm Cream Balustrades (2F, 3F, 4F)
-      // A. North Wing - East Straight Section (x = -18.0 to 26.0)
-      g.add(box(nStraightW + 0.4, 0.28, nStraightD, concrete, nStraightCx, baseY + 0.14, nStraightCz, false));
-      // Rear wall (facing -Z) & windows
-      g.add(box(nStraightW + 0.4, FH, 0.4, creamWall, nStraightCx, cy, nStraightZBack));
-      [-14.0, -8.5, -3.0, 2.5, 8.0, 13.5, 19.0].forEach((wx) => {
-        g.add(box(3.2, 1.4, 0.08, darkGlass, wx, cy + 0.2, nStraightZBack - 0.05, false));
-        g.add(box(3.4, 0.08, 0.12, creamWall, wx, cy - 0.6, nStraightZBack - 0.06, false));
-      });
-      // Recessed classroom wall facing open courtyard corridor (facing +Z)
-      g.add(box(nStraightW - 2.0, FH, 0.2, [creamWall, creamWall, creamWall, creamWall, corridorWallMat, creamWall], nStraightCx, cy, nStraightZFront - 2.2));
-      g.add(box(nStraightW, 0.15, 2.2, creamWall, nStraightCx, baseY + FH - 0.08, nStraightZFront - 1.1));
-      // Solid cream balustrade along corridor front edge (z = nStraightZFront)
-      g.add(box(nStraightW, 1.05, 0.25, creamWall, nStraightCx, baseY + 0.525, nStraightZFront));
-      g.add(box(nStraightW + 0.1, 0.08, 0.32, creamWall, nStraightCx, baseY + 1.09, nStraightZFront));
-      g.add(box(nStraightW, 0.5, 0.3, creamWall, nStraightCx, baseY + FH - 0.25, nStraightZFront));
-      [-12.0, -6.0, 0.0, 6.0, 12.0, 18.0, 22.0].forEach((cx) => {
-        g.add(box(0.6, FH, 0.6, creamWall, cx, cy, nStraightZFront));
-      });
-      g.add(box(0.7, FH, 0.7, creamWall, nAngledPivotX, cy, nStraightZFront)); // bend pillar at x = -18.0
+      // Levels 1, 2, 3: Open-Air Corridors with Signature Zigzag Spandrel Balconies (2F, 3F, 4F)
+      C5_INNER_SEGS.forEach((seg) => {
+        const grp = new THREE.Group();
+        grp.position.set(seg.cx, baseY, seg.cz);
+        grp.rotation.y = seg.rotY;
 
-      // Air Conditioner Units along straight wing balustrades
-      [-10.0, -2.0, 6.0, 14.0].forEach((acX) => {
-        const acY = baseY + 1.35;
-        g.add(box(0.85, 0.62, 0.38, [mats.metalSilver, mats.metalSilver, mats.metalSilver, mats.metalSilver, acUnitMat, mats.metalSilver], acX, acY, nStraightZFront + 0.22));
-        g.add(box(0.04, 0.45, 0.42, mats.metalDark, acX - 0.28, acY - 0.35, nStraightZFront + 0.22));
-        g.add(box(0.04, 0.45, 0.42, mats.metalDark, acX + 0.28, acY - 0.35, nStraightZFront + 0.22));
-      });
+        // Front Balustrade along corridor front edge (local Z = 0)
+        grp.add(box(seg.len, 1.05, 0.25, creamWall, 0, 0.525, 0));
+        grp.add(box(seg.len + 0.1, 0.08, 0.32, creamWall, 0, 1.09, 0)); // coping
+        grp.add(box(seg.len, 0.5, 0.3, creamWall, 0, FH - 0.25, 0)); // lintel beam
 
-      // B. North Wing - West Angled Dog-Leg Section (cranks from bend at x = -18.0 towards x = -31.0)
-      const angledFloor = new THREE.Group();
-      angledFloor.position.set(nAngledPivotX, 0, nAngledPivotZ);
-      angledFloor.rotation.y = nAngledAngle;
+        // Signature Blue Zigzag Spandrel Panel facing courtyard (+Z)
+        grp.add(box(seg.len, 1.15, 0.05, [creamWall, creamWall, creamWall, creamWall, getSpandrelMat(seg.len), creamWall], 0, 0.6, 0.16));
 
-      angledFloor.add(box(nAngledLen + 0.5, 0.28, nAngledD, concrete, -nAngledLen / 2, baseY + 0.14, 0, false));
-      angledFloor.add(box(nAngledLen, FH, 0.4, creamWall, -nAngledLen / 2, cy, nAngledZBack + 0.2));
-      angledFloor.add(box(0.4, FH, nAngledD, creamWall, -nAngledLen, cy, 0)); // west end wall
-      // Rear windows along local z' = nAngledZBack
-      [-3.5, -8.0].forEach((wx) => {
-        angledFloor.add(box(3.2, 1.4, 0.08, darkGlass, wx, cy + 0.2, nAngledZBack - 0.05, false));
-        angledFloor.add(box(3.4, 0.08, 0.12, creamWall, wx, cy - 0.6, nAngledZBack - 0.06, false));
-      });
+        // Dark Blue Corridor Soffit & Fascia Strip
+        grp.add(box(seg.len, 0.03, 2.1, soffitBlue, 0, FH - 0.17, -1.1, false));
+        grp.add(box(seg.len, 0.12, 0.34, soffitBlue, 0, FH - 0.56, 0.02));
 
-      // Recessed classroom wall facing open corridor
-      angledFloor.add(box(nAngledLen - 2.0, FH, 0.2, [creamWall, creamWall, creamWall, creamWall, corridorWallMat, creamWall], -nAngledLen / 2, cy, 1.55));
-      angledFloor.add(box(nAngledLen, 0.15, 2.2, creamWall, -nAngledLen / 2, baseY + FH - 0.08, 2.65));
+        // Blue Corbel Brackets every ~3m under the lintel
+        for (let bx = -seg.len / 2 + 1.5; bx < seg.len / 2; bx += 3.0) {
+          grp.add(box(0.16, 0.4, 0.5, soffitBlue, bx, FH - 0.82, 0.05));
+        }
 
-      if (f === 3) {
-        // 4F Level: Grand Architectural Royal Blue Hall Opening Portal connecting Garden Terrace directly into Angled North Wing
-        // At local x' = -3.0 (world x ~ -20.9, directly on 4F garden terrace at x in [-23.44, -18.0])
-        const portalXPrime = -3.0;
-        const pOpenW = 3.8;
-        const leftBalcLen = Math.abs(-nAngledLen - (portalXPrime - pOpenW / 2));
-        const leftBalcCx = -nAngledLen + leftBalcLen / 2;
-        angledFloor.add(box(leftBalcLen, 1.05, 0.25, creamWall, leftBalcCx, baseY + 0.525, nAngledZFront));
-        angledFloor.add(box(leftBalcLen, 0.08, 0.32, creamWall, leftBalcCx, baseY + 1.09, nAngledZFront));
+        // Structural columns along the corridor front edge
+        const colSpacing = 4.0;
+        const colCount = Math.floor(seg.len / colSpacing);
+        for (let c = 0; c <= colCount; c++) {
+          const lx = -seg.len / 2 + (c * seg.len) / colCount;
+          grp.add(box(0.6, FH, 0.6, creamWall, lx, FH / 2, 0));
+        }
 
-        const rightBalcLen = Math.abs(portalXPrime + pOpenW / 2);
-        const rightBalcCx = -(rightBalcLen / 2);
-        angledFloor.add(box(rightBalcLen, 1.05, 0.25, creamWall, rightBalcCx, baseY + 0.525, nAngledZFront));
-        angledFloor.add(box(rightBalcLen, 0.08, 0.32, creamWall, rightBalcCx, baseY + 1.09, nAngledZFront));
+        // Recessed classroom wall (offset 2.2m inward) with doors, windows & warm illumination
+        grp.add(box(seg.len - 0.6, FH, 0.2, [creamWall, creamWall, creamWall, creamWall, corridorWallMat, creamWall], 0, FH / 2, -2.2));
 
-        // Lintel beam above
-        angledFloor.add(box(nAngledLen, 0.5, 0.3, creamWall, -nAngledLen / 2, baseY + FH - 0.25, nAngledZFront));
+        // Air Conditioner Outdoor Compressor Units mounted on balustrades
+        [-seg.len / 4, seg.len / 4].forEach((acX) => {
+          grp.add(box(0.85, 0.62, 0.38, [mats.metalSilver, mats.metalSilver, mats.metalSilver, mats.metalSilver, acUnitMat, mats.metalSilver], acX, 1.35, 0.22));
+          grp.add(box(0.04, 0.45, 0.42, mats.metalDark, acX - 0.28, 1.0, 0.22));
+          grp.add(box(0.04, 0.45, 0.42, mats.metalDark, acX + 0.28, 1.0, 0.22));
+        });
 
-        // Royal Blue Portal Frame inside angled wing
-        angledFloor.add(box(0.35, 2.75, 0.5, blueWall, portalXPrime - 1.7, baseY + 0.3 + 1.375, nAngledZFront + 0.05));
-        angledFloor.add(box(0.35, 2.75, 0.5, blueWall, portalXPrime + 1.7, baseY + 0.3 + 1.375, nAngledZFront + 0.05));
-        angledFloor.add(box(3.75, 0.45, 0.55, blueWall, portalXPrime, baseY + 2.85, nAngledZFront + 0.06));
+        // 4F Level Portal Connection (on West North Wing meeting 4F Garden Terrace)
+        if (f === 3 && seg.idx === 0) {
+          const portalLX = -2.0; // aligns near world X = -21.5
+          grp.add(box(0.35, 2.75, 0.5, blueWall, portalLX - 1.7, 0.3 + 1.375, 0.05));
+          grp.add(box(0.35, 2.75, 0.5, blueWall, portalLX + 1.7, 0.3 + 1.375, 0.05));
+          grp.add(box(3.75, 0.45, 0.55, blueWall, portalLX, 2.85, 0.06));
+          grp.add(box(4.0, 0.12, 0.85, mats.metalSilver, portalLX, 3.12, 0.42));
+          // Propped glass double doors
+          grp.add(box(0.06, 2.4, 1.35, [officeGlassMat, darkGlass, mats.metalSilver, mats.metalSilver, mats.metalSilver, mats.metalSilver], portalLX - 0.7, 1.5, -0.25));
+          grp.add(box(0.06, 2.4, 1.35, [officeGlassMat, darkGlass, mats.metalSilver, mats.metalSilver, mats.metalSilver, mats.metalSilver], portalLX + 0.7, 1.5, -0.25));
+          // Walkway threshold connecting terrace seamlessly into North Wing portal
+          g.add(box(3.8, 0.06, 2.4, mats.metalDark, -21.5, baseY + 0.32, -50.2));
+        }
 
-        // Canopy above portal
-        angledFloor.add(box(4.0, 0.12, 0.85, mats.metalSilver, portalXPrime, baseY + 3.12, nAngledZFront + 0.42));
-        angledFloor.add(box(4.04, 0.06, 0.88, blueWall, portalXPrime, baseY + 3.06, nAngledZFront + 0.43));
-
-        // Glass double doors propped open
-        angledFloor.add(box(0.06, 2.4, 1.35, [officeGlassMat, darkGlass, mats.metalSilver, mats.metalSilver, mats.metalSilver, mats.metalSilver], portalXPrime - 0.7, baseY + 0.3 + 1.2, nAngledZFront - 0.25));
-        angledFloor.add(box(0.06, 2.4, 1.35, [officeGlassMat, darkGlass, mats.metalSilver, mats.metalSilver, mats.metalSilver, mats.metalSilver], portalXPrime + 0.7, baseY + 0.3 + 1.2, nAngledZFront - 0.25));
-
-        // Walkway paver floor inside
-        angledFloor.add(box(3.2, 0.04, 2.6, mats.metalDark, portalXPrime, baseY + 0.32, nAngledZFront - 1.1));
-
-        // Flush transition threshold connecting 4F Terrace seamlessly into Portal opening
-        g.add(box(3.8, 0.06, 1.4, mats.metalDark, -20.5, baseY + 0.32, -45.5));
-      } else {
-        // Continuous balustrade on 2F & 3F
-        angledFloor.add(box(nAngledLen, 1.05, 0.25, creamWall, -nAngledLen / 2, baseY + 0.525, nAngledZFront));
-        angledFloor.add(box(nAngledLen + 0.1, 0.08, 0.32, creamWall, -nAngledLen / 2, baseY + 1.09, nAngledZFront));
-        angledFloor.add(box(nAngledLen, 0.5, 0.3, creamWall, -nAngledLen / 2, baseY + FH - 0.25, nAngledZFront));
-
-        // Flush corridor threshold into Student Services rear hallway
-        g.add(box(3.6, 0.28, 1.4, concrete, -20.5, baseY + 0.14, -45.5));
-      }
-
-      // West junction column meeting Student Services back wall
-      g.add(box(0.8, FH, 0.8, whiteMat, admBackX, cy, -46.5));
-
-      // Colonnade columns along angled front
-      [-3.0, -7.5, -12.0].forEach((cx) => {
-        angledFloor.add(box(0.6, FH, 0.6, creamWall, cx, cy, nAngledZFront));
+        g.add(grp);
       });
 
-      // Air Conditioner Units along angled balustrade
-      [-7.0].forEach((acX) => {
-        const acY = baseY + 1.35;
-        angledFloor.add(box(0.85, 0.62, 0.38, [mats.metalSilver, mats.metalSilver, mats.metalSilver, mats.metalSilver, acUnitMat, mats.metalSilver], acX, acY, nAngledZFront + 0.22));
-        angledFloor.add(box(0.04, 0.45, 0.42, mats.metalDark, acX - 0.28, acY - 0.35, nAngledZFront + 0.22));
-        angledFloor.add(box(0.04, 0.45, 0.42, mats.metalDark, acX + 0.28, acY - 0.35, nAngledZFront + 0.22));
+      // Outer Perimeter Walls (Segments 3..8) with Classroom Ribbon Windows
+      C5_OUTER_SEGS.forEach((seg) => {
+        const wallGrp = new THREE.Group();
+        wallGrp.position.set(seg.cx, baseY, seg.cz);
+        wallGrp.rotation.y = seg.rotY;
+
+        wallGrp.add(box(seg.len, FH, 0.35, creamWall, 0, FH / 2, 0));
+
+        // Exterior windows if segment is long enough
+        if (seg.len > 12.0) {
+          const winCount = Math.floor(seg.len / 6.0);
+          for (let w = 0; w < winCount; w++) {
+            const wx = -seg.len / 2 + 3.0 + w * 6.0;
+            wallGrp.add(box(3.2, 1.4, 0.08, darkGlass, wx, FH / 2 + 0.2, 0.18, false));
+            wallGrp.add(box(3.4, 0.08, 0.12, blueWall, wx, FH / 2 - 0.6, 0.2, false));
+          }
+        }
+
+        g.add(wallGrp);
       });
 
-      g.add(angledFloor);
-
-      // C. East Wing Open Corridor & Classrooms (Short wing along Z on opposite side, facing -X towards court)
-      g.add(box(eWingW, 0.28, eWingL, concrete, eWingCx, baseY + 0.14, eWingCz, false));
-      // East Wing rear wall (facing +X)
-      g.add(box(0.4, FH, eWingL, creamWall, eWingXBack, cy, eWingCz));
-      // East Wing rear windows
-      [-26.0, -32.0, -38.0, -44.0].forEach((wz) => {
-        g.add(box(0.08, 1.4, 3.2, darkGlass, eWingXBack + 0.05, cy + 0.2, wz, false));
-        g.add(box(0.12, 0.08, 3.4, creamWall, eWingXBack + 0.06, cy - 0.6, wz, false));
-      });
-      // South end wall
-      g.add(box(eWingW, FH, 0.4, creamWall, eWingCx, cy, eWingZ0));
-
-      // Recessed classroom wall facing open courtyard corridor (at x = 20.7, facing -X)
-      const eRecessL = 24.5;
-      const eRecessCz = -34.25;
-      g.add(box(0.2, FH, eRecessL, [creamWall, corridorWallMat, creamWall, creamWall, creamWall, creamWall], 20.7, cy, eRecessCz));
-      // Open corridor ceiling soffit
-      g.add(box(2.2, 0.15, eRecessL, creamWall, 19.6, baseY + FH - 0.08, eRecessCz));
-      // Solid cream balustrade along corridor front edge (x = eWingXFront = 18.5)
-      g.add(box(0.25, 1.05, eRecessL, creamWall, eWingXFront, baseY + 0.525, eRecessCz));
-      g.add(box(0.32, 0.08, eRecessL + 0.1, creamWall, eWingXFront, baseY + 1.09, eRecessCz)); // coping
-      // Concrete lintel beam along front ceiling
-      g.add(box(0.3, 0.5, eRecessL, creamWall, eWingXFront, baseY + FH - 0.25, eRecessCz));
-      // Colonnade columns along corridor line
-      [-24.0, -29.0, -34.0, -39.0, -44.0].forEach((cz) => {
-        g.add(box(0.6, FH, 0.6, creamWall, eWingXFront, cy, cz));
-      });
-
-      // Air Conditioner Outdoor Compressor Units mounted on balustrades
-      [-28.0, -38.0].forEach((acZ) => {
-        const acY = baseY + 1.35;
-        g.add(box(0.38, 0.62, 0.85, [mats.metalSilver, acUnitMat, mats.metalSilver, mats.metalSilver, mats.metalSilver, mats.metalSilver], eWingXFront - 0.22, acY, acZ));
-        g.add(box(0.42, 0.45, 0.04, mats.metalDark, eWingXFront - 0.22, acY - 0.35, acZ - 0.28));
-        g.add(box(0.42, 0.45, 0.04, mats.metalDark, eWingXFront - 0.22, acY - 0.35, acZ + 0.28));
-      });
-
-      // D. Corner Blue Glass Atrium Tower (Levels 1 to 3)
-      g.add(box(4.5, FH, 4.5, glassAtriumMat, 19.5, cy, nStraightZFront - 1.0));
-      g.add(box(0.35, FH, 0.35, blueWall, 17.25, cy, nStraightZFront + 1.25));
+      // Corner Glass Atrium Tower (Levels 1 to 3) at P3 [17.0, -57.5]
+      const p3 = C5_POINTS[2];
+      g.add(box(4.8, FH, 4.8, glassAtriumMat, p3[0], cy, p3[1]));
+      g.add(box(0.35, FH, 0.35, blueWall, p3[0] - 2.2, cy, p3[1] + 2.2));
+      g.add(box(0.35, FH, 0.35, blueWall, p3[0] + 2.2, cy, p3[1] - 2.2));
     } else if (f === 4) {
-      // Level 4: 5th Floor Enclosed Floor with Continuous Ribbon Glass & Ochre Header Band
-      // A. North Wing 5F - East Straight Section (x = -18.0 to 26.0)
-      g.add(box(nStraightW + 0.4, 0.28, nStraightD, concrete, nStraightCx, baseY + 0.14, nStraightCz, false));
-      g.add(box(nStraightW + 0.4, FH, 0.4, creamWall, nStraightCx, cy, nStraightZBack));
-      [-14.0, -8.5, -3.0, 2.5, 8.0, 13.5, 19.0].forEach((wx) => {
-        g.add(box(3.2, 1.4, 0.08, darkGlass, wx, cy + 0.2, nStraightZBack - 0.05, false));
+      // Level 4: 5th Floor Enclosed Academic Hall with Continuous Louvered Window Bays
+      C5_INNER_SEGS.forEach((seg) => {
+        const grp = new THREE.Group();
+        grp.position.set(seg.cx, baseY, seg.cz);
+        grp.rotation.y = seg.rotY;
+
+        // 5F Continuous Louvered Window Bays with Blue Sills & Frames
+        grp.add(box(seg.len - 0.6, FH - 0.8, 0.2, [creamWall, creamWall, creamWall, creamWall, ribbon5FMat, creamWall], 0, FH / 2 - 0.1, 0));
+        grp.add(box(seg.len, 0.7, 0.35, ochreWall, 0, FH - 0.35, 0)); // blue header band
+        grp.add(box(seg.len, 0.4, 0.3, creamWall, 0, 0.2, 0)); // base sill band
+
+        // Zigzag spandrel band underneath the 5F louvered window sills
+        grp.add(box(seg.len, 1.15, 0.05, [creamWall, creamWall, creamWall, creamWall, getSpandrelMat(seg.len), creamWall], 0, 0.6, 0.16));
+        grp.add(box(seg.len, 0.03, 2.1, soffitBlue, 0, FH - 0.17, -1.1, false));
+
+        // Recessed interior classroom wall
+        grp.add(box(seg.len - 0.6, FH, 0.2, creamWall, 0, FH / 2, -2.2));
+
+        g.add(grp);
       });
-      g.add(box(nStraightW - 1.0, FH - 0.8, 0.2, [creamWall, creamWall, creamWall, creamWall, ribbon5FMat, creamWall], nStraightCx, cy - 0.1, nStraightZFront));
-      g.add(box(nStraightW, 0.7, 0.35, ochreWall, nStraightCx, baseY + FH - 0.35, nStraightZFront));
-      g.add(box(nStraightW, 0.4, 0.3, creamWall, nStraightCx, baseY + 0.2, nStraightZFront));
-      g.add(box(0.7, FH, 0.7, ochreWall, nAngledPivotX, cy, nStraightZFront)); // bend pillar at x = -18.0
 
-      // B. North Wing 5F - West Angled Dog-Leg Section
-      const angledFloor5 = new THREE.Group();
-      angledFloor5.position.set(nAngledPivotX, 0, nAngledPivotZ);
-      angledFloor5.rotation.y = nAngledAngle;
+      // Outer Perimeter Walls (5F)
+      C5_OUTER_SEGS.forEach((seg) => {
+        const wallGrp = new THREE.Group();
+        wallGrp.position.set(seg.cx, baseY, seg.cz);
+        wallGrp.rotation.y = seg.rotY;
 
-      angledFloor5.add(box(nAngledLen + 0.5, 0.28, nAngledD, concrete, -nAngledLen / 2, baseY + 0.14, 0, false));
-      angledFloor5.add(box(nAngledLen, FH, 0.4, creamWall, -nAngledLen / 2, cy, nAngledZBack + 0.2));
-      angledFloor5.add(box(0.4, FH, nAngledD, creamWall, -nAngledLen, cy, 0)); // west end wall
-      [-3.5, -8.5, -12.0].forEach((wx) => {
-        angledFloor5.add(box(3.2, 1.4, 0.08, darkGlass, wx, cy + 0.2, nAngledZBack - 0.05, false));
+        wallGrp.add(box(seg.len, FH, 0.35, creamWall, 0, FH / 2, 0));
+
+        if (seg.len > 12.0) {
+          const winCount = Math.floor(seg.len / 6.0);
+          for (let w = 0; w < winCount; w++) {
+            const wx = -seg.len / 2 + 3.0 + w * 6.0;
+            wallGrp.add(box(3.2, 1.4, 0.08, darkGlass, wx, FH / 2 + 0.2, 0.18, false));
+            wallGrp.add(box(3.4, 0.08, 0.12, blueWall, wx, FH / 2 - 0.6, 0.2, false));
+          }
+        }
+
+        g.add(wallGrp);
       });
-      angledFloor5.add(box(nAngledLen - 1.0, FH - 0.8, 0.2, [creamWall, creamWall, creamWall, creamWall, ribbon5FMat, creamWall], -nAngledLen / 2, cy - 0.1, nAngledZFront));
-      angledFloor5.add(box(nAngledLen, 0.7, 0.35, ochreWall, -nAngledLen / 2, baseY + FH - 0.35, nAngledZFront));
-      angledFloor5.add(box(nAngledLen, 0.4, 0.3, creamWall, -nAngledLen / 2, baseY + 0.2, nAngledZFront));
-      g.add(angledFloor5);
 
-      // West junction column meeting Student Services back wall
-      g.add(box(0.8, FH, 0.8, whiteMat, admBackX, cy, -46.5));
-
-      // C. East Wing 5F
-      g.add(box(eWingW, 0.28, eWingL, concrete, eWingCx, baseY + 0.14, eWingCz, false));
-      g.add(box(0.4, FH, eWingL, creamWall, eWingXBack, cy, eWingCz));
-      g.add(box(eWingW, FH, 0.4, creamWall, eWingCx, cy, eWingZ0));
-      [-26.0, -32.0, -38.0, -44.0].forEach((wz) => {
-        g.add(box(0.08, 1.4, 3.2, darkGlass, eWingXBack + 0.05, cy + 0.2, wz, false));
-      });
-      const eRecessL = 24.5;
-      const eRecessCz = -34.25;
-      g.add(box(0.2, FH - 0.8, eRecessL, [creamWall, ribbon5FMat, creamWall, creamWall, creamWall, creamWall], eWingXFront, cy - 0.1, eRecessCz));
-      g.add(box(0.35, 0.7, eRecessL, ochreWall, eWingXFront, baseY + FH - 0.35, eRecessCz));
-      g.add(box(0.3, 0.4, eRecessL, creamWall, eWingXFront, baseY + 0.2, eRecessCz));
-
-      // D. Corner Blue Glass Atrium & UDD Crest Seal
-      g.add(box(4.5, FH, 4.5, glassAtriumMat, 19.5, cy, nStraightZFront - 1.0));
-      g.add(box(0.35, FH, 0.35, blueWall, 17.25, cy, nStraightZFront + 1.25));
+      // Corner Glass Atrium Tower & Universidad de Dagupan Crest Seal at P3 [17.0, -57.5]
+      const p3 = C5_POINTS[2];
+      g.add(box(4.8, FH, 4.8, glassAtriumMat, p3[0], cy, p3[1]));
+      g.add(box(0.35, FH, 0.35, blueWall, p3[0] - 2.2, cy, p3[1] + 2.2));
+      g.add(box(0.35, FH, 0.35, blueWall, p3[0] + 2.2, cy, p3[1] - 2.2));
 
       // Circular Universidad de Dagupan Seal Medallion at 45° Inner Corner
-      const cornerSealX = 17.2;
-      const cornerSealZ = nStraightZFront + 1.3;
+      const cornerSealX = p3[0] - 1.2;
+      const cornerSealZ = p3[1] + 1.2;
       const sealY = baseY + FH - 0.4;
       const cornerSeal = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.3, 0.22, 48), emblemMat);
       cornerSeal.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(-1, 0, 1).normalize());
