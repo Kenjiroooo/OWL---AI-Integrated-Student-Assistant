@@ -918,8 +918,8 @@ function createCourtyardCorridorTexture(): THREE.CanvasTexture {
   const H = 256;
   const { canvas, ctx } = makeCanvas(W, H);
 
-  // Warm ivory/cream wall background
-  ctx.fillStyle = '#ded6be';
+  // Crisp white painted wall background (from courtyard reference photos)
+  ctx.fillStyle = '#f1f3f6';
   ctx.fillRect(0, 0, W, H);
 
   // 4 classroom modules per texture repeat
@@ -992,59 +992,92 @@ function createCourtyardCorridorTexture(): THREE.CanvasTexture {
   }
 
   // Base skirting board along bottom
-  ctx.fillStyle = '#a89f88';
+  ctx.fillStyle = '#9aa4b2';
   ctx.fillRect(0, H - 8, W, 8);
 
   return toTexture(canvas);
 }
 
-/** 5F Continuous Ribbon Glass texture: dark tinted architectural glass with white mullions and ochre top band. */
+/** 5F top-floor facade: white wall with large louvered window bays framed by blue sills (from courtyard photos). */
 function createRibbonWindow5FTexture(): THREE.CanvasTexture {
   const W = 1024;
   const H = 256;
   const { canvas, ctx } = makeCanvas(W, H);
 
-  // Dark tinted reflective glass
-  ctx.fillStyle = '#132233';
+  // White painted wall
+  ctx.fillStyle = '#f1f3f6';
   ctx.fillRect(0, 0, W, H);
 
-  // Sky reflection
-  const ref = ctx.createLinearGradient(0, 0, W, H);
-  ref.addColorStop(0, 'rgba(130, 190, 255, 0.32)');
-  ref.addColorStop(0.5, 'rgba(75, 135, 195, 0.10)');
-  ref.addColorStop(1, 'rgba(15, 30, 50, 0.45)');
-  ctx.fillStyle = ref;
-  ctx.fillRect(0, 0, W, H);
-
-  // Top ochre/sand header band (from photo)
-  ctx.fillStyle = '#c89a3c';
-  ctx.fillRect(0, 0, W, 28);
-
-  // White frame
-  ctx.strokeStyle = '#f8fafc';
-  ctx.lineWidth = 6;
-  ctx.strokeRect(3, 28, W - 6, H - 31);
-
-  // Vertical white mullions (8 bays)
-  const bays = 8;
+  // 4 louvered window bays separated by white piers
+  const bays = 4;
   const bayW = W / bays;
-  ctx.strokeStyle = '#e2e8f0';
-  ctx.lineWidth = 4;
-  for (let i = 1; i < bays; i++) {
-    const x = i * bayW;
-    ctx.beginPath();
-    ctx.moveTo(x, 28);
-    ctx.lineTo(x, H - 3);
-    ctx.stroke();
+  for (let i = 0; i < bays; i++) {
+    const x = i * bayW + 22;
+    const w = bayW - 44;
+    const y = 26;
+    const h = H - 70;
+    // Dark blue recessed frame
+    ctx.fillStyle = '#1f4f8a';
+    ctx.fillRect(x - 6, y - 6, w + 12, h + 12);
+    // Louver background (shadow)
+    ctx.fillStyle = '#2a3442';
+    ctx.fillRect(x, y, w, h);
+    // Horizontal aluminum louver blades
+    for (let ly = y + 6; ly < y + h; ly += 12) {
+      ctx.fillStyle = '#c7d0db';
+      ctx.fillRect(x, ly, w, 5);
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      ctx.fillRect(x, ly, w, 1);
+    }
+    // Vertical mullions
+    ctx.fillStyle = '#e5e9ef';
+    for (let m = 1; m < 3; m++) ctx.fillRect(x + (w * m) / 3 - 2, y, 4, h);
   }
 
-  // Horizontal transom bar
-  ctx.beginPath();
-  ctx.moveTo(3, 28 + (H - 28) * 0.35);
-  ctx.lineTo(W - 3, 28 + (H - 28) * 0.35);
-  ctx.stroke();
+  // Blue sill band along the bottom
+  ctx.fillStyle = '#3b82c4';
+  ctx.fillRect(0, H - 26, W, 14);
 
   return toTexture(canvas);
+}
+
+/** Courtyard balcony spandrel: white panel with sky-blue / light-grey zigzag triangles (signature UDD pattern). */
+function createZigzagSpandrelTexture(): THREE.CanvasTexture {
+  const W = 1024;
+  const H = 128;
+  const { canvas, ctx } = makeCanvas(W, H);
+
+  ctx.fillStyle = '#f4f6f9';
+  ctx.fillRect(0, 0, W, H);
+
+  const seg = W / 4;
+  for (let i = 0; i < 4; i++) {
+    const x0 = i * seg;
+    // Long sky-blue wedge rising left-to-right
+    ctx.fillStyle = '#5b9fe0';
+    ctx.beginPath();
+    ctx.moveTo(x0, H);
+    ctx.lineTo(x0 + seg * 0.55, 0);
+    ctx.lineTo(x0 + seg * 0.8, 0);
+    ctx.closePath();
+    ctx.fill();
+    // Soft grey shadow wedge falling right
+    ctx.fillStyle = '#c9ced6';
+    ctx.beginPath();
+    ctx.moveTo(x0 + seg * 0.8, 0);
+    ctx.lineTo(x0 + seg, H);
+    ctx.lineTo(x0 + seg * 0.45, H);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Blue top coping line
+  ctx.fillStyle = '#2f6fb5';
+  ctx.fillRect(0, 0, W, 6);
+
+  const tex = toTexture(canvas);
+  tex.wrapS = THREE.RepeatWrapping;
+  return tex;
 }
 
 /** Terracotta red metal standing seam pitched roof texture */
@@ -1140,25 +1173,25 @@ function createSolarPanelTexture(): THREE.CanvasTexture {
   return tex;
 }
 
-/** Corner Glass Atrium Curtain Wall texture: royal blue structural mullions with reflective glass */
+/** Corner Glass Atrium Curtain Wall texture: clear glazing on a silver/white aluminium grid (from photos) */
 function createGlassAtriumTexture(): THREE.CanvasTexture {
   const W = 512;
   const H = 512;
   const { canvas, ctx } = makeCanvas(W, H);
 
-  // Reflective tinted glass
-  ctx.fillStyle = '#0f172a';
+  // Clear glass showing a pale interior
+  ctx.fillStyle = '#8fa6bb';
   ctx.fillRect(0, 0, W, H);
 
   const grad = ctx.createLinearGradient(0, 0, W, H);
-  grad.addColorStop(0, 'rgba(56, 189, 248, 0.45)');
-  grad.addColorStop(0.5, 'rgba(14, 116, 144, 0.25)');
-  grad.addColorStop(1, 'rgba(2, 132, 199, 0.55)');
+  grad.addColorStop(0, 'rgba(235, 245, 255, 0.55)');
+  grad.addColorStop(0.5, 'rgba(150, 175, 200, 0.25)');
+  grad.addColorStop(1, 'rgba(60, 80, 100, 0.45)');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
 
-  // Royal blue perimeter frame
-  ctx.strokeStyle = '#1e40af';
+  // Silver perimeter frame
+  ctx.strokeStyle = '#e2e8f0';
   ctx.lineWidth = 10;
   ctx.strokeRect(5, 5, W - 10, H - 10);
 
@@ -1168,8 +1201,8 @@ function createGlassAtriumTexture(): THREE.CanvasTexture {
   const bayW = W / cols;
   const bayH = H / rows;
 
-  ctx.strokeStyle = '#1d4ed8';
-  ctx.lineWidth = 5;
+  ctx.strokeStyle = '#d7dde5';
+  ctx.lineWidth = 6;
   for (let c = 1; c < cols; c++) {
     ctx.beginPath();
     ctx.moveTo(c * bayW, 0);
@@ -1303,6 +1336,108 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     map: createDeansListBoardTexture(),
     roughness: 0.3,
   });
+
+// ── Student Services & New 2-Storey Wing Footprint Dimensions ─────────────
+  const admFrontX = -18.0;
+  const admBackX = -31.0;
+  const admD = admFrontX - admBackX; // 13.0m
+  const admCx = (admFrontX + admBackX) / 2; // -24.5m
+  const admW = 30.5; // spans from z = -20.0 to z = -50.5 (connects flush to 5-Storey Building at z = -50.5)
+  const admCz = -35.25;
+
+  // New 2-Storey Wing Footprint (Reduced 30% from the front, expanding the front terrace promenade)
+  const wingFrontX = -23.44; // Was -20.2 (stepped back 3.24m / 30% of 10.8m depth)
+  const wingBackX = admBackX; // -31.0m
+  const wingD = wingFrontX - wingBackX; // 7.56m (was 10.8m)
+  const wingCx = (wingFrontX + wingBackX) / 2; // -27.22m
+  const wingZ0 = -20.0;
+  const wingZ1 = -50.5; // meets 5-Storey North Wing flush at z = -50.5
+  const wingW = wingZ0 - wingZ1; // 30.5m
+  const wingCz = (wingZ0 + wingZ1) / 2; // -35.25m
+
+  const newWingCurtainMat = new THREE.MeshStandardMaterial({
+    map: createNewWingCurtainWallTexture(),
+    roughness: 0.18,
+    metalness: 0.55,
+  });
+  const newWingUpperMat = new THREE.MeshStandardMaterial({
+    map: createNewWingUpperFacadeTexture(),
+    roughness: 0.2,
+    metalness: 0.5,
+  });
+  const newWingSignMat = new THREE.MeshStandardMaterial({
+    map: createNewWingSignTexture(),
+    roughness: 0.35,
+    metalness: 0.2,
+  });
+
+  // ── 5-STOREY COURTYARD BUILDING (Exact 9-Point Pinpointed Boundary) ──────
+  // Building Outline shifted inward by +3.5m in Z to connect flush into Student Services / Innovation Wing (at z = -50.5):
+  const C5_SHIFT_Z = 3.5;
+  const C5_POINTS: readonly [number, number][] = [
+    [-31.0, -54.0 + C5_SHIFT_Z], // P1: Corner 1 - West North Wing front (meets Student Services corner at -50.5)
+    [-8.0, -54.0 + C5_SHIFT_Z],  // P2: Corner 2 - Bend point from straight to angled North Wing
+    [17.0, -57.5 + C5_SHIFT_Z],  // P3: Corner 3 - Inner corner junction (Corner Glass Atrium Tower)
+    [24.0, -30.0 + C5_SHIFT_Z],  // P4: Corner 4 - East Wing south inner corner
+    [33.0, -33.0 + C5_SHIFT_Z],  // P5: Corner 5 - East Wing south outer corner
+    [24.0, -68.5 + C5_SHIFT_Z],  // P6: Corner 6 - East / North-East outer corner
+    [-9.0, -62.5 + C5_SHIFT_Z],  // P7: Corner 7 - North Wing outer bend point A
+    [-8.5, -63.0 + C5_SHIFT_Z],  // P8: Corner 8 - North Wing outer bend point B (notch)
+    [-31.0, -62.5 + C5_SHIFT_Z], // P9: Corner 9 - West North Wing outer rear corner
+  ] as const;
+
+  interface SegmentInfo {
+    idx: number;
+    p1: readonly [number, number];
+    p2: readonly [number, number];
+    len: number;
+    cx: number;
+    cz: number;
+    rotY: number;
+  }
+
+  const getSegmentInfo = (idx: number, p1: readonly [number, number], p2: readonly [number, number]): SegmentInfo => {
+    const dx = p2[0] - p1[0];
+    const dz = p2[1] - p1[1];
+    const len = Math.hypot(dx, dz);
+    const cx = (p1[0] + p2[0]) / 2;
+    const cz = (p1[1] + p2[1]) / 2;
+    const rotY = Math.atan2(-dz, dx);
+    return { idx, p1, p2, len, cx, cz, rotY };
+  };
+
+  const C5_SEGMENTS: SegmentInfo[] = C5_POINTS.map((pt, i) => {
+    const nextPt = C5_POINTS[(i + 1) % C5_POINTS.length];
+    return getSegmentInfo(i, pt, nextPt);
+  });
+
+  // Segments 0, 1, 2 are Inner Corridors facing the courtyard; Segments 3..8 are Outer Walls
+  const C5_INNER_SEGS = C5_SEGMENTS.slice(0, 3);
+  const C5_OUTER_SEGS = C5_SEGMENTS.slice(3);
+
+  // 2D Extrusion shape for floor slabs and roof deck
+  const c5Shape = new THREE.Shape();
+  c5Shape.moveTo(C5_POINTS[0][0], -C5_POINTS[0][1]);
+  for (let i = 1; i < C5_POINTS.length; i++) {
+    c5Shape.lineTo(C5_POINTS[i][0], -C5_POINTS[i][1]);
+  }
+  c5Shape.closePath();
+
+  const createC5FloorSlab = (y: number, thickness: number = 0.28, mat: THREE.Material = concrete): THREE.Mesh => {
+    const geom = new THREE.ExtrudeGeometry(c5Shape, { depth: thickness, bevelEnabled: false });
+    geom.rotateX(-Math.PI / 2);
+    geom.computeVertexNormals();
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.position.y = y;
+    mesh.receiveShadow = true;
+    mesh.castShadow = true;
+    return mesh;
+  };
+
+  // Materials for 5-Storey Building
+  // Palette from courtyard photos: crisp white walls + UDD sky/royal blue accents
+  const creamWall = new THREE.MeshStandardMaterial({ color: 0xf1f3f6, roughness: 0.6 });
+
 
   // ── Student Services & New 2-Storey Wing Footprint Dimensions ─────────────
   const admFrontX = -18.0;
