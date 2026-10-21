@@ -242,25 +242,175 @@ function createBillboardTexture(): THREE.CanvasTexture {
   return toTexture(canvas);
 }
 
-/** Blue entrance portal sign: "UNIVERSIDAD DE DAGUPAN". */
+/** Vibrant cyan/blue entrance portal sign: "UNIVERSIDAD DE DAGUPAN" (from entrance photo). */
 function createPortalSignTexture(): THREE.CanvasTexture {
   const W = 2048;
   const H = 256;
   const { canvas, ctx } = makeCanvas(W, H);
-  ctx.fillStyle = '#0b4da2';
+
+  // Signature vibrant cyan/UDD sky blue background from photo
+  ctx.fillStyle = '#0284c7';
   ctx.fillRect(0, 0, W, H);
 
-  // White borders
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, W, 14);
+  // Subtle top highlight and bottom shadow for 3D fascia plate look
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+  ctx.fillRect(0, 0, W, 12);
+  ctx.fillStyle = 'rgba(0, 40, 90, 0.35)';
   ctx.fillRect(0, H - 14, W, 14);
 
-  // Bold 3D-like text
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '900 128px sans-serif';
+  // Bold 3D white lettering with depth shadow
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
+  ctx.font = '900 128px sans-serif';
+
+  // 3D shadow layers
+  ctx.fillStyle = 'rgba(2, 38, 80, 0.45)';
+  ctx.fillText('UNIVERSIDAD DE DAGUPAN', W / 2 + 5, H / 2 + 6);
+  ctx.fillStyle = '#0369a1';
+  ctx.fillText('UNIVERSIDAD DE DAGUPAN', W / 2 + 2, H / 2 + 3);
+
+  // Crisp white face
+  ctx.fillStyle = '#ffffff';
   ctx.fillText('UNIVERSIDAD DE DAGUPAN', W / 2, H / 2);
+
+  return toTexture(canvas);
+}
+
+/** Security Reminder Sign: "NO I.D. NO ENTRY" (from entrance photo). */
+function createNoIdSignTexture(): THREE.CanvasTexture {
+  const W = 512;
+  const H = 384;
+  const { canvas, ctx } = makeCanvas(W, H);
+
+  // White reflective background
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, W, H);
+
+  // Navy blue outer border & inner double frame
+  ctx.strokeStyle = '#0f4ba3';
+  ctx.lineWidth = 14;
+  ctx.strokeRect(7, 7, W - 14, H - 14);
+  ctx.lineWidth = 3;
+  ctx.strokeRect(20, 20, W - 40, H - 40);
+
+  // Top header bar: "SECURITY REMINDER"
+  ctx.fillStyle = '#0f4ba3';
+  ctx.fillRect(20, 20, W - 40, 52);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 24px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('SECURITY REMINDER', W / 2, 46);
+
+  // Big bold "NO I.D."
+  ctx.fillStyle = '#0f4ba3';
+  ctx.font = '900 86px sans-serif';
+  ctx.fillText('NO I.D.', 180, 145);
+
+  // ID Card Badge Icon
+  ctx.fillStyle = '#0284c7';
+  ctx.fillRect(340, 95, 110, 80);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(352, 107, 40, 56); // photo box
+  ctx.fillRect(402, 117, 36, 9);   // lines
+  ctx.fillRect(402, 133, 36, 9);
+  ctx.fillRect(402, 149, 36, 9);
+
+  // Big bold "NO ENTRY"
+  ctx.fillStyle = '#0f4ba3';
+  ctx.font = '900 78px sans-serif';
+  ctx.fillText('NO ENTRY', W / 2, 235);
+
+  // Bottom blue footer bar: "STUDENTS • EMPLOYEES • VISITORS"
+  ctx.fillStyle = '#0284c7';
+  ctx.fillRect(20, H - 76, W - 40, 56);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 20px sans-serif';
+  ctx.fillText('STUDENTS • EMPLOYEES • VISITORS', W / 2, H - 48);
+
+  return toTexture(canvas);
+}
+
+/** Pedestrian Gate Sign: "ENTRANCE ➔" (from entrance photo). */
+function createEntranceSignTexture(): THREE.CanvasTexture {
+  const W = 512;
+  const H = 256;
+  const { canvas, ctx } = makeCanvas(W, H);
+
+  // Crisp white sign background
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, W, H);
+
+  // Navy blue outer border & header
+  ctx.strokeStyle = '#0a3273';
+  ctx.lineWidth = 12;
+  ctx.strokeRect(6, 6, W - 12, H - 12);
+
+  // Top header bar
+  ctx.fillStyle = '#0a3273';
+  ctx.fillRect(16, 16, W - 32, 40);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 22px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('PEDESTRIAN ACCESS', W / 2, 36);
+
+  // Main bold "ENTRANCE"
+  ctx.fillStyle = '#0a3273';
+  ctx.font = '900 64px sans-serif';
+  ctx.fillText('ENTRANCE', W / 2, 105);
+
+  // Subtext: "STUDENTS / VISITORS ONLY"
+  ctx.fillStyle = '#475569';
+  ctx.font = 'bold 20px sans-serif';
+  ctx.fillText('STUDENTS / VISITORS ONLY', W / 2, 148);
+
+  // Bold right arrow
+  ctx.fillStyle = '#0f172a';
+  const arrowX = 140;
+  const arrowY = 195;
+  const arrowL = 230;
+  const arrowH = 20;
+  ctx.fillRect(arrowX, arrowY - arrowH / 2, arrowL - 35, arrowH);
+  ctx.beginPath();
+  ctx.moveTo(arrowX + arrowL - 35, arrowY - 26);
+  ctx.lineTo(arrowX + arrowL, arrowY);
+  ctx.lineTo(arrowX + arrowL - 35, arrowY + 26);
+  ctx.closePath();
+  ctx.fill();
+
+  return toTexture(canvas);
+}
+
+/** Right perimeter wall placard with "UDD" lettering & seal (from entrance photo). */
+function createUddWallPlacardTexture(): THREE.CanvasTexture {
+  const W = 1024;
+  const H = 512;
+  const { canvas, ctx } = makeCanvas(W, H);
+
+  ctx.fillStyle = '#f8fafc';
+  ctx.fillRect(0, 0, W, H);
+
+  // Large Bold "UDD" with blue 3D shadow and white face bevel
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // Drop shadow
+  ctx.fillStyle = 'rgba(2, 44, 100, 0.4)';
+  ctx.font = '900 320px sans-serif';
+  ctx.fillText('UDD', W / 2 + 12, H / 2 + 12);
+
+  // Deep royal blue body
+  ctx.fillStyle = '#0038a8';
+  ctx.fillText('UDD', W / 2, H / 2);
+
+  // White inner highlight outline
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 14;
+  ctx.strokeText('UDD', W / 2, H / 2);
+
+  ctx.fillStyle = '#0047bb';
+  ctx.fillText('UDD', W / 2, H / 2);
 
   return toTexture(canvas);
 }
@@ -1293,9 +1443,16 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   const whiteMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.5 });
   const darkGlass = new THREE.MeshStandardMaterial({ color: 0x16222f, roughness: 0.15, metalness: 0.7 });
   const blueWall = new THREE.MeshStandardMaterial({ color: 0x1153b6, roughness: 0.45, metalness: 0.35 });
+  const portalBlueMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.35, metalness: 0.2 });
+  const gateBlue = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.45, metalness: 0.65 });
+  const uddLetterMat = new THREE.MeshStandardMaterial({ color: 0x0038a8, roughness: 0.3, metalness: 0.4 });
+  const yellowLineMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.4 });
   const stoneMat = new THREE.MeshStandardMaterial({ map: createStoneWallTexture(), roughness: 0.8 });
   const billboardMat = new THREE.MeshStandardMaterial({ map: createBillboardTexture(), roughness: 0.3 });
   const portalSignMat = new THREE.MeshStandardMaterial({ map: createPortalSignTexture(), roughness: 0.35 });
+  const noIdSignMat = new THREE.MeshStandardMaterial({ map: createNoIdSignTexture(), roughness: 0.35 });
+  const entranceSignMat = new THREE.MeshStandardMaterial({ map: createEntranceSignTexture(), roughness: 0.35 });
+  const uddWallSignMat = new THREE.MeshStandardMaterial({ map: createUddWallPlacardTexture(), roughness: 0.35 });
   const roofLettersMat = new THREE.MeshStandardMaterial({ map: createRooftopLettersTexture(), roughness: 0.35 });
   const emblemMat = new THREE.MeshStandardMaterial({ map: createEmblemTexture(), roughness: 0.25 });
   const concrete = new THREE.MeshStandardMaterial({ color: 0xa1a6ad, roughness: 0.9 });
