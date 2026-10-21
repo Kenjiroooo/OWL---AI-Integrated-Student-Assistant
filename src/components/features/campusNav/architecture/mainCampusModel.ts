@@ -1808,26 +1808,46 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   // Diagonal structural brace to the left
   ground.add(rod(new THREE.Vector3(crossX - 2.8, 0.2, crossZ), new THREE.Vector3(crossX, 6.8, crossZ), 0.14, whiteMat));
 
-  // 4. Campus Main Entrance Portal & Gate (Right side)
+  // 4. Campus Main Entrance Portal & Gate (Real-world photo layout)
+  // Left side: Dedicated covered Pedestrian Walkway ("people path") with security checkpoint,
+  //            turnstile, "NO I.D. NO ENTRY" pillar sign, and "ENTRANCE ➔" guide sign.
+  // Right side: Arched-top dark blue steel security gate with vertical pickets.
+  // Right perimeter wall: Crisp white wall with giant 3D block letters "UDD" & overflowing landscaping.
+  // Courtyard driveway: Row of parked motorcycles / scooters.
+
   const portalX0 = 8.5;
   const portalX1 = 18.5;
   const portalZ = frontZ + 0.8;
   const portalH = 6.4;
+  const pedDividerX = 11.9; // Boundary between people path (left) and vehicular gate (right)
+  const pedW = pedDividerX - portalX0; // 3.4m width
+  const pedCx = (portalX0 + pedDividerX) / 2; // 10.2m
+  const gateW = portalX1 - pedDividerX; // 6.6m width
+  const gateCx = (pedDividerX + portalX1) / 2; // 15.2m
 
-  // Sturdy white pillars
-  ground.add(box(1.2, portalH, 1.2, whiteMat, portalX0, portalH / 2, portalZ));
-  ground.add(box(1.2, portalH, 1.2, whiteMat, portalX1, portalH / 2, portalZ));
+  // UDD Cyan/Blue Portal Pillars (as seen in photo)
+  // Left pillar (at X = 8.5)
+  ground.add(box(1.2, portalH, 1.2, portalBlueMat, portalX0, portalH / 2, portalZ));
+  ground.add(box(1.4, 0.25, 1.4, concrete, portalX0, 0.125, portalZ)); // concrete footing
+  ground.add(box(1.35, 0.18, 1.35, whiteMat, portalX0, portalH - 0.09, portalZ)); // top capital trim
 
-  // Grand Blue Beam: "UNIVERSIDAD DE DAGUPAN"
+  // Right pillar (at X = 18.5)
+  ground.add(box(1.2, portalH, 1.2, portalBlueMat, portalX1, portalH / 2, portalZ));
+  ground.add(box(1.4, 0.25, 1.4, concrete, portalX1, 0.125, portalZ));
+  ground.add(box(1.35, 0.18, 1.35, whiteMat, portalX1, portalH - 0.09, portalZ));
+
+  // Grand Cyan Beam: "UNIVERSIDAD DE DAGUPAN"
   const beamY = portalH + 0.9;
   ground.add(box(portalX1 - portalX0 + 2.0, 1.8, 0.9, portalSignMat, (portalX0 + portalX1) / 2, beamY, portalZ));
+  // White/silver perimeter fascia trim around beam
+  ground.add(box(portalX1 - portalX0 + 2.15, 0.08, 0.96, whiteMat, (portalX0 + portalX1) / 2, beamY + 0.94, portalZ));
+  ground.add(box(portalX1 - portalX0 + 2.15, 0.08, 0.96, whiteMat, (portalX0 + portalX1) / 2, beamY - 0.94, portalZ));
 
   // Curved overhead steel arch truss with circular UDD seal
   const archRadius = (portalX1 - portalX0) / 2 + 0.5;
   const archCenter = new THREE.Vector3((portalX0 + portalX1) / 2, beamY + 0.9, portalZ);
   const archGeo = new THREE.TorusGeometry(archRadius, 0.16, 12, 32, Math.PI);
   const archMesh = new THREE.Mesh(archGeo, mats.metalSilver);
-  archMesh.rotation.x = 0;
   archMesh.position.copy(archCenter);
   ground.add(archMesh);
 
@@ -1843,14 +1863,325 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   gateSeal.castShadow = true;
   ground.add(gateSeal);
 
-  // Black security iron grille gates
-  const gateW = (portalX1 - portalX0 - 1.4) / 2;
-  ground.add(box(gateW, 2.6, 0.08, mats.metalDark, portalX0 + 0.7 + gateW / 2, 1.3, portalZ));
-  ground.add(box(gateW, 2.6, 0.08, mats.metalDark, portalX1 - 0.7 - gateW / 2, 1.3, portalZ));
-  // Horizontal bars
-  for (let y = 0.4; y < 2.6; y += 0.25) {
-    ground.add(box(portalX1 - portalX0 - 1.2, 0.04, 0.1, mats.metalSilver, (portalX0 + portalX1) / 2, y, portalZ));
+  // -------------------------------------------------------------------------
+  // A. LEFT SIDE: DEDICATED PEOPLE PATH ("PEDESTRIAN WALKWAY")
+  // -------------------------------------------------------------------------
+  // Paved walkway slab with tactile guide line
+  ground.add(box(pedW - 0.2, 0.06, 9.5, concrete, pedCx, 0.03, portalZ + 1.25, false));
+  ground.add(box(0.18, 0.015, 9.3, yellowLineMat, pedCx, 0.068, portalZ + 1.25, false));
+
+  // Overhead Walkway Canopy Awning (dark metal roof extending forward as in photo)
+  const pedCanopyZ0 = portalZ - 1.2;
+  const pedCanopyZ1 = portalZ + 3.8;
+  const pedCanopyL = pedCanopyZ1 - pedCanopyZ0;
+  const pedCanopyY = 3.9;
+  // Corrugated dark roof awning
+  ground.add(box(pedW + 0.4, 0.08, pedCanopyL, mats.metalDark, pedCx, pedCanopyY, (pedCanopyZ0 + pedCanopyZ1) / 2));
+  // Roof fascia trim
+  ground.add(box(pedW + 0.44, 0.2, 0.06, mats.metalSilver, pedCx, pedCanopyY, pedCanopyZ1));
+  ground.add(box(0.06, 0.2, pedCanopyL, mats.metalSilver, pedCx - (pedW + 0.4) / 2, pedCanopyY, (pedCanopyZ0 + pedCanopyZ1) / 2));
+  ground.add(box(0.06, 0.2, pedCanopyL, mats.metalSilver, pedCx + (pedW + 0.4) / 2, pedCanopyY, (pedCanopyZ0 + pedCanopyZ1) / 2));
+
+  // Canopy Structural Support Columns (dark steel tubular posts)
+  const colMat = mats.metalDark;
+  ground.add(box(0.14, pedCanopyY, 0.14, colMat, portalX0 + 0.15, pedCanopyY / 2, pedCanopyZ1 - 0.2));
+  ground.add(box(0.14, pedCanopyY, 0.14, colMat, pedDividerX - 0.15, pedCanopyY / 2, pedCanopyZ1 - 0.2));
+  ground.add(box(0.14, pedCanopyY, 0.14, colMat, pedDividerX - 0.15, pedCanopyY / 2, portalZ + 1.4));
+  // Crossbeams supporting canopy
+  ground.add(box(pedW, 0.12, 0.12, colMat, pedCx, pedCanopyY - 0.1, pedCanopyZ1 - 0.2));
+  ground.add(box(pedW, 0.12, 0.12, colMat, pedCx, pedCanopyY - 0.1, portalZ + 1.4));
+  ground.add(box(pedW, 0.12, 0.12, colMat, pedCx, pedCanopyY - 0.1, portalZ - 1.0));
+
+  // "NO I.D. NO ENTRY" Official Security Sign (Mounted on Left Blue Portal Pillar)
+  // Photo reference: Mounted prominently on the front face of the blue entrance pillar
+  const noIdSignW = 0.96;
+  const noIdSignH = 1.28;
+  ground.add(box(noIdSignW + 0.06, noIdSignH + 0.06, 0.03, gateBlue, portalX0, 3.75, portalZ + 0.62)); // frame backing
+  ground.add(box(noIdSignW, noIdSignH, 0.02, noIdSignMat, portalX0, 3.75, portalZ + 0.64)); // sign face
+
+  // Divider Barrier / Railing between People Path and Vehicular Gate
+  // At X = pedDividerX (11.9), running along Z
+  const dividerH = 1.35;
+  const dividerZ0 = portalZ - 1.0;
+  const dividerZ1 = portalZ + 2.4;
+  const dividerL = dividerZ1 - dividerZ0;
+  // Main divider post
+  ground.add(box(0.24, 2.9, 0.24, portalBlueMat, pedDividerX, 1.45, portalZ));
+  ground.add(box(0.28, 0.12, 0.28, whiteMat, pedDividerX, 2.95, portalZ));
+  // Divider railing along the walkway
+  ground.add(box(0.06, dividerH, dividerL, gateBlue, pedDividerX, dividerH / 2, (dividerZ0 + dividerZ1) / 2));
+  // Railing top handrail & mid-rail
+  ground.add(box(0.1, 0.06, dividerL + 0.1, mats.metalSilver, pedDividerX, dividerH, (dividerZ0 + dividerZ1) / 2));
+  ground.add(box(0.08, 0.05, dividerL + 0.1, mats.metalDark, pedDividerX, dividerH * 0.5, (dividerZ0 + dividerZ1) / 2));
+  ground.add(box(0.08, 0.05, dividerL + 0.1, mats.metalDark, pedDividerX, 0.15, (dividerZ0 + dividerZ1) / 2));
+
+  // "ENTRANCE ➔" Directional Sign (Mounted on the divider railing facing incoming students)
+  // Photo reference: Mounted at waist/eye height on the barrier facing the street entrance
+  const entSignW = 0.88;
+  const entSignH = 0.98;
+  ground.add(box(entSignW + 0.04, entSignH + 0.04, 0.03, mats.metalDark, pedDividerX - 0.05, 1.45, portalZ + 0.28));
+  ground.add(box(entSignW, entSignH, 0.02, entranceSignMat, pedDividerX - 0.05, 1.45, portalZ + 0.3));
+
+  // Pedestrian Checkpoint: Tripod Access Turnstile & Guard Podium
+  // Tripod turnstile cabinet
+  const turnX = pedCx + 0.55;
+  const turnZ = portalZ + 0.1;
+  ground.add(box(0.32, 1.02, 0.72, mats.metalSilver, turnX, 0.51, turnZ));
+  // Turnstile top scanner / green status LED indicator
+  ground.add(box(0.12, 0.02, 0.18, darkGlass, turnX, 1.03, turnZ - 0.15));
+  ground.add(box(0.08, 0.02, 0.08, new THREE.MeshBasicMaterial({ color: 0x22c55e }), turnX, 1.035, turnZ + 0.12));
+  // Rotating tripod chrome arms
+  const arm1 = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.55, 12), mats.metalSilver);
+  arm1.rotation.z = Math.PI / 4;
+  arm1.position.set(turnX - 0.2, 0.88, turnZ);
+  ground.add(arm1);
+  const arm2 = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.55, 12), mats.metalSilver);
+  arm2.rotation.z = -Math.PI / 4;
+  arm2.rotation.y = Math.PI / 3;
+  arm2.position.set(turnX - 0.15, 0.8, turnZ - 0.15);
+  ground.add(arm2);
+
+  // Security guard checkpoint desk on the left
+  ground.add(box(1.05, 0.82, 0.55, whiteMat, portalX0 + 0.9, 0.41, portalZ - 0.3));
+  ground.add(box(1.1, 0.04, 0.6, mats.metalDark, portalX0 + 0.9, 0.84, portalZ - 0.3)); // desk top
+  ground.add(box(0.42, 0.28, 0.05, darkGlass, portalX0 + 0.9, 1.02, portalZ - 0.3)); // monitor
+  ground.add(box(0.45, 0.95, 0.45, mats.metalDark, portalX0 + 0.9, 0.48, portalZ - 0.8)); // chair
+
+  // Helper: Stylized Scale Pedestrian Figure (Student)
+  const createPedestrian = (x: number, z: number, rotY = 0, shirtMat: THREE.Material = blueWall) => {
+    const ped = new THREE.Group();
+    ped.position.set(x, 0, z);
+    ped.rotation.y = rotY;
+    // Legs
+    ped.add(box(0.14, 0.82, 0.14, mats.metalDark, -0.1, 0.41, 0));
+    ped.add(box(0.14, 0.82, 0.14, mats.metalDark, 0.1, 0.41, 0.08));
+    // Torso / shirt
+    ped.add(box(0.38, 0.52, 0.22, shirtMat, 0, 1.08, 0.02));
+    // Backpack
+    ped.add(box(0.3, 0.42, 0.16, carDark, 0, 1.08, -0.16));
+    // Head
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 12), new THREE.MeshStandardMaterial({ color: 0xd4a373, roughness: 0.6 }));
+    head.position.set(0, 1.48, 0.02);
+    ped.add(head);
+    return ped;
+  };
+  // Student walking into campus along the people path
+  ground.add(createPedestrian(pedCx - 0.25, portalZ + 2.2, Math.PI, blueWall));
+  ground.add(createPedestrian(pedCx + 0.1, portalZ + 0.8, Math.PI, carWhite));
+
+  // -------------------------------------------------------------------------
+  // B. RIGHT SIDE: VEHICULAR SECURITY GATE (MOVED TO RIGHT SIDE)
+  // -------------------------------------------------------------------------
+  // Double-leaf arched-top dark blue steel security gate (matching real-life photo)
+  // Ground roller wheel guide track
+  ground.add(box(gateW, 0.04, 0.16, mats.metalDark, gateCx, 0.02, portalZ, false));
+
+  // Bottom horizontal girder rail
+  ground.add(box(gateW - 0.08, 0.12, 0.08, gateBlue, gateCx, 0.16, portalZ));
+  // Mid horizontal crossbar rail
+  ground.add(box(gateW - 0.08, 0.08, 0.08, gateBlue, gateCx, 1.35, portalZ));
+
+  // Arched top rail profile:
+  // Height is 2.85m at sides (x = pedDividerX, portalX1) and rises to 3.35m at gate center (x = gateCx)
+  const archH0 = 2.85; // side height
+  const archHCenter = 3.35; // peak height at center crown
+  const halfGateW = gateW / 2;
+
+  const getGateTopH = (x: number) => {
+    const norm = (x - gateCx) / halfGateW;
+    return archH0 + (archHCenter - archH0) * Math.max(0, 1 - norm * norm);
+  };
+
+  // Build arched top segments and vertical pickets
+  const numPickets = 34;
+  const picketSpacing = (gateW - 0.2) / (numPickets - 1);
+  const picketGeo = new THREE.BoxGeometry(0.038, 1, 0.038);
+
+  for (let i = 0; i < numPickets; i++) {
+    const px = pedDividerX + 0.1 + i * picketSpacing;
+    const topY = getGateTopH(px);
+    const barH = topY - 0.16;
+    const barMesh = new THREE.Mesh(picketGeo, gateBlue);
+    barMesh.scale.set(1, barH, 1);
+    barMesh.position.set(px, 0.16 + barH / 2, portalZ);
+    barMesh.castShadow = true;
+    ground.add(barMesh);
+
+    // Spear/finial tip atop picket
+    const finial = new THREE.Mesh(new THREE.ConeGeometry(0.032, 0.08, 6), mats.metalSilver);
+    finial.position.set(px, topY + 0.04, portalZ);
+    ground.add(finial);
+
+    // Segment of arched top rail connecting pickets
+    if (i < numPickets - 1) {
+      const nextX = px + picketSpacing;
+      const nextY = getGateTopH(nextX);
+      ground.add(rod(new THREE.Vector3(px, topY, portalZ), new THREE.Vector3(nextX, nextY, portalZ), 0.045, gateBlue));
+    }
   }
+
+  // Heavy-duty vertical stile framing
+  // Left leaf hinge stile
+  ground.add(box(0.1, 2.9, 0.1, gateBlue, pedDividerX + 0.05, 1.45, portalZ));
+  // Center meeting stiles (split between two gate leaves)
+  ground.add(box(0.08, archHCenter, 0.08, gateBlue, gateCx - 0.05, archHCenter / 2, portalZ));
+  ground.add(box(0.08, archHCenter, 0.08, gateBlue, gateCx + 0.05, archHCenter / 2, portalZ));
+  // Right leaf hinge stile
+  ground.add(box(0.1, 2.9, 0.1, gateBlue, portalX1 - 0.05, 1.45, portalZ));
+  // Central security lock box & slide bolt
+  ground.add(box(0.3, 0.35, 0.12, mats.metalDark, gateCx, 1.35, portalZ));
+  ground.add(box(0.12, 0.06, 0.16, mats.metalSilver, gateCx, 1.35, portalZ));
+
+  // -------------------------------------------------------------------------
+  // C. RIGHT PERIMETER WALL WITH GIANT 3D "UDD" LETTERS & LANDSCAPING
+  // -------------------------------------------------------------------------
+  // Photo reference: To the right of the gate/portal stands a crisp white perimeter wall
+  // with giant 3D block letters "UDD" in royal blue with white front bevel, backed by
+  // lush overflowing landscaping trees and green foliage!
+  const wallX0 = portalX1; // 18.5
+  const wallX1 = 26.5; // extends 8.0m to the right
+  const wallW = wallX1 - wallX0; // 8.0m
+  const wallCx = (wallX0 + wallX1) / 2; // 22.5m
+  const wallZ = portalZ - 0.15; // 4.65m
+  const wallH = 2.15;
+
+  // Base concrete plinth foundation
+  ground.add(box(wallW, 0.22, 0.6, concrete, wallCx, 0.11, wallZ));
+  // Crisp white wall body
+  ground.add(box(wallW, wallH, 0.45, whiteMat, wallCx, wallH / 2 + 0.1, wallZ));
+  // Projecting coping cap atop the wall
+  ground.add(box(wallW + 0.2, 0.14, 0.55, whiteMat, wallCx, wallH + 0.24, wallZ));
+
+  // High-resolution backing placard on wall face
+  ground.add(box(6.8, 1.85, 0.03, uddWallSignMat, wallCx, 1.25, wallZ + 0.24));
+
+  // Helper: Giant 3D Block Letter for "UDD" on the wall
+  // Letters stand out 0.16m from wall face in royal blue with crisp white front face
+  const add3DLetter = (char: 'U' | 'D', cx: number, cy: number, cz: number) => {
+    const d = 0.16;
+    const fd = 0.025; // front highlight depth
+    const fz = cz + d / 2 + fd / 2;
+    if (char === 'U') {
+      // Left vertical leg
+      ground.add(box(0.26, 1.35, d, uddLetterMat, cx - 0.45, cy, cz));
+      ground.add(box(0.26, 1.35, fd, whiteMat, cx - 0.45, cy, fz));
+      // Right vertical leg
+      ground.add(box(0.26, 1.35, d, uddLetterMat, cx + 0.45, cy, cz));
+      ground.add(box(0.26, 1.35, fd, whiteMat, cx + 0.45, cy, fz));
+      // Bottom curved base
+      ground.add(box(0.68, 0.26, d, uddLetterMat, cx, cy - 0.545, cz));
+      ground.add(box(0.68, 0.26, fd, whiteMat, cx, cy - 0.545, fz));
+      // Angled inner fillets
+      ground.add(rod(new THREE.Vector3(cx - 0.45, cy - 0.35, cz), new THREE.Vector3(cx - 0.2, cy - 0.545, cz), 0.12, uddLetterMat));
+      ground.add(rod(new THREE.Vector3(cx + 0.45, cy - 0.35, cz), new THREE.Vector3(cx + 0.2, cy - 0.545, cz), 0.12, uddLetterMat));
+    } else {
+      // Back vertical spine
+      ground.add(box(0.26, 1.35, d, uddLetterMat, cx - 0.45, cy, cz));
+      ground.add(box(0.26, 1.35, fd, whiteMat, cx - 0.45, cy, fz));
+      // Top bar
+      ground.add(box(0.6, 0.24, d, uddLetterMat, cx - 0.02, cy + 0.555, cz));
+      ground.add(box(0.6, 0.24, fd, whiteMat, cx - 0.02, cy + 0.555, fz));
+      // Bottom bar
+      ground.add(box(0.6, 0.24, d, uddLetterMat, cx - 0.02, cy - 0.555, cz));
+      ground.add(box(0.6, 0.24, fd, whiteMat, cx - 0.02, cy - 0.555, fz));
+      // Right outer curve spine
+      ground.add(box(0.26, 0.95, d, uddLetterMat, cx + 0.46, cy, cz));
+      ground.add(box(0.26, 0.95, fd, whiteMat, cx + 0.46, cy, fz));
+      // Top-right and bottom-right corner transitions
+      ground.add(rod(new THREE.Vector3(cx + 0.28, cy + 0.555, cz), new THREE.Vector3(cx + 0.46, cy + 0.38, cz), 0.12, uddLetterMat));
+      ground.add(rod(new THREE.Vector3(cx + 0.28, cy - 0.555, cz), new THREE.Vector3(cx + 0.46, cy - 0.38, cz), 0.12, uddLetterMat));
+    }
+  };
+
+  const letterZ = wallZ + 0.28;
+  add3DLetter('U', 20.35, 1.25, letterZ);
+  add3DLetter('D', 22.35, 1.25, letterZ);
+  add3DLetter('D', 24.35, 1.25, letterZ);
+
+  // Landscaping: Lush tropical foliage planter behind and spilling over the wall
+  // (As prominent in the reference photograph)
+  const planterZ = wallZ - 1.1;
+  ground.add(box(wallW, 0.7, 1.6, planterMat, wallCx, 0.35, planterZ));
+  ground.add(box(wallW - 0.2, 0.1, 1.4, grassMat, wallCx, 0.71, planterZ));
+
+  // Shrubbery & tree crowns spilling over wall top
+  const foliageGeo = new THREE.DodecahedronGeometry(1.0, 1);
+  const foliagePositions: [number, number, number, number, THREE.Material][] = [
+    [19.4, 2.7, wallZ - 0.6, 0.85, shrubLight],
+    [20.8, 3.2, wallZ - 0.8, 1.15, shrubDark],
+    [22.2, 2.9, wallZ - 0.5, 0.95, shrubLight],
+    [23.6, 3.4, wallZ - 0.9, 1.25, grassMat],
+    [25.0, 3.0, wallZ - 0.6, 1.05, shrubDark],
+    [26.1, 2.6, wallZ - 0.5, 0.85, shrubLight],
+    // Taller background tropical trees
+    [21.5, 4.4, wallZ - 1.4, 1.45, shrubDark],
+    [24.2, 4.7, wallZ - 1.5, 1.55, shrubLight],
+  ];
+  foliagePositions.forEach(([fx, fy, fz, fscale, fmat]) => {
+    const fMesh = new THREE.Mesh(foliageGeo, fmat);
+    fMesh.scale.set(fscale, fscale * 0.95, fscale);
+    fMesh.position.set(fx, fy, fz);
+    fMesh.castShadow = true;
+    ground.add(fMesh);
+  });
+
+  // Low trimmed boxwood hedge along sidewalk in front of wall
+  ground.add(box(wallW - 0.4, 0.42, 0.38, shrubMat, wallCx, 0.21, wallZ + 0.85));
+
+  // -------------------------------------------------------------------------
+  // D. COURTYARD DRIVEWAY: MOTORCYCLE PARKING ROW (INSIDE GATE)
+  // -------------------------------------------------------------------------
+  // Photo reference: Looking through the entrance gate, a neat row of parked
+  // motorcycles and scooters lines the right side of the inner courtyard driveway.
+  const createMotorcycle = (x: number, z: number, rotY: number, colorMat: THREE.Material) => {
+    const moto = new THREE.Group();
+    moto.position.set(x, 0, z);
+    moto.rotation.y = rotY;
+
+    // Dual wheels / tires
+    const wheelGeo = new THREE.CylinderGeometry(0.28, 0.28, 0.1, 16);
+    const wFront = new THREE.Mesh(wheelGeo, mats.metalDark);
+    wFront.rotation.z = Math.PI / 2;
+    wFront.position.set(0, 0.28, 0.72);
+    moto.add(wFront);
+    const wRear = new THREE.Mesh(wheelGeo, mats.metalDark);
+    wRear.rotation.z = Math.PI / 2;
+    wRear.position.set(0, 0.28, -0.68);
+    moto.add(wRear);
+
+    // Chassis frame & engine block
+    moto.add(box(0.22, 0.32, 0.75, mats.metalDark, 0, 0.36, 0));
+    moto.add(box(0.24, 0.24, 0.35, mats.metalSilver, 0, 0.32, 0.05));
+
+    // Body fairing & fuel tank
+    moto.add(box(0.28, 0.25, 0.55, colorMat, 0, 0.58, 0.18));
+    // Seat
+    moto.add(box(0.24, 0.12, 0.6, mats.metalDark, 0, 0.62, -0.28));
+
+    // Front fork & handlebars
+    moto.add(rod(new THREE.Vector3(0, 0.28, 0.72), new THREE.Vector3(0, 0.82, 0.52), 0.025, mats.metalSilver));
+    moto.add(box(0.55, 0.04, 0.04, mats.metalDark, 0, 0.82, 0.52)); // handlebars
+    // Headlight
+    moto.add(box(0.14, 0.12, 0.08, whiteMat, 0, 0.74, 0.62));
+    // Exhaust pipe
+    moto.add(rod(new THREE.Vector3(0.12, 0.28, 0.05), new THREE.Vector3(0.14, 0.24, -0.72), 0.035, mats.metalSilver));
+
+    // Kickstand lean (slight roll)
+    moto.rotation.z = 0.08;
+    return moto;
+  };
+
+  // Row of 4 parked motorcycles inside courtyard
+  const motoZList = [portalZ - 2.2, portalZ - 3.6, portalZ - 5.0, portalZ - 6.4];
+  const motoColors = [blueWall, carDark, carWhite, portalBlueMat];
+  const motoX = 16.8;
+
+  motoZList.forEach((mz, idx) => {
+    // Painted parking stall line
+    ground.add(box(2.2, 0.015, 0.08, yellowLineMat, motoX - 0.2, 0.01, mz, false));
+    // Parked motorcycle angled into stall
+    ground.add(createMotorcycle(motoX, mz, -Math.PI / 3, motoColors[idx]));
+  });
 
   // Digital Billboard on cylindrical column (Right of Chapel)
   const signColX = 7.0;
