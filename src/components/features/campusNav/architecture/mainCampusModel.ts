@@ -1378,8 +1378,8 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     [-31.0, -54.0 + C5_SHIFT_Z], // P1: Corner 1 - West North Wing front (meets Student Services corner at -50.5)
     [-8.0, -54.0 + C5_SHIFT_Z],  // P2: Corner 2 - Bend point from straight to angled North Wing
     [17.0, -57.5 + C5_SHIFT_Z],  // P3: Corner 3 - Inner corner junction (Corner Glass Atrium Tower)
-    [24.0, -30.0 + C5_SHIFT_Z],  // P4: Corner 4 - East Wing south inner corner
-    [33.0, -33.0 + C5_SHIFT_Z],  // P5: Corner 5 - East Wing south outer corner
+    [23.0, -34.0 + C5_SHIFT_Z],  // P4: Corner 4 - East Wing south inner corner (shortened to remove end bay)
+    [32.0, -37.0 + C5_SHIFT_Z],  // P5: Corner 5 - East Wing south outer corner (shortened to remove end bay)
     [24.0, -68.5 + C5_SHIFT_Z],  // P6: Corner 6 - East / North-East outer corner
     [-9.0, -62.5 + C5_SHIFT_Z],  // P7: Corner 7 - North Wing outer bend point A
     [-8.5, -63.0 + C5_SHIFT_Z],  // P8: Corner 8 - North Wing outer bend point B (notch)
@@ -1818,7 +1818,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
 
   // Paved courtyard concourse connecting basketball court to 5-Storey Building colonnade
   ground.add(box(56.0, 0.08, 8.0, concrete, -2.0, 0.04, -47.0, false));
-  ground.add(box(8.0, 0.08, 28.0, concrete, 21.0, 0.04, -40.5, false));
+  ground.add(box(8.0, 0.08, 24.0, concrete, 20.5, 0.04, -42.0, false));
 
   // ── 8. 5-Storey Courtyard Building (Level 0 / 1F: Exact 9-Point Boundary) ──
   // Ground concrete floor slab extruded to exact 9-point perimeter
@@ -1874,21 +1874,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   ground.add(box(0.35, FH, 0.35, blueWall, p3[0] - 2.2, FH / 2, p3[1] + 2.2));
   ground.add(box(0.35, FH, 0.35, blueWall, p3[0] + 2.2, FH / 2, p3[1] - 2.2));
 
-  // D. External Concrete Staircase with Blue Handrails (along East corridor)
-  const stairZ0 = -34.5 + C5_SHIFT_Z;
-  const stairX = 22.8;
-  for (let s = 0; s <= 12; s++) {
-    const stepT = s / 12;
-    const sz = stairZ0 + stepT * 6.0; // rises towards z = -25.0
-    const sy = stepT * FH;
-    ground.add(box(1.4, 0.22, 0.55, concrete, stairX, sy + 0.11, sz));
-    if (s % 3 === 0) {
-      ground.add(box(0.04, 0.9, 0.04, blueWall, stairX - 0.65, sy + 0.55, sz));
-      ground.add(box(0.04, 0.9, 0.04, blueWall, stairX + 0.65, sy + 0.55, sz));
-    }
-  }
-  ground.add(rod(new THREE.Vector3(stairX - 0.65, 0.9, stairZ0), new THREE.Vector3(stairX - 0.65, FH + 0.9, stairZ0 + 6.0), 0.025, blueWall));
-  ground.add(rod(new THREE.Vector3(stairX + 0.65, 0.9, stairZ0), new THREE.Vector3(stairX + 0.65, FH + 0.9, stairZ0 + 6.0), 0.025, blueWall));
+
 
   // Courtyard corner garden planter (from reference photo)
   ground.add(box(2.2, 0.4, 3.2, planterMat, 22.0, 0.2, -22.5 + C5_SHIFT_Z));
@@ -2611,7 +2597,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   });
 
   // Arrays on East Wing deck
-  [-32.5 + C5_SHIFT_Z, -48.5 + C5_SHIFT_Z].forEach((arrZ) => {
+  [-48.5 + C5_SHIFT_Z].forEach((arrZ) => {
     const arrW = 4.2;
     const arrL = 7.5;
     const arrY = bldgTopY + 0.7;
