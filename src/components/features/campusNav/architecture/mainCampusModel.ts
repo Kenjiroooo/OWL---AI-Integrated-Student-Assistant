@@ -2441,6 +2441,49 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   ground.add(createCar(18.0, -30.5 + C5_SHIFT_Z, carDark));
   ground.add(createCar(18.0, -36.5 + C5_SHIFT_Z, carWhite));
 
+  // ── 9. 2F Footbridge Ground Support Piers (from y = 0 to baseY = FH) ──────
+  // Placed along the exact path connecting Tower Building and 5-Storey Building:
+  // Approach (10.5, -18.5), Point 1 (14.0, -18.5), Mid-Span 1 (20.0, -18.75),
+  // Point 2 Elbow (26.0, -19.0), Mid-Span 2 (27.25, -23.75), Point 3 (28.5, -28.5),
+  // and 5-Storey Entrance (28.5, -31.5)
+  const footbridgePiers: Array<[number, number, number]> = [
+    [10.5, -18.5, 0],
+    [14.0, -18.5, 0.0416],
+    [20.0, -18.75, 0.0416],
+    [26.0, -19.0, 0.677],
+    [27.25, -23.75, 1.3135],
+    [28.5, -28.5, 1.3135],
+    [28.5, -31.0, 1.3135],
+  ];
+
+  footbridgePiers.forEach(([px, pz, rotY]) => {
+    // Square reinforced concrete footing
+    ground.add(box(1.2, 0.28, 1.2, concrete, px, 0.14, pz));
+
+    // Sturdy cylindrical concrete shaft
+    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.27, FH - 0.5, 16), mats.whiteWall);
+    shaft.position.set(px, (FH - 0.5) / 2 + 0.28, pz);
+    shaft.castShadow = true;
+    ground.add(shaft);
+
+    // Royal blue protective base collar
+    const baseCollar = new THREE.Mesh(new THREE.CylinderGeometry(0.31, 0.34, 0.6, 16), blueWall);
+    baseCollar.position.set(px, 0.58, pz);
+    baseCollar.castShadow = true;
+    ground.add(baseCollar);
+
+    // Royal blue architectural capital collar
+    const capCollar = new THREE.Mesh(new THREE.CylinderGeometry(0.33, 0.28, 0.32, 16), blueWall);
+    capCollar.position.set(px, FH - 0.42, pz);
+    capCollar.castShadow = true;
+    ground.add(capCollar);
+
+    // Transverse pier cap beam supporting bridge box girders
+    const capBeam = box(2.6, 0.35, 0.65, concrete, px, FH - 0.175, pz);
+    capBeam.rotation.y = rotY;
+    ground.add(capBeam);
+  });
+
   floorGroups.push(ground);
   root.add(ground);
 
