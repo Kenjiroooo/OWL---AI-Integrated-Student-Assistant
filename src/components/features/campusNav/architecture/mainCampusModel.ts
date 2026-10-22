@@ -1062,6 +1062,49 @@ function createNewWingSignTexture(): THREE.CanvasTexture {
   return toTexture(canvas);
 }
 
+/** Architectural signage plaque for the 2nd Floor Footbridge / Skybridge */
+function createFootbridgeSignTexture(
+  title = '2F CONNECTING FOOTBRIDGE',
+  subtitle = 'TOWER BUILDING ⮂ 5-STOREY BUILDING'
+): THREE.CanvasTexture {
+  const W = 1024;
+  const H = 256;
+  const { canvas, ctx } = makeCanvas(W, H);
+
+  // Deep royal blue background
+  ctx.fillStyle = '#0b4da2';
+  ctx.fillRect(0, 0, W, H);
+
+  // Gold metallic border
+  ctx.strokeStyle = '#e2b342';
+  ctx.lineWidth = 10;
+  ctx.strokeRect(10, 10, W - 20, H - 20);
+
+  // Inner white accent border
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(18, 18, W - 36, H - 36);
+
+  // Header Subtitle
+  ctx.fillStyle = '#e2b342';
+  ctx.font = '900 28px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('UNIVERSIDAD DE DAGUPAN', W / 2, 56);
+
+  // Main title
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '900 52px sans-serif';
+  ctx.fillText(title, W / 2, 128);
+
+  // Subtitle / destination
+  ctx.fillStyle = '#93c5fd';
+  ctx.font = '700 26px sans-serif';
+  ctx.fillText(subtitle, W / 2, 196);
+
+  return toTexture(canvas);
+}
+
 /** Recessed classroom wall along open corridors: ivory wall, dark timber doors & ribbon transom windows. */
 function createCourtyardCorridorTexture(): THREE.CanvasTexture {
   const W = 1024;
@@ -1524,6 +1567,22 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   });
   const newWingSignMat = new THREE.MeshStandardMaterial({
     map: createNewWingSignTexture(),
+    roughness: 0.35,
+    metalness: 0.2,
+  });
+
+  const footbridgeSignMat = new THREE.MeshStandardMaterial({
+    map: createFootbridgeSignTexture('2F PEDESTRIAN SKYBRIDGE', 'TOWER BUILDING  ⮂  5-STOREY BUILDING'),
+    roughness: 0.35,
+    metalness: 0.2,
+  });
+  const footbridgeTowerPortalSignMat = new THREE.MeshStandardMaterial({
+    map: createFootbridgeSignTexture('2F SKYBRIDGE ACCESS', '➔ TO 5-STOREY BUILDING'),
+    roughness: 0.35,
+    metalness: 0.2,
+  });
+  const footbridge5SPortalSignMat = new THREE.MeshStandardMaterial({
+    map: createFootbridgeSignTexture('2F SKYBRIDGE ACCESS', '➔ TO MAIN TOWER BUILDING'),
     roughness: 0.35,
     metalness: 0.2,
   });
