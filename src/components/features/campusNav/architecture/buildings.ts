@@ -62,15 +62,15 @@ export const CAMPUS_BUILDINGS: readonly CampusBuilding[] = [
     shortName: 'Main Campus',
     campus: 'Main Campus • Dagupan City',
     description:
-      'The unified campus complex of Universidad de Dagupan: featuring the 6-storey academic block with perforated mesh chevron facade, the iconic Main Tower facade with horizontal blue floor bands, balconies and vertical "UDD" sign, circular university seal, modern chapel with monumental cross, grand entrance portal, outdoor collegiate basketball court, the Student Services Hall, the 2-storey Innovation & Research Wing, the 4th floor garden terrace hallway portal, the 2nd-floor covered pedestrian footbridge connecting the Main Tower Building and 5-Storey Building (constructed along the exact 21.8m measured outline via Point 1 [14.0, -18.5], Point 2 [26.0, -19.0], and Point 3 [28.5, -28.5] with panoramic glass balustrades and observation elbow pavilion), and the 5-Storey Courtyard Building constructed to the exact 9-point pinpointed boundary (734.2m² footprint), featuring signature blue zigzag balcony spandrels, multi-storey corner clear glass atrium tower, 5F louvered academic hall with UDD crest seal, flat solar panel roof decks, and 12-meter telecommunications lattice antenna tower.',
+      'The unified campus complex of Universidad de Dagupan: featuring the 6-storey academic block with perforated mesh chevron facade, the iconic Main Tower facade with horizontal blue floor bands, balconies and vertical "UDD" sign, circular university seal, modern chapel with monumental cross, grand entrance portal, outdoor collegiate basketball court, the Student Services Hall, the 2-storey Innovation & Research Wing, the 4th floor garden terrace hallway portal, the 2nd-floor open-air pedestrian skybridge connecting the Main Tower 2F outdoor balcony and 5-Storey Building 2F open-air corridor (constructed along the exact 21.8m measured outline via Point 1 [14.0, -18.5], Point 2 [26.0, -19.0], and Point 3 [28.5, -28.5] with panoramic glass balustrades and open-air observation elbow terrace), and the 5-Storey Courtyard Building constructed to the exact 9-point pinpointed boundary (734.2m² footprint), featuring signature blue zigzag balcony spandrels, multi-storey corner clear glass atrium tower, 5F louvered academic hall with UDD crest seal, flat solar panel roof decks, and 12-meter telecommunications lattice antenna tower.',
     visibleFeatures: [
       'Perforated mesh facade with chevron arrows',
       'Main Tower facade with blue floor bands & balconies',
       'Vertical tower core with "UDD" sign',
       'Classroom balconies with AC condenser units',
-      '2nd-floor covered pedestrian footbridge connecting Main Tower and 5-Storey Building',
+      '2nd-floor open-air pedestrian skybridge connecting Main Tower balcony and 5-Storey Building open corridor',
       'Panoramic glass balustrades with silver handrails & royal blue fascia beams on footbridge',
-      'Observation elbow pavilion at Point 2 with courtyard viewing deck & student resting benches',
+      'Open-air observation elbow terrace at Point 2 with courtyard viewing deck & student resting benches',
       'Ground-level reinforced concrete support piers with royal blue capital collars',
       'Circular Universidad de Dagupan seal',
       'Modern A-frame chapel with monumental cross',

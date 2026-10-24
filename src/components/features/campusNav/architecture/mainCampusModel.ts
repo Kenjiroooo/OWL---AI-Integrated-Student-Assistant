@@ -1575,16 +1575,6 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     roughness: 0.35,
     metalness: 0.2,
   });
-  const footbridgeTowerPortalSignMat = new THREE.MeshStandardMaterial({
-    map: createFootbridgeSignTexture('2F SKYBRIDGE ACCESS', '➔ TO 5-STOREY BUILDING'),
-    roughness: 0.35,
-    metalness: 0.2,
-  });
-  const footbridge5SPortalSignMat = new THREE.MeshStandardMaterial({
-    map: createFootbridgeSignTexture('2F SKYBRIDGE ACCESS', '➔ TO MAIN TOWER BUILDING'),
-    roughness: 0.35,
-    metalness: 0.2,
-  });
 
   // ── 5-STOREY COURTYARD BUILDING (Exact 9-Point Pinpointed Boundary) ──────
   // Building Outline shifted inward by +3.5m in Z to connect flush into Student Services / Innovation Wing (at z = -50.5):
@@ -2446,7 +2436,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   // Point 2 Elbow (26.0, -19.0), Mid-Span 2 (27.25, -23.75), Point 3 (28.5, -28.5),
   // and 5-Storey Entrance (28.5, -31.5)
   const footbridgePiers: Array<[number, number, number]> = [
-    [10.5, -18.5, 0],
+    [11.0, -20.54, -0.597],
     [14.0, -18.5, 0.0416],
     [20.0, -18.75, 0.0416],
     [26.0, -19.0, 0.677],
@@ -2555,7 +2545,10 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     g.add(box(classW - 0.2, 0.85, 0.12, whiteMat, classCx, baseY + 1.05, balcFrontZ));
     g.add(box(classW, 0.12, 0.18, blueWall, classCx, baseY + 1.52, balcFrontZ));
     g.add(box(0.15, 0.85, balcD, whiteMat, classX0 + 0.1, baseY + 1.05, balcZ));
-    g.add(box(0.15, 0.85, balcD, whiteMat, classX1 - 0.1, baseY + 1.05, balcZ));
+    if (f > 1) {
+      // 2F right end connects directly into the pedestrian skybridge
+      g.add(box(0.15, 0.85, balcD, whiteMat, classX1 - 0.1, baseY + 1.05, balcZ));
+    }
 
     // D. Wall-Mounted Air Conditioner Outdoor Compressor Units on Brackets (udd-main-tower.JPG)
     const acConfigs: Record<number, number[]> = {
@@ -2977,11 +2970,10 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     }
 
     if (f === 1) {
-      // ── 2F Footbridge connecting Tower Building & 5-Storey Building ────────
-      // Follows exact user outline: Point 1 [14.0, -18.5], Point 2 [26.0, -19.0], Point 3 [28.5, -28.5]
-      // Plus approach spans connecting into Tower Building [8.0, -18.5] and 5-Storey Building [28.5, -31.5]
+      // ── 2F Open-Air Skybridge connecting Tower Balcony & 5-Storey Corridor ────────
+      // Connects directly onto the Main Tower 2F Balcony [8.0, -22.575] and 5-Storey Corridor [28.5, -30.5],
+      // following the exact user outline: Point 1 [14.0, -18.5], Point 2 [26.0, -19.0], Point 3 [28.5, -28.5]
       const BR_W = 2.4;
-      const canopyW = BR_W + 0.5;
 
       interface BridgeSegmentDef {
         p1: [number, number];
@@ -2990,14 +2982,14 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       }
 
       const bridgeSegments: BridgeSegmentDef[] = [
-        // Approach from Tower Building wall to Point 1 (6.0m)
-        { p1: [8.0, -18.5], p2: [14.0, -18.5] },
-        // Exact User Outline Span 1: Point 1 to Point 2 (12.0m)
+        // Approach span connecting directly from the 2F Balcony right end [8.0, -22.575] to Point 1 [14.0, -18.5]
+        { p1: [8.0, -22.575], p2: [14.0, -18.5] },
+        // Exact User Outline Span 1: Point 1 [14.0, -18.5] to Point 2 [26.0, -19.0] (12.0m)
         { p1: [14.0, -18.5], p2: [26.0, -19.0], isUserSpan1: true },
-        // Exact User Outline Span 2: Point 2 to Point 3 (9.8m)
+        // Exact User Outline Span 2: Point 2 [26.0, -19.0] to Point 3 [28.5, -28.5] (9.8m)
         { p1: [26.0, -19.0], p2: [28.5, -28.5] },
-        // Connection into 5-Storey Building 2F corridor (3.0m)
-        { p1: [28.5, -28.5], p2: [28.5, -31.5] },
+        // Connection into 5-Storey Building 2F open-air corridor [28.5, -30.5]
+        { p1: [28.5, -28.5], p2: [28.5, -30.5] },
       ];
 
       bridgeSegments.forEach(({ p1, p2, isUserSpan1 }) => {
@@ -3030,11 +3022,11 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
           spanGrp.add(box(0.12, 0.24, BR_W - 0.2, mats.metalSilver, rx, -0.05, 0));
         }
 
-        // 4. Architectural Safety Balustrades (Left & Right)
+        // 4. Architectural Safety Balustrades (Left & Right) - Open Air (No Roof)
         [-1, 1].forEach((side) => {
           const bz = side * (BR_W / 2 - 0.05);
 
-          // Glass panel
+          // Tinted safety glass panel
           spanGrp.add(box(len - 0.08, 1.05, 0.06, darkGlass, 0, 0.24 + 0.525, bz));
           // Royal blue base shoe channel
           spanGrp.add(box(len, 0.08, 0.08, blueWall, 0, 0.24 + 0.04, bz));
@@ -3047,44 +3039,17 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
           }
         });
 
-        // 5. Overhead Covered Canopy Roof Columns (spaced every ~3.0m)
-        for (let kx = -len / 2 + 1.5; kx < len / 2; kx += 3.0) {
-          [-1, 1].forEach((side) => {
-            const czPos = side * (BR_W / 2 - 0.06);
-            // Upright column
-            spanGrp.add(box(0.12, 2.7, 0.12, mats.metalSilver, kx, 0.24 + 1.35, czPos));
-            // Blue base & capital brackets
-            spanGrp.add(box(0.18, 0.22, 0.18, blueWall, kx, 0.24 + 0.11, czPos));
-            spanGrp.add(box(0.18, 0.22, 0.18, blueWall, kx, 0.24 + 2.59, czPos));
-          });
-          // Overhead cross-arch tie beam
-          spanGrp.add(box(0.12, 0.14, BR_W, mats.metalSilver, kx, 0.24 + 2.7, 0));
-        }
-
-        // 6. Canopy Roof Deck & Ceiling Soffit
-        spanGrp.add(box(len + 0.08, 0.04, canopyW - 0.1, whiteMat, 0, 0.24 + 2.72, 0));
-        // Royal blue edge fascia
-        spanGrp.add(box(len + 0.1, 0.18, 0.12, blueWall, 0, 0.24 + 2.78, canopyW / 2 - 0.06));
-        spanGrp.add(box(len + 0.1, 0.18, 0.12, blueWall, 0, 0.24 + 2.78, -canopyW / 2 + 0.06));
-        // Silver standing-seam roof
-        spanGrp.add(box(len + 0.1, 0.06, canopyW, mats.metalSilver, 0, 0.24 + 2.87, 0));
-
-        // Linear LED downlights along ceiling
-        for (let lx = -len / 2 + 1.5; lx < len / 2; lx += 2.5) {
-          spanGrp.add(box(0.9, 0.02, 0.35, mats.whiteWall, lx, 0.24 + 2.71, 0, false));
-        }
-
-        // Signage mounted along the exterior of Span 1 facing the basketball court
+        // Signage mounted along the exterior girder of Span 1 facing the basketball court
         if (isUserSpan1) {
           spanGrp.add(
             box(
               4.6,
-              0.85,
+              0.48,
               0.08,
               [blueWall, blueWall, blueWall, blueWall, footbridgeSignMat, blueWall],
               0,
-              0.24 + 2.78,
-              -canopyW / 2 - 0.08
+              -0.07,
+              -BR_W / 2 - 0.06
             )
           );
         }
@@ -3092,11 +3057,10 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
         g.add(spanGrp);
       });
 
-      // ── Corner Elbow Pavilion / Observation Node at Point 2 [26.0, -19.0] ──
+      // ── Open-Air Corner Elbow Observation Platform at Point 2 [26.0, -19.0] ──
       const elX = 26.0;
       const elZ = -19.0;
       const elSize = 3.6;
-      const elCanopySize = 4.0;
 
       const elbowGrp = new THREE.Group();
       elbowGrp.position.set(elX, baseY, elZ);
@@ -3106,32 +3070,16 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       elbowGrp.add(box(elSize - 0.2, 0.03, elSize - 0.2, mats.metalDark, 0, 0.235, 0));
       elbowGrp.add(box(elSize + 0.1, 0.36, elSize + 0.1, blueWall, 0, -0.07, 0));
 
-      // 4 Heavy-duty corner canopy pillars
-      const elOff = elSize / 2 - 0.15;
-      [
-        [-elOff, -elOff],
-        [elOff, -elOff],
-        [-elOff, elOff],
-        [elOff, elOff],
-      ].forEach(([px, pz]) => {
-        elbowGrp.add(box(0.16, 3.1, 0.16, mats.metalSilver, px, 0.24 + 1.55, pz));
-        elbowGrp.add(box(0.24, 0.26, 0.24, blueWall, px, 0.24 + 0.13, pz));
-        elbowGrp.add(box(0.24, 0.26, 0.24, blueWall, px, 0.24 + 2.97, pz));
-      });
-
-      // Elevated Pyramidal / Lantern Pavilion Canopy Roof
-      elbowGrp.add(box(elCanopySize, 0.06, elCanopySize, whiteMat, 0, 0.24 + 3.0, 0));
-      elbowGrp.add(box(elCanopySize + 0.1, 0.26, elCanopySize + 0.1, blueWall, 0, 0.24 + 3.1, 0));
-      elbowGrp.add(box(elCanopySize - 0.6, 0.25, elCanopySize - 0.6, mats.metalSilver, 0, 0.24 + 3.25, 0));
-      elbowGrp.add(box(1.4, 0.35, 1.4, blueWall, 0, 0.24 + 3.55, 0));
-
       // Exterior panoramic glass railing along the exposed corner (facing courtyard & north)
       elbowGrp.add(box(elSize - 0.2, 1.05, 0.06, darkGlass, 0, 0.24 + 0.525, -elSize / 2 + 0.05));
       elbowGrp.add(box(elSize - 0.2, 0.08, 0.12, mats.metalSilver, 0, 0.24 + 1.05, -elSize / 2 + 0.05));
       elbowGrp.add(box(0.06, 1.05, elSize - 0.2, darkGlass, elSize / 2 - 0.05, 0.24 + 0.525, 0));
       elbowGrp.add(box(0.12, 0.08, elSize - 0.2, mats.metalSilver, elSize / 2 - 0.05, 0.24 + 1.05, 0));
 
-      // Relaxing Campus View Benches inside the Pavilion
+      // Corner accent post
+      elbowGrp.add(box(0.12, 1.15, 0.12, mats.metalSilver, elSize / 2 - 0.05, 0.24 + 0.575, -elSize / 2 + 0.05));
+
+      // Relaxing Campus View Benches inside the Observation Platform
       elbowGrp.add(box(1.4, 0.42, 0.45, mats.metalDark, 0.6, 0.24 + 0.21, 0.6));
       elbowGrp.add(box(1.4, 0.42, 0.45, mats.metalDark, -0.6, 0.24 + 0.21, -0.6));
 
@@ -3140,31 +3088,20 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
 
       g.add(elbowGrp);
 
-      // ── Tower Building Portal Entrance (at x = 8.0, z = -18.5) ──────────────
-      // Architectural portal frame in UDD royal blue
-      g.add(box(0.4, 3.2, 3.0, blueWall, 8.0, cy + 0.2, -18.5));
-      g.add(box(0.35, 2.9, 2.7, whiteMat, 8.0, cy + 0.15, -18.5));
-      // Double sliding glass doors
-      g.add(box(0.06, 2.5, 1.1, [darkGlass, mats.metalSilver, mats.metalSilver, mats.metalSilver, mats.metalSilver, mats.metalSilver], 8.0, cy, -18.5 - 0.7));
-      g.add(box(0.06, 2.5, 1.1, [darkGlass, mats.metalSilver, mats.metalSilver, mats.metalSilver, mats.metalSilver, mats.metalSilver], 8.0, cy, -18.5 + 0.7));
-      // Illuminated portal header signage plaque
-      g.add(box(0.12, 0.65, 2.6, [footbridgeTowerPortalSignMat, blueWall, blueWall, blueWall, blueWall, blueWall], 8.22, cy + 1.85, -18.5));
-      // Eyebrow canopy shelf
-      g.add(box(0.8, 0.08, 3.2, mats.metalSilver, 8.4, cy + 1.6, -18.5));
+      // ── Main Tower 2F Balcony Direct Connection (at x = 8.0, z = -22.575) ──
+      // Connects directly onto the 2F outdoor balcony floor (no interior portal box)
+      g.add(box(0.8, 0.04, balcD + 0.2, mats.metalDark, 8.0, baseY + 0.56, balcZ));
+      // Handrail terminal posts connecting balcony rail to bridge rail
+      g.add(box(0.08, 1.05, 0.08, mats.metalSilver, 8.0, baseY + 1.05, balcFrontZ));
+      g.add(box(0.08, 1.05, 0.08, mats.metalSilver, 8.0, baseY + 1.05, backZ));
 
-      // ── 5-Storey Building Portal Entrance (at x = 28.5, z = -31.5) ──────────
-      // Architectural portal frame in UDD royal blue
-      g.add(box(3.0, 3.2, 0.4, blueWall, 28.5, cy + 0.2, -31.5));
-      g.add(box(2.7, 2.9, 0.35, whiteMat, 28.5, cy + 0.15, -31.5));
-      // Double sliding glass doors
-      g.add(box(1.1, 2.5, 0.06, [darkGlass, mats.metalSilver, mats.metalSilver, mats.metalSilver, mats.metalSilver, mats.metalSilver], 28.5 - 0.7, cy, -31.5));
-      g.add(box(1.1, 2.5, 0.06, [darkGlass, mats.metalSilver, mats.metalSilver, mats.metalSilver, mats.metalSilver, mats.metalSilver], 28.5 + 0.7, cy, -31.5));
-      // Illuminated portal header signage plaque
-      g.add(box(2.6, 0.65, 0.12, [blueWall, blueWall, blueWall, blueWall, footbridge5SPortalSignMat, blueWall], 28.5, cy + 1.85, -31.28));
-      // Eyebrow canopy shelf
-      g.add(box(3.2, 0.08, 0.8, mats.metalSilver, 28.5, cy + 1.6, -31.1));
+      // ── 5-Storey Building 2F Open Corridor Direct Connection (at x = 28.5, z = -30.5) ──
+      // Connects directly into the 2F open-air corridor (no interior portal box)
+      g.add(box(BR_W, 0.04, 0.8, mats.metalDark, 28.5, baseY + 0.25, -30.5));
+      g.add(box(0.08, 1.05, 0.08, mats.metalSilver, 28.5 - BR_W / 2 + 0.05, baseY + 0.78, -30.5));
+      g.add(box(0.08, 1.05, 0.08, mats.metalSilver, 28.5 + BR_W / 2 - 0.05, baseY + 0.78, -30.5));
 
-      // Additional students walking on the 2F Footbridge
+      // Additional students walking on the 2F Open-Air Skybridge
       g.add(createPedestrian(17.5, -18.75, Math.PI / 2, blueWall, baseY + 0.24));
       g.add(createPedestrian(27.8, -25.0, -Math.PI / 2 + 0.2, carWhite, baseY + 0.24));
     }
