@@ -2439,10 +2439,9 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     [8.0, -23.25, 0],
     [14.25, -23.25, 0],
     [20.5, -23.25, 0],
-    [24.5, -23.0, 0.124],
+    [23.0, -27.25, 1.5708],
     [26.5, -27.5, 0.86],
-    [25.5, -33.23, 2.89],
-    [22.5, -32.46, 2.89],
+    [24.1, -30.77, -1.3204],
   ];
 
   footbridgePiers.forEach(([px, pz, rotY]) => {
@@ -2827,38 +2826,13 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
         grp.position.set(seg.cx, baseY, seg.cz);
         grp.rotation.y = seg.rotY;
 
-        // Front Balustrade along corridor front edge (local Z = 0)
-        // On 2F (f === 1) along front corridor (seg.idx === 2), REMOVE the balustrade wall
-        // across the footbridge entrance bay between lx = 9.1m and 11.1m (opening width 2.0m)
-        // so students can walk freely straight from the footbridge onto the 2F balcony!
-        const is2FBridgeCorridor = (f === 1 && seg.idx === 2);
-        if (is2FBridgeCorridor) {
-          // North balustrade section (from lx = -seg.len/2 to lx = 9.1m, len = 21.23m)
-          const l1 = 9.1 - (-seg.len / 2);
-          const cx1 = (-seg.len / 2 + 9.1) / 2;
-          grp.add(box(l1, 1.05, 0.25, creamWall, cx1, 0.525, 0));
-          grp.add(box(l1, 0.08, 0.32, creamWall, cx1, 1.09, 0));
-          grp.add(box(l1, 1.15, 0.05, [creamWall, creamWall, creamWall, creamWall, getSpandrelMat(l1), creamWall], cx1, 0.6, 0.16));
-          // Blue portal jamb post at north edge of opening
-          grp.add(box(0.2, 1.15, 0.35, blueWall, 9.1, 0.575, 0.05));
+        // Front Balustrade along corridor front edge (local Z = 0) - fully intact with signature blue zigzag spandrels
+        grp.add(box(seg.len, 1.05, 0.25, creamWall, 0, 0.525, 0));
+        grp.add(box(seg.len + 0.1, 0.08, 0.32, creamWall, 0, 1.09, 0)); // coping
+        grp.add(box(seg.len, 0.5, 0.3, creamWall, 0, FH - 0.25, 0)); // lintel beam
 
-          // South balustrade section (from lx = 11.1m to lx = seg.len/2, len = 1.03m)
-          const l2 = seg.len / 2 - 11.1;
-          const cx2 = (11.1 + seg.len / 2) / 2;
-          grp.add(box(l2, 1.05, 0.25, creamWall, cx2, 0.525, 0));
-          grp.add(box(l2, 0.08, 0.32, creamWall, cx2, 1.09, 0));
-          grp.add(box(l2, 1.15, 0.05, [creamWall, creamWall, creamWall, creamWall, getSpandrelMat(l2), creamWall], cx2, 0.6, 0.16));
-          // Blue portal jamb post at south edge of opening
-          grp.add(box(0.2, 1.15, 0.35, blueWall, 11.1, 0.575, 0.05));
-
-          // Overhead lintel beam stays continuous overhead
-          grp.add(box(seg.len, 0.5, 0.3, creamWall, 0, FH - 0.25, 0));
-        } else {
-          grp.add(box(seg.len, 1.05, 0.25, creamWall, 0, 0.525, 0));
-          grp.add(box(seg.len + 0.1, 0.08, 0.32, creamWall, 0, 1.09, 0)); // coping
-          grp.add(box(seg.len, 0.5, 0.3, creamWall, 0, FH - 0.25, 0)); // lintel beam
-          grp.add(box(seg.len, 1.15, 0.05, [creamWall, creamWall, creamWall, creamWall, getSpandrelMat(seg.len), creamWall], 0, 0.6, 0.16));
-        }
+        // Signature Blue Zigzag Spandrel Panel facing courtyard (+Z)
+        grp.add(box(seg.len, 1.15, 0.05, [creamWall, creamWall, creamWall, creamWall, getSpandrelMat(seg.len), creamWall], 0, 0.6, 0.16));
 
         // Dark Blue Corridor Soffit & Fascia Strip
         grp.add(box(seg.len, 0.03, 2.1, soffitBlue, 0, FH - 0.17, -1.1, false));
@@ -2881,8 +2855,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
         grp.add(box(seg.len - 0.6, FH, 0.2, [creamWall, creamWall, creamWall, creamWall, corridorWallMat, creamWall], 0, FH / 2, -2.2));
 
         // Air Conditioner Outdoor Compressor Units mounted on balustrades
-        const acPositions = is2FBridgeCorridor ? [-seg.len / 4, -1.5] : [-seg.len / 4, seg.len / 4];
-        acPositions.forEach((acX) => {
+        [-seg.len / 4, seg.len / 4].forEach((acX) => {
           grp.add(box(0.85, 0.62, 0.38, [mats.metalSilver, mats.metalSilver, mats.metalSilver, mats.metalSilver, acUnitMat, mats.metalSilver], acX, 1.35, 0.22));
           grp.add(box(0.04, 0.45, 0.42, mats.metalDark, acX - 0.28, 1.0, 0.22));
           grp.add(box(0.04, 0.45, 0.42, mats.metalDark, acX + 0.28, 1.0, 0.22));
@@ -2996,11 +2969,12 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     }
 
     if (f === 1) {
-      // ── 2F Open-Air Skybridge Connected Straight & Perpendicular Into 2F Balcony ──
-      // 1. Straight connector from Tower Building Balcony [8.0, -23.25] to [20.5, -23.25] (width 1.5m)
-      // 2. Smoothed turning elbow terrace with wide panoramic observation deck and resting bench
-      // 3. Straight, perpendicular approach span connecting directly at 90° into the 5-Storey Building
-      //    2F front balcony through the open portal gateway at [22.28, -33.33] and [22.72, -31.59] (wall removed).
+      // ── 2F Open-Air Skybridge Connected into Corridor South End (User Blue-Line Path) ──
+      // 1. Straight span from Tower Building Balcony [8.0, -23.25] to [20.5, -23.25] (width 1.5m)
+      // 2. Smoothed turning elbow terrace with wide panoramic viewing deck and resting bench
+      // 3. Direct walkway path connecting into the open south end of the 2F corridor between
+      //    corner column P4 [23.0, -30.5] and classroom wall [25.13, -31.04] (NOT touching the front zigzag wall),
+      //    framed with royal blue portal jambs matching the user blue-line trapezoid instruction.
       const BR_W = 1.5;
 
       // ── 1. Straight Tower Connection Span (X: 8.0 to 20.5, Z = -23.25, rotY = 0) ──
@@ -3030,7 +3004,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       for (let sx = -straightLen / 2 + 0.9; sx < straightLen / 2; sx += 1.8) {
         straightSpanGrp.add(box(0.06, 1.08, 0.08, mats.metalSilver, sx, 0.24 + 0.54, BR_W / 2 - 0.05));
       }
-      // South balustrade along Z = -24.0 (meets Corner 11 [20.5, -24.0], facing basketball court)
+      // South balustrade along Z = -24.0 (meets Corner 8 [20.5, -24.0], facing basketball court)
       straightSpanGrp.add(box(straightLen - 0.08, 1.05, 0.06, darkGlass, 0, 0.24 + 0.525, -BR_W / 2 + 0.05));
       straightSpanGrp.add(box(straightLen, 0.08, 0.08, blueWall, 0, 0.24 + 0.04, -BR_W / 2 + 0.05));
       straightSpanGrp.add(box(straightLen, 0.08, 0.12, mats.metalSilver, 0, 0.24 + 1.05, -BR_W / 2 + 0.05));
@@ -3051,25 +3025,21 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       );
       g.add(straightSpanGrp);
 
-      // ── 2. Turning Deck with Straight 90° Perpendicular Approach into Balcony ──
+      // ── 2. Turning Deck Connected into Open South End of 2F Corridor ──
       // Vertices in CCW order:
-      // 1..4: Smooth outer curve with observation terrace
-      // 5->6: Straight perpendicular approach outer edge (slopes at -0.2553 matching balcony normal)
-      // 6->7: Open balcony threshold landing (perpendicular, flush on balcony floor between jambs)
-      // 7->8: Straight perpendicular approach inner edge (exact parallel to 5->6)
-      // 8..11: Inner curve back to straight span south rail
+      // 1 [20.5, -22.5] -> 2 [24.5, -22.0] -> 3 [27.5, -25.5] (observation terrace)
+      // -> 4 [26.5, -31.0] -> 5 [25.13, -31.04] (corridor east jamb at classroom wall)
+      // -> 6 [23.0, -30.5] (corridor west jamb at corner column P4)
+      // -> 7 [23.0, -24.0] -> 8 [20.5, -24.0] (straight span south connection)
       const bridgePolyPts: readonly [number, number][] = [
         [20.5, -22.5],   // 1. Straight span north rail connection
         [24.5, -22.0],   // 2. Outer chamfer bend 1
         [27.5, -25.5],   // 3. Outer apex observation terrace
-        [27.0, -30.5],   // 4. Outer elbow transition
-        [25.28, -34.10], // 5. Start of straight perpendicular approach outer edge
-        [22.28, -33.33], // 6. 5-Storey 2F Balcony Landing Outer Jamb (at 90°)
-        [22.72, -31.59], // 7. 5-Storey 2F Balcony Landing Inner Jamb (at 90°)
-        [25.72, -32.36], // 8. Start of straight perpendicular approach inner edge
-        [25.0, -26.0],   // 9. Inner curve apex
-        [23.0, -24.0],   // 10. Inner curve bend 1
-        [20.5, -24.0],   // 11. Straight span south rail connection
+        [26.5, -31.0],   // 4. Outer terrace corner
+        [25.13, -31.04], // 5. Corridor End East Jamb (meets classroom wall)
+        [23.0, -30.5],   // 6. Corridor End West Jamb (meets corner column P4)
+        [23.0, -24.0],   // 7. Inner curve bend
+        [20.5, -24.0],   // 8. Straight span south rail connection
       ];
 
       const shapeDeck = new THREE.Shape();
@@ -3108,19 +3078,16 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       g.add(skirtMeshDeck);
 
       // Architectural Balustrades along outer smoothed edges & inner courtyard edges
-      // Open at Edge 11->1 (straight bridge connection) and Edge 6->7 (open balcony entrance)
+      // Open at Edge 8->1 (straight bridge connection) and Edge 5->6 (corridor end entrance portal)
       const railingEdgesDeck: Array<{ p1: [number, number]; p2: [number, number]; name: string }> = [
-        // Outer smoothed curve & straight perpendicular approach balustrades
+        // Outer smoothed curve & observation terrace balustrades
         { p1: [20.5, -22.5], p2: [24.5, -22.0], name: "outer_1_2" },
         { p1: [24.5, -22.0], p2: [27.5, -25.5], name: "outer_2_3" },
-        { p1: [27.5, -25.5], p2: [27.0, -30.5], name: "outer_3_4" },
-        { p1: [27.0, -30.5], p2: [25.28, -34.10], name: "outer_4_5" },
-        { p1: [25.28, -34.10], p2: [22.28, -33.33], name: "outer_straight_approach" }, // 100% perpendicular to balcony
-        // Inner courtyard curve & straight perpendicular approach balustrades
-        { p1: [22.72, -31.59], p2: [25.72, -32.36], name: "inner_straight_approach" }, // 100% perpendicular to balcony
-        { p1: [25.72, -32.36], p2: [25.0, -26.0], name: "inner_8_9" },
-        { p1: [25.0, -26.0], p2: [23.0, -24.0], name: "inner_9_10" },
-        { p1: [23.0, -24.0], p2: [20.5, -24.0], name: "inner_10_11" },
+        { p1: [27.5, -25.5], p2: [26.5, -31.0], name: "outer_3_4" },
+        { p1: [26.5, -31.0], p2: [25.13, -31.04], name: "outer_4_5" }, // meets classroom wall
+        // Inner courtyard edge (facing basketball court)
+        { p1: [23.0, -30.5], p2: [23.0, -24.0], name: "inner_col_to_bend" }, // meets corner column P4
+        { p1: [23.0, -24.0], p2: [20.5, -24.0], name: "inner_bend_to_straight" },
       ];
 
       railingEdgesDeck.forEach(({ p1, p2 }) => {
@@ -3176,25 +3143,36 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       g.add(box(0.08, 1.05, 0.08, mats.metalSilver, 8.0, baseY + 1.05, -22.5));
       g.add(box(0.08, 1.05, 0.08, mats.metalSilver, 8.0, baseY + 1.05, -24.0));
 
-      // ── 5-Storey Building 2F FRONT Balcony Flush Landing Threshold ───────────
-      // Connected straight & perpendicularly into the open 2F balcony doorway (wall removed)
-      const balcMidX = (22.28 + 22.72) / 2; // 22.50
-      const balcMidZ = (-33.33 + -31.59) / 2; // -32.46
-      const balcLen = Math.hypot(22.72 - 22.28, -31.59 - (-33.33)); // 1.80m
-      const balcRotY = Math.atan2(-(-31.59 - -33.33), 22.72 - 22.28);
-      const landingPlatGrp = new THREE.Group();
-      landingPlatGrp.position.set(balcMidX, baseY + 0.25, balcMidZ);
-      landingPlatGrp.rotation.y = balcRotY;
-      landingPlatGrp.add(box(balcLen, 0.04, 0.8, mats.metalDark, 0, 0, 0));
-      landingPlatGrp.add(box(balcLen - 0.1, 0.015, 0.08, yellowLineMat, 0, 0.02, 0.35, false));
-      landingPlatGrp.add(box(balcLen - 0.1, 0.015, 0.08, yellowLineMat, 0, 0.02, -0.35, false));
-      g.add(landingPlatGrp);
+      // ── 5-Storey Building 2F Corridor South End Portal Gateway (User Blue-Line Trapezoid) ──
+      // Connects directly into the open south end of the 2F corridor between [23.0, -30.5] and [25.13, -31.04]
+      const corMidX = (23.0 + 25.13) / 2; // 24.065
+      const corMidZ = (-30.5 + -31.04) / 2; // -30.77
+      const corWidth = Math.hypot(25.13 - 23.0, -31.04 - (-30.5)); // 2.20m
+      const corRotY = Math.atan2(-(-31.04 - -30.5), 25.13 - 23.0); // -0.248 rad
 
-      // Students walking along the 2F Open-Air Skybridge
+      // Royal Blue Portal Gateway Arch (matches the blue trapezoid in user instruction)
+      const portalGrp = new THREE.Group();
+      portalGrp.position.set(corMidX, baseY, corMidZ);
+      portalGrp.rotation.y = corRotY;
+      // Left portal jamb at corner column P4
+      portalGrp.add(box(0.2, FH - 0.3, 0.35, blueWall, -corWidth / 2 + 0.1, (FH - 0.3) / 2, 0));
+      // Right portal jamb at classroom wall
+      portalGrp.add(box(0.2, FH - 0.3, 0.35, blueWall, corWidth / 2 - 0.1, (FH - 0.3) / 2, 0));
+      // Portal overhead header beam
+      portalGrp.add(box(corWidth + 0.2, 0.35, 0.45, blueWall, 0, FH - 0.3 - 0.175, 0));
+      // Silver architectural canopy trim
+      portalGrp.add(box(corWidth + 0.3, 0.08, 0.65, mats.metalSilver, 0, FH - 0.3, 0.1));
+      // Flush non-slip landing threshold plate on the corridor floor
+      portalGrp.add(box(corWidth, 0.04, 0.8, mats.metalDark, 0, 0.25, 0));
+      portalGrp.add(box(corWidth - 0.1, 0.015, 0.08, yellowLineMat, 0, 0.27, 0.35, false));
+      portalGrp.add(box(corWidth - 0.1, 0.015, 0.08, yellowLineMat, 0, 0.27, -0.35, false));
+      g.add(portalGrp);
+
+      // Students walking along the 2F Open-Air Skybridge into the corridor
       g.add(createPedestrian(14.0, -23.25, 0, blueWall, baseY + 0.24));
-      g.add(createPedestrian(22.5, -23.5, 0.35, carWhite, baseY + 0.24));
-      g.add(createPedestrian(26.2, -28.0, 1.25, carDark, baseY + 0.24));
-      g.add(createPedestrian(23.8, -32.8, 2.8916, carBlue, baseY + 0.24)); // walking straight into open balcony
+      g.add(createPedestrian(22.0, -23.5, 0.35, carWhite, baseY + 0.24));
+      g.add(createPedestrian(26.6, -26.5, 1.25, carDark, baseY + 0.24)); // at observation terrace
+      g.add(createPedestrian(23.8, -29.5, -1.3204, carBlue, baseY + 0.24)); // walking through portal into corridor
     }
 
     floorGroups.push(g);
