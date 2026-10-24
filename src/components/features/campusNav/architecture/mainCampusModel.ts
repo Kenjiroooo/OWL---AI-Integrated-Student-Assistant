@@ -2539,12 +2539,21 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     const balcD = 1.15;
     const balcZ = backZ - balcD / 2; // -22.575
     const balcFrontZ = backZ - balcD; // -23.15
-    g.add(box(classW - 0.2, 0.2, balcD, whiteMat, classCx, baseY + 0.55, balcZ));
-    g.add(box(classW - 0.2, 0.85, 0.12, whiteMat, classCx, baseY + 1.05, balcFrontZ));
-    g.add(box(classW, 0.12, 0.18, blueWall, classCx, baseY + 1.52, balcFrontZ));
-    g.add(box(0.15, 0.85, balcD, whiteMat, classX0 + 0.1, baseY + 1.05, balcZ));
-    if (f > 1) {
-      // 2F right end connects directly into the pedestrian skybridge
+    if (f === 1) {
+      // 2F: Classroom balcony runs from x = classX0 (-10.0) to x = 2.0 (length 12.0m)
+      // Leaving x = 2.0 to 8.0 for the seamless flush pedestrian skybridge landing deck!
+      const balc2FW = 2.0 - classX0; // 12.0m
+      const balc2FCx = (classX0 + 2.0) / 2; // -4.0m
+      g.add(box(balc2FW - 0.2, 0.2, balcD, whiteMat, balc2FCx, baseY + 0.55, balcZ));
+      g.add(box(balc2FW - 0.2, 0.85, 0.12, whiteMat, balc2FCx, baseY + 1.05, balcFrontZ));
+      g.add(box(balc2FW, 0.12, 0.18, blueWall, balc2FCx, baseY + 1.52, balcFrontZ));
+      g.add(box(0.15, 0.85, balcD, whiteMat, classX0 + 0.1, baseY + 1.05, balcZ));
+    } else {
+      // 3F, 4F, 5F: Full continuous classroom balconies across entire wing
+      g.add(box(classW - 0.2, 0.2, balcD, whiteMat, classCx, baseY + 0.55, balcZ));
+      g.add(box(classW - 0.2, 0.85, 0.12, whiteMat, classCx, baseY + 1.05, balcFrontZ));
+      g.add(box(classW, 0.12, 0.18, blueWall, classCx, baseY + 1.52, balcFrontZ));
+      g.add(box(0.15, 0.85, balcD, whiteMat, classX0 + 0.1, baseY + 1.05, balcZ));
       g.add(box(0.15, 0.85, balcD, whiteMat, classX1 - 0.1, baseY + 1.05, balcZ));
     }
 
@@ -3141,13 +3150,36 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
         g.add(box(0.12, 1.15, 0.12, mats.metalSilver, cx, baseY + 0.24 + 0.575, cz));
       });
 
-      // ── Main Tower 2F Balcony Direct Connection & Walkway Runner (x = 2.0 to 8.0, z = -23.25) ──
-      g.add(box(6.0, 0.04, BR_W, mats.metalDark, 5.0, baseY + 0.56, -23.25));
-      g.add(box(6.0, 0.015, 0.08, yellowLineMat, 5.0, baseY + 0.57, -23.25 + BR_W / 2 - 0.05, false));
-      g.add(box(6.0, 0.015, 0.08, yellowLineMat, 5.0, baseY + 0.57, -23.25 - BR_W / 2 + 0.05, false));
-      // Handrail terminal posts connecting balcony rail to bridge rail at x = 8.0
-      g.add(box(0.08, 1.05, 0.08, mats.metalSilver, 8.0, baseY + 1.05, -22.5));
-      g.add(box(0.08, 1.05, 0.08, mats.metalSilver, 8.0, baseY + 1.05, -24.0));
+      // ── Main Tower 2F Balcony Direct Connection & Walkway Landing (x = 2.0 to 8.0) ──
+      // 1. Reinforced concrete landing deck slab matching bridge deck height (baseY + 0.11, top baseY + 0.22)
+      // Depth 2.0m from classroom wall (backZ = -22.0) to outer rail line (Z = -24.0)
+      g.add(box(6.0, 0.22, 2.0, concrete, 5.0, baseY + 0.11, -23.0));
+      // Under-deck royal blue fascia girder skirts
+      g.add(box(6.0, 0.36, 0.2, blueWall, 5.0, baseY - 0.07, -24.0 + 0.1));
+      g.add(box(6.0, 0.36, 0.2, blueWall, 5.0, baseY - 0.07, -22.5 - 0.1));
+      // 2. Non-slip dark paver walkway surface flush with straight bridge deck (Z = -23.25, width BR_W = 1.5)
+      g.add(box(6.0, 0.03, BR_W, mats.metalDark, 5.0, baseY + 0.235, -23.25));
+      // Continuous yellow safety border lines (15cm inside railings)
+      g.add(box(6.0, 0.015, 0.08, yellowLineMat, 5.0, baseY + 0.245, -23.25 + BR_W / 2 - 0.15, false));
+      g.add(box(6.0, 0.015, 0.08, yellowLineMat, 5.0, baseY + 0.245, -23.25 - BR_W / 2 + 0.15, false));
+      // 3. North tinted glass balustrade along Z = -24.0 (connecting flush into straight bridge railing at x = 8.0)
+      g.add(box(6.0 - 0.08, 1.05, 0.06, darkGlass, 5.0, baseY + 0.24 + 0.525, -24.0 + 0.05));
+      g.add(box(6.0, 0.08, 0.08, blueWall, 5.0, baseY + 0.24 + 0.04, -24.0 + 0.05));
+      g.add(box(6.0, 0.08, 0.12, mats.metalSilver, 5.0, baseY + 0.24 + 1.05, -24.0 + 0.05));
+      for (let sx = 2.8; sx < 8.0; sx += 1.6) {
+        g.add(box(0.06, 1.08, 0.08, mats.metalSilver, sx, baseY + 0.24 + 0.54, -24.0 + 0.05));
+      }
+      // Handrail terminal posts at bridge seam (x = 8.0)
+      g.add(box(0.08, 1.08, 0.08, mats.metalSilver, 8.0, baseY + 0.24 + 0.54, -22.5));
+      g.add(box(0.08, 1.08, 0.08, mats.metalSilver, 8.0, baseY + 0.24 + 0.54, -24.0 + 0.05));
+      // 4. Smooth architectural transition steps from classroom balcony level (baseY + 0.55) to bridge landing (baseY + 0.25)
+      g.add(box(0.6, 0.11, BR_W, concrete, 1.7, baseY + 0.165, -23.25));
+      g.add(box(0.6, 0.22, BR_W, concrete, 1.1, baseY + 0.22, -23.25));
+      g.add(box(0.6, 0.33, BR_W, concrete, 0.5, baseY + 0.275, -23.25));
+      // Chamfer balustrade connecting classroom balcony parapet at [2.0, -23.15] to bridge rail at [2.0, -23.95]
+      const transBal = box(0.8, 1.05, 0.1, whiteMat, 2.0, baseY + 0.24 + 0.525, -23.55);
+      transBal.rotation.y = Math.PI / 2;
+      g.add(transBal);
 
       // ── 5-Storey Building 2F Corridor Entrance Portal Frame (Blue Square in User Image) ──
       // Open entrance between corner column P4 [23.0, -30.5] and classroom wall [25.13, -31.04] (wall removed!)
