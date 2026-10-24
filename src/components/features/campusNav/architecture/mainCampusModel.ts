@@ -2439,9 +2439,10 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     [8.0, -23.25, 0],
     [14.25, -23.25, 0],
     [20.5, -23.25, 0],
-    [23.8, -23.0, 0.124],
-    [26.2, -25.8, 0.86],
-    [25.5, -30.75, 2.89],
+    [24.0, -23.0, 0.124],
+    [26.5, -26.0, 0.86],
+    [24.5, -31.0, 1.3],
+    [22.6, -32.0, 1.82],
   ];
 
   footbridgePiers.forEach(([px, pz, rotY]) => {
@@ -2969,13 +2970,10 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     }
 
     if (f === 1) {
-      // ── 2F Open-Air Skybridge with Smoothed Chamfered Turning Elbow Terrace ──
+      // ── 2F Open-Air Skybridge with Smoothed Turning Elbow Connected into 2F Balcony ──
       // 1. Straight connector from Tower Building Balcony [8.0, -23.25] to [20.5, -23.25] (width 1.5m)
-      // 2. Smoothed turning elbow terrace constructed to the exact User 8-Point Outline (Perimeter: 27.6m, Area: 25.4m²):
-      //    Point 1 [20.5, -22.5] -> Point 2 [24.5, -22.0] -> Point 3 [27.5, -25.5] -> Point 4 [26.5, -31.0] ->
-      //    Point 5 [24.5, -30.5] -> Point 6 [25.0, -26.0] -> Point 7 [23.0, -24.0] -> Point 8 [20.5, -24.0],
-      //    which eliminates any sharp turn and creates a wide, smooth panoramic viewing curve
-      //    connecting flush onto the 5-Storey Building 2F front balcony without interior penetration.
+      // 2. Smoothed turning elbow terrace (8-point geometry) seamlessly extended and connected directly
+      //    into the 5-Storey Building 2F Front Balcony floor between columns at [22.41, -32.8] and [22.82, -31.2].
       const BR_W = 1.5;
 
       // ── 1. Straight Tower Connection Span (X: 8.0 to 20.5, Z = -23.25, rotY = 0) ──
@@ -3026,70 +3024,73 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       );
       g.add(straightSpanGrp);
 
-      // ── 2. Smoothed Turning Elbow Terrace Constructed to Exact 8-Point Outline ──
-      // Points: 1 [20.5, -22.5], 2 [24.5, -22.0], 3 [27.5, -25.5], 4 [26.5, -31.0],
-      //         5 [24.5, -30.5], 6 [25.0, -26.0], 7 [23.0, -24.0], 8 [20.5, -24.0]
-      // Perimeter: 27.6m, Area: 25.4m²
-      const outline8Pts: readonly [number, number][] = [
-        [20.5, -22.5], // Corner 1 (Straight span north connection)
-        [24.5, -22.0], // Corner 2 (Outer curve bend 1)
-        [27.5, -25.5], // Corner 3 (Outer curve apex / observation elbow)
-        [26.5, -31.0], // Corner 4 (Balcony landing right threshold)
-        [24.5, -30.5], // Corner 5 (Balcony landing left threshold)
-        [25.0, -26.0], // Corner 6 (Inner curve apex)
-        [23.0, -24.0], // Corner 7 (Inner curve bend 1)
-        [20.5, -24.0], // Corner 8 (Straight span south connection)
+      // ── 2. Smoothed Turning Bridge Deck Connected Directly Into 5-Storey 2F Balcony ──
+      // Continuous polygon from straight span [20.5, -22.5] around the smooth 8-point turn
+      // directly reaching the 5-Storey Building 2F Front Balcony line at [22.41, -32.8] and [22.82, -31.2]
+      const bridgePolyPts: readonly [number, number][] = [
+        [20.5, -22.5],   // 1. Straight span north connection
+        [24.5, -22.0],   // 2. Outer chamfer bend 1
+        [27.5, -25.5],   // 3. Outer apex observation terrace
+        [26.5, -31.0],   // 4. Outer turn elbow corner
+        [22.41, -32.8],  // 5. 5-Storey 2F Balcony Landing Outer Edge
+        [22.82, -31.2],  // 6. 5-Storey 2F Balcony Landing Inner Edge
+        [24.5, -30.5],   // 7. Inner turn elbow corner
+        [25.0, -26.0],   // 8. Inner curve apex
+        [23.0, -24.0],   // 9. Inner curve bend 1
+        [20.5, -24.0],   // 10. Straight span south connection
       ];
 
-      const shape8 = new THREE.Shape();
-      shape8.moveTo(outline8Pts[0][0], -outline8Pts[0][1]);
-      for (let i = 1; i < outline8Pts.length; i++) {
-        shape8.lineTo(outline8Pts[i][0], -outline8Pts[i][1]);
+      const shapeDeck = new THREE.Shape();
+      shapeDeck.moveTo(bridgePolyPts[0][0], -bridgePolyPts[0][1]);
+      for (let i = 1; i < bridgePolyPts.length; i++) {
+        shapeDeck.lineTo(bridgePolyPts[i][0], -bridgePolyPts[i][1]);
       }
-      shape8.closePath();
+      shapeDeck.closePath();
 
       // Structural concrete floor slab
-      const geom8Slab = new THREE.ExtrudeGeometry(shape8, { depth: 0.22, bevelEnabled: false });
-      geom8Slab.rotateX(-Math.PI / 2);
-      geom8Slab.computeVertexNormals();
-      const slabMesh8 = new THREE.Mesh(geom8Slab, concrete);
-      slabMesh8.position.y = baseY;
-      slabMesh8.receiveShadow = true;
-      slabMesh8.castShadow = true;
-      g.add(slabMesh8);
+      const geomDeckSlab = new THREE.ExtrudeGeometry(shapeDeck, { depth: 0.22, bevelEnabled: false });
+      geomDeckSlab.rotateX(-Math.PI / 2);
+      geomDeckSlab.computeVertexNormals();
+      const slabMeshDeck = new THREE.Mesh(geomDeckSlab, concrete);
+      slabMeshDeck.position.y = baseY;
+      slabMeshDeck.receiveShadow = true;
+      slabMeshDeck.castShadow = true;
+      g.add(slabMeshDeck);
 
       // Non-slip dark paver top walking surface layer
-      const geom8Paver = new THREE.ExtrudeGeometry(shape8, { depth: 0.03, bevelEnabled: false });
-      geom8Paver.rotateX(-Math.PI / 2);
-      geom8Paver.computeVertexNormals();
-      const paverMesh8 = new THREE.Mesh(geom8Paver, mats.metalDark);
-      paverMesh8.position.y = baseY + 0.22;
-      paverMesh8.receiveShadow = true;
-      g.add(paverMesh8);
+      const geomDeckPaver = new THREE.ExtrudeGeometry(shapeDeck, { depth: 0.03, bevelEnabled: false });
+      geomDeckPaver.rotateX(-Math.PI / 2);
+      geomDeckPaver.computeVertexNormals();
+      const paverMeshDeck = new THREE.Mesh(geomDeckPaver, mats.metalDark);
+      paverMeshDeck.position.y = baseY + 0.22;
+      paverMeshDeck.receiveShadow = true;
+      g.add(paverMeshDeck);
 
       // Royal blue under-deck fascia girder skirt
-      const geom8Skirt = new THREE.ExtrudeGeometry(shape8, { depth: 0.36, bevelEnabled: false });
-      geom8Skirt.rotateX(-Math.PI / 2);
-      geom8Skirt.computeVertexNormals();
-      const skirtMesh8 = new THREE.Mesh(geom8Skirt, blueWall);
-      skirtMesh8.position.y = baseY - 0.14;
-      skirtMesh8.castShadow = true;
-      g.add(skirtMesh8);
+      const geomDeckSkirt = new THREE.ExtrudeGeometry(shapeDeck, { depth: 0.36, bevelEnabled: false });
+      geomDeckSkirt.rotateX(-Math.PI / 2);
+      geomDeckSkirt.computeVertexNormals();
+      const skirtMeshDeck = new THREE.Mesh(geomDeckSkirt, blueWall);
+      skirtMeshDeck.position.y = baseY - 0.14;
+      skirtMeshDeck.castShadow = true;
+      g.add(skirtMeshDeck);
 
       // Architectural Balustrades along outer smoothed edges & inner courtyard edges
-      // Open at Edge 8->1 (straight bridge connection) and Edge 4->5 (balcony landing)
-      const railingEdges8: Array<{ p1: [number, number]; p2: [number, number]; name: string }> = [
-        // Outer smoothed turning curve
+      // Open at Edge 10->1 (straight bridge connection) and Edge 5->6 (balcony landing threshold)
+      const railingEdgesDeck: Array<{ p1: [number, number]; p2: [number, number]; name: string }> = [
+        // Outer smoothed turning & approach balustrades
         { p1: [20.5, -22.5], p2: [24.5, -22.0], name: "outer_1_2" },
         { p1: [24.5, -22.0], p2: [27.5, -25.5], name: "outer_2_3" },
         { p1: [27.5, -25.5], p2: [26.5, -31.0], name: "outer_3_4" },
-        // Inner courtyard turning curve
-        { p1: [24.5, -30.5], p2: [25.0, -26.0], name: "inner_5_6" },
-        { p1: [25.0, -26.0], p2: [23.0, -24.0], name: "inner_6_7" },
-        { p1: [23.0, -24.0], p2: [20.5, -24.0], name: "inner_7_8" },
+        { p1: [26.5, -31.0], p2: [22.41, -32.8], name: "outer_4_balc" },
+        // Inner courtyard turning & approach balustrades
+        { p1: [22.82, -31.2], p2: [24.5, -30.5], name: "inner_balc_7" },
+        { p1: [24.5, -30.5], p2: [25.0, -26.0], name: "inner_7_8" },
+        { p1: [25.0, -26.0], p2: [23.0, -24.0], name: "inner_8_9" },
+        { p1: [23.0, -24.0], p2: [20.5, -24.0], name: "inner_9_10" },
       ];
 
-      railingEdges8.forEach(({ p1, p2 }) => {
+      railingEdgesDeck.forEach(({ p1, p2 }) => {
         const edx = p2[0] - p1[0];
         const edz = p2[1] - p1[1];
         const elen = Math.hypot(edx, edz);
@@ -3121,8 +3122,8 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
         g.add(yellowStrip);
       });
 
-      // Stainless steel structural terminal and corner posts at all 8 outline corners
-      outline8Pts.forEach(([cx, cz]) => {
+      // Stainless steel structural terminal and corner posts at all 10 perimeter vertices
+      bridgePolyPts.forEach(([cx, cz]) => {
         g.add(box(0.12, 1.15, 0.12, mats.metalSilver, cx, baseY + 0.24 + 0.575, cz));
       });
 
@@ -3143,11 +3144,11 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       g.add(box(0.08, 1.05, 0.08, mats.metalSilver, 8.0, baseY + 1.05, -24.0));
 
       // ── 5-Storey Building 2F FRONT Balcony Flush Landing Threshold ───────────
-      // Wide 2.06m opening between [26.5, -31.0] and [24.5, -30.5] onto 2F balcony
-      const balcMidX = (26.5 + 24.5) / 2;
-      const balcMidZ = (-31.0 + -30.5) / 2;
-      const balcLen = Math.hypot(24.5 - 26.5, -30.5 - (-31.0));
-      const balcRotY = Math.atan2(-(-30.5 - -31.0), 24.5 - 26.5);
+      // Connected directly and flush into the 2F outdoor balcony between [22.41, -32.8] and [22.82, -31.2]
+      const balcMidX = (22.41 + 22.82) / 2;
+      const balcMidZ = (-32.8 + -31.2) / 2;
+      const balcLen = Math.hypot(22.82 - 22.41, -31.2 - (-32.8));
+      const balcRotY = Math.atan2(-(-31.2 - -32.8), 22.82 - 22.41);
       const landingPlatGrp = new THREE.Group();
       landingPlatGrp.position.set(balcMidX, baseY + 0.25, balcMidZ);
       landingPlatGrp.rotation.y = balcRotY;
@@ -3158,7 +3159,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       // Students walking along the smoothed 2F Open-Air Skybridge
       g.add(createPedestrian(14.0, -23.25, 0, blueWall, baseY + 0.24));
       g.add(createPedestrian(22.0, -23.5, 0.35, carWhite, baseY + 0.24));
-      g.add(createPedestrian(26.0, -27.5, 1.39, carBlue, baseY + 0.24));
+      g.add(createPedestrian(24.0, -29.5, 1.39, carBlue, baseY + 0.24));
     }
 
     floorGroups.push(g);
