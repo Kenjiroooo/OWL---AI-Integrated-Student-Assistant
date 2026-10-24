@@ -70,7 +70,7 @@ export const CAMPUS_BUILDINGS: readonly CampusBuilding[] = [
       'Classroom balconies with AC condenser units',
       '2nd-floor open-air pedestrian skybridge connecting Main Tower balcony to 5-Storey Building 2F corridor south portal (streamlined bridge shape, wall removed for open walk-through)',
       'Panoramic glass balustrades with silver handrails & royal blue fascia beams on footbridge',
-      'Open-air observation elbow terrace at Point 2 with courtyard viewing deck & student resting benches',
+      'Seamless streamlined turning ramp connecting open-air skybridge into 2F corridor with panoramic tinted glass balustrades',
       'Ground-level reinforced concrete support piers with royal blue capital collars',
       'Circular Universidad de Dagupan seal',
       'Modern A-frame chapel with monumental cross',

@@ -2439,7 +2439,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     [8.0, -23.25, 0],
     [14.25, -23.25, 0],
     [19.5, -23.25, 0],
-    [23.5, -24.5, 0.4],
+    [23.5, -24.0, 0.53],
     [24.065, -30.77, -0.248],
   ];
 
@@ -3038,21 +3038,23 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       );
       g.add(straightSpanGrp);
 
-      // ── 2. Streamlined Turning Ramp Deck (User Blue-Line Shape) ──
+      // ── 2. Streamlined Turning Ramp Deck (Clean Chamfered Corner, No Protrusions) ──
       // Vertices in CCW order:
-      // 1. [19.5, -22.5] (straight span north connection)
-      // 2. [22.0, -23.0] (inner curve bend)
-      // 3. [23.0, -30.5] (corridor west jamb at corner column P4)
+      // 1. [19.5, -22.5] (straight span south rail connection - outer)
+      // 2. [23.0, -22.5] (outer straight extension along south edge)
+      // 3. [24.5, -24.5] (outer chamfer bend at pier - user blue arrow line)
       // 4. [25.13, -31.04] (corridor east jamb at classroom wall, wall removed!)
-      // 5. [23.5, -24.5] (outer bend at pier - target of the user blue arrow!)
-      // 6. [19.5, -24.0] (straight span south connection)
+      // 5. [23.0, -30.5] (corridor west jamb at corner column P4)
+      // 6. [21.5, -25.0] (inner chamfer bend facing courtyard - clean seamless corner)
+      // 7. [19.5, -24.0] (straight span north rail connection - inner)
       const bridgePolyPts: readonly [number, number][] = [
-        [19.5, -22.5],   // 1. Straight span north rail connection
-        [22.0, -23.0],   // 2. Inner curve bend
-        [23.0, -30.5],   // 3. Corridor West Jamb (at corner column P4)
+        [19.5, -22.5],   // 1. Straight span south rail connection (outer)
+        [23.0, -22.5],   // 2. Outer straight extension
+        [24.5, -24.5],   // 3. Outer chamfer bend at pier
         [25.13, -31.04], // 4. Corridor East Jamb (at classroom wall - wall removed!)
-        [23.5, -24.5],   // 5. Outer bend at pier (exact blue arrow line from jamb 4 to here)
-        [19.5, -24.0],   // 6. Straight span south rail connection
+        [23.0, -30.5],   // 5. Corridor West Jamb (at corner column P4)
+        [21.5, -25.0],   // 6. Inner chamfer bend (facing courtyard)
+        [19.5, -24.0],   // 7. Straight span north rail connection (inner)
       ];
 
       const shapeDeck = new THREE.Shape();
@@ -3090,16 +3092,16 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       skirtMeshDeck.castShadow = true;
       g.add(skirtMeshDeck);
 
-      // Architectural Balustrades matching the user blue line instruction
-      // Open at Edge 6->1 (straight bridge connection) and Edge 3->4 (open corridor entrance portal)
+      // Architectural Balustrades matching the deck perimeter exactly
+      // Open at Edge 7->1 (straight bridge connection) and Edge 4->5 (open corridor entrance portal)
       const railingEdgesDeck: Array<{ p1: [number, number]; p2: [number, number]; name: string }> = [
-        // Inner curve railing (facing courtyard/basketball court)
-        { p1: [19.5, -22.5], p2: [22.0, -23.0], name: "inner_1_2" },
-        { p1: [22.0, -23.0], p2: [23.0, -30.5], name: "inner_2_3" }, // leads into corner column P4
-        // Outer straight railing (EXACT USER BLUE ARROW LINE from right jamb to pier bend)
-        { p1: [25.13, -31.04], p2: [23.5, -24.5], name: "outer_blue_arrow" }, // straight arrow line
-        // Outer bend railing along south edge to straight span
-        { p1: [23.5, -24.5], p2: [19.5, -24.0], name: "outer_5_6" },
+        // Outer railings along south edge and user blue arrow line
+        { p1: [19.5, -22.5], p2: [23.0, -22.5], name: "outer_straight_ext" },
+        { p1: [23.0, -22.5], p2: [24.5, -24.5], name: "outer_bend" },
+        { p1: [24.5, -24.5], p2: [25.13, -31.04], name: "outer_to_door" }, // meets classroom wall
+        // Inner railings facing courtyard (no crossing, no trapped pocket, zero protrusion)
+        { p1: [23.0, -30.5], p2: [21.5, -25.0], name: "inner_from_door" }, // meets corner column P4
+        { p1: [21.5, -25.0], p2: [19.5, -24.0], name: "inner_to_straight" }, // meets straight north rail
       ];
 
       railingEdgesDeck.forEach(({ p1, p2 }) => {
@@ -3130,7 +3132,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
         const yellowStrip = new THREE.Group();
         yellowStrip.position.set(ecx, baseY + 0.245, ecz);
         yellowStrip.rotation.y = erotY;
-        yellowStrip.add(box(elen, 0.015, 0.08, yellowLineMat, 0, 0, 0.15, false));
+        yellowStrip.add(box(elen, 0.015, 0.08, yellowLineMat, 0, 0, -0.15, false));
         g.add(yellowStrip);
       });
 
