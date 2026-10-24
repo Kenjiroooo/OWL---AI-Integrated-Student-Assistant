@@ -2425,7 +2425,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   van.add(box(4.8, 2.0, 2.2, mats.whiteWall, 0, 1.1, 0));
   van.add(box(1.8, 0.85, 2.22, darkGlass, 1.2, 1.35, 0));
   van.add(box(2.4, 0.75, 2.22, darkGlass, -0.9, 1.35, 0));
-  van.position.set(18.0, 0.1, -24.5 + C5_SHIFT_Z);
+  van.position.set(18.0, 0.1, -29.0 + C5_SHIFT_Z);
   ground.add(van);
   ground.add(createCar(18.0, -30.5 + C5_SHIFT_Z, carDark));
   ground.add(createCar(18.0, -36.5 + C5_SHIFT_Z, carWhite));
@@ -2436,13 +2436,14 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   // Point 2 Elbow (26.0, -19.0), Mid-Span 2 (27.25, -23.75), Point 3 (28.5, -28.5),
   // and 5-Storey Entrance (28.5, -31.5)
   const footbridgePiers: Array<[number, number, number]> = [
-    [11.0, -20.54, -0.597],
-    [14.0, -18.5, 0.0416],
-    [20.0, -18.75, 0.0416],
+    [8.0, -22.75, 0],
+    [13.5, -22.75, 0],
+    [19.0, -22.75, -0.246],
+    [22.5, -20.875, -0.492],
     [26.0, -19.0, 0.677],
     [27.25, -23.75, 1.3135],
     [28.5, -28.5, 1.3135],
-    [28.5, -31.0, 1.3135],
+    [28.5, -30.5, 1.3135],
   ];
 
   footbridgePiers.forEach(([px, pz, rotY]) => {
@@ -2971,28 +2972,31 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
 
     if (f === 1) {
       // ── 2F Open-Air Skybridge connecting Tower Balcony & 5-Storey Corridor ────────
-      // Connects directly onto the Main Tower 2F Balcony [8.0, -22.575] and 5-Storey Corridor [28.5, -30.5],
-      // following the exact user outline: Point 1 [14.0, -18.5], Point 2 [26.0, -19.0], Point 3 [28.5, -28.5]
-      const BR_W = 2.4;
+      // Straight connector from Tower Building Balcony [8.0, -22.75] to [19.0, -22.75] (User 4-Point Outline:
+      // Point 1 [2.5, -22.0], Point 2 [19.0, -22.0], Point 3 [19.0, -23.5], Point 4 [2.0, -23.5]),
+      // continuing via Point 2 [26.0, -19.0] and Point 3 [28.5, -28.5] to 5-Storey Corridor [28.5, -30.5].
+      const BR_W_STRAIGHT = 1.5; // Exact width from user outline (Z = -22.0 to -23.5)
+      const BR_W_ANGLED = 2.0;
 
       interface BridgeSegmentDef {
         p1: [number, number];
         p2: [number, number];
+        width: number;
         isUserSpan1?: boolean;
       }
 
       const bridgeSegments: BridgeSegmentDef[] = [
-        // Approach span connecting directly from the 2F Balcony right end [8.0, -22.575] to Point 1 [14.0, -18.5]
-        { p1: [8.0, -22.575], p2: [14.0, -18.5] },
-        // Exact User Outline Span 1: Point 1 [14.0, -18.5] to Point 2 [26.0, -19.0] (12.0m)
-        { p1: [14.0, -18.5], p2: [26.0, -19.0], isUserSpan1: true },
-        // Exact User Outline Span 2: Point 2 [26.0, -19.0] to Point 3 [28.5, -28.5] (9.8m)
-        { p1: [26.0, -19.0], p2: [28.5, -28.5] },
-        // Connection into 5-Storey Building 2F open-air corridor [28.5, -30.5]
-        { p1: [28.5, -28.5], p2: [28.5, -30.5] },
+        // 1. Straight Tower Connection Span (Exact User Outline: Z = -22.0 to -23.5, width 1.5m, X: 8.0 to 19.0, rotY = 0)
+        { p1: [8.0, -22.75], p2: [19.0, -22.75], width: BR_W_STRAIGHT, isUserSpan1: true },
+        // 2. Angled transition span from X = 19.0 to Point 2 Observation Elbow [26.0, -19.0] (7.94m)
+        { p1: [19.0, -22.75], p2: [26.0, -19.0], width: 1.8 },
+        // 3. User Outline Span: Point 2 [26.0, -19.0] to Point 3 [28.5, -28.5] (9.82m)
+        { p1: [26.0, -19.0], p2: [28.5, -28.5], width: BR_W_ANGLED },
+        // 4. Connection into 5-Storey Building 2F open-air corridor [28.5, -30.5] (2.0m)
+        { p1: [28.5, -28.5], p2: [28.5, -30.5], width: BR_W_ANGLED },
       ];
 
-      bridgeSegments.forEach(({ p1, p2, isUserSpan1 }) => {
+      bridgeSegments.forEach(({ p1, p2, width, isUserSpan1 }) => {
         const dx = p2[0] - p1[0];
         const dz = p2[1] - p1[1];
         const len = Math.hypot(dx, dz);
@@ -3005,26 +3009,26 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
         spanGrp.rotation.y = rotY;
 
         // 1. Concrete Structural Deck Slab
-        spanGrp.add(box(len, 0.22, BR_W, concrete, 0, 0.11, 0));
+        spanGrp.add(box(len, 0.22, width, concrete, 0, 0.11, 0));
 
         // 2. Non-slip Paver Walkway Surface
-        spanGrp.add(box(len - 0.04, 0.03, BR_W - 0.2, mats.metalDark, 0, 0.235, 0));
+        spanGrp.add(box(len - 0.04, 0.03, width - 0.2, mats.metalDark, 0, 0.235, 0));
         // Yellow safety warning borders
-        spanGrp.add(box(len, 0.015, 0.08, yellowLineMat, 0, 0.245, BR_W / 2 - 0.15, false));
-        spanGrp.add(box(len, 0.015, 0.08, yellowLineMat, 0, 0.245, -BR_W / 2 + 0.15, false));
+        spanGrp.add(box(len, 0.015, 0.08, yellowLineMat, 0, 0.245, width / 2 - 0.15, false));
+        spanGrp.add(box(len, 0.015, 0.08, yellowLineMat, 0, 0.245, -width / 2 + 0.15, false));
 
         // 3. Royal Blue Under-Deck Edge Girders
-        spanGrp.add(box(len, 0.36, 0.2, blueWall, 0, -0.07, BR_W / 2 - 0.1));
-        spanGrp.add(box(len, 0.36, 0.2, blueWall, 0, -0.07, -BR_W / 2 + 0.1));
+        spanGrp.add(box(len, 0.36, 0.2, blueWall, 0, -0.07, width / 2 - 0.1));
+        spanGrp.add(box(len, 0.36, 0.2, blueWall, 0, -0.07, -width / 2 + 0.1));
 
         // Transverse structural stiffener ribs underneath
         for (let rx = -len / 2 + 1.5; rx < len / 2; rx += 2.0) {
-          spanGrp.add(box(0.12, 0.24, BR_W - 0.2, mats.metalSilver, rx, -0.05, 0));
+          spanGrp.add(box(0.12, 0.24, width - 0.2, mats.metalSilver, rx, -0.05, 0));
         }
 
         // 4. Architectural Safety Balustrades (Left & Right) - Open Air (No Roof)
         [-1, 1].forEach((side) => {
-          const bz = side * (BR_W / 2 - 0.05);
+          const bz = side * (width / 2 - 0.05);
 
           // Tinted safety glass panel
           spanGrp.add(box(len - 0.08, 1.05, 0.06, darkGlass, 0, 0.24 + 0.525, bz));
@@ -3039,23 +3043,38 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
           }
         });
 
-        // Signage mounted along the exterior girder of Span 1 facing the basketball court
+        // Signage mounted along the exterior girder of Span 1 facing the basketball court and courtyard
         if (isUserSpan1) {
           spanGrp.add(
             box(
-              4.6,
+              5.0,
               0.48,
               0.08,
               [blueWall, blueWall, blueWall, blueWall, footbridgeSignMat, blueWall],
               0,
               -0.07,
-              -BR_W / 2 - 0.06
+              -width / 2 - 0.06
             )
           );
         }
 
         g.add(spanGrp);
       });
+
+      // ── Transition Landing Node at X = 19.0, Z = -22.75 (Eastern Court Apron) ──
+      const jnX = 19.0;
+      const jnZ = -22.75;
+      const jnSize = 2.2;
+      const jnGrp = new THREE.Group();
+      jnGrp.position.set(jnX, baseY, jnZ);
+      jnGrp.add(box(jnSize, 0.22, jnSize, concrete, 0, 0.11, 0));
+      jnGrp.add(box(jnSize - 0.2, 0.03, jnSize - 0.2, mats.metalDark, 0, 0.235, 0));
+      jnGrp.add(box(jnSize + 0.1, 0.36, jnSize + 0.1, blueWall, 0, -0.07, 0));
+      // Outer safety railing to seamlessly connect Span 1 and Span 2
+      jnGrp.add(box(jnSize, 1.05, 0.06, darkGlass, 0, 0.24 + 0.525, -jnSize / 2 + 0.05));
+      jnGrp.add(box(jnSize, 0.08, 0.12, mats.metalSilver, 0, 0.24 + 1.05, -jnSize / 2 + 0.05));
+      jnGrp.add(box(0.12, 1.15, 0.12, mats.metalSilver, 0, 0.24 + 0.575, -jnSize / 2 + 0.05));
+      g.add(jnGrp);
 
       // ── Open-Air Corner Elbow Observation Platform at Point 2 [26.0, -19.0] ──
       const elX = 26.0;
@@ -3088,21 +3107,23 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
 
       g.add(elbowGrp);
 
-      // ── Main Tower 2F Balcony Direct Connection (at x = 8.0, z = -22.575) ──
-      // Connects directly onto the 2F outdoor balcony floor (no interior portal box)
-      g.add(box(0.8, 0.04, balcD + 0.2, mats.metalDark, 8.0, baseY + 0.56, balcZ));
-      // Handrail terminal posts connecting balcony rail to bridge rail
-      g.add(box(0.08, 1.05, 0.08, mats.metalSilver, 8.0, baseY + 1.05, balcFrontZ));
-      g.add(box(0.08, 1.05, 0.08, mats.metalSilver, 8.0, baseY + 1.05, backZ));
+      // ── Main Tower 2F Balcony Direct Connection & Walkway Runner (x = 2.0 to 8.0, z = -22.75) ──
+      // Dedicated 1.5m wide bridge approach walkway runner across the balcony (User Outline Corners 1 & 4)
+      g.add(box(6.0, 0.04, BR_W_STRAIGHT, mats.metalDark, 5.0, baseY + 0.56, -22.75));
+      g.add(box(6.0, 0.015, 0.08, yellowLineMat, 5.0, baseY + 0.57, -22.75 + BR_W_STRAIGHT / 2 - 0.05, false));
+      g.add(box(6.0, 0.015, 0.08, yellowLineMat, 5.0, baseY + 0.57, -22.75 - BR_W_STRAIGHT / 2 + 0.05, false));
+      // Handrail terminal posts connecting balcony rail to bridge rail at x = 8.0
+      g.add(box(0.08, 1.05, 0.08, mats.metalSilver, 8.0, baseY + 1.05, -22.0));
+      g.add(box(0.08, 1.05, 0.08, mats.metalSilver, 8.0, baseY + 1.05, -23.5));
 
       // ── 5-Storey Building 2F Open Corridor Direct Connection (at x = 28.5, z = -30.5) ──
       // Connects directly into the 2F open-air corridor (no interior portal box)
-      g.add(box(BR_W, 0.04, 0.8, mats.metalDark, 28.5, baseY + 0.25, -30.5));
-      g.add(box(0.08, 1.05, 0.08, mats.metalSilver, 28.5 - BR_W / 2 + 0.05, baseY + 0.78, -30.5));
-      g.add(box(0.08, 1.05, 0.08, mats.metalSilver, 28.5 + BR_W / 2 - 0.05, baseY + 0.78, -30.5));
+      g.add(box(BR_W_ANGLED, 0.04, 0.8, mats.metalDark, 28.5, baseY + 0.25, -30.5));
+      g.add(box(0.08, 1.05, 0.08, mats.metalSilver, 28.5 - BR_W_ANGLED / 2 + 0.05, baseY + 0.78, -30.5));
+      g.add(box(0.08, 1.05, 0.08, mats.metalSilver, 28.5 + BR_W_ANGLED / 2 - 0.05, baseY + 0.78, -30.5));
 
       // Additional students walking on the 2F Open-Air Skybridge
-      g.add(createPedestrian(17.5, -18.75, Math.PI / 2, blueWall, baseY + 0.24));
+      g.add(createPedestrian(14.0, -22.75, 0, blueWall, baseY + 0.24));
       g.add(createPedestrian(27.8, -25.0, -Math.PI / 2 + 0.2, carWhite, baseY + 0.24));
     }
 
