@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { useAuth } from '../../context/AuthContext';
-import { Calendar, MapPin, User, Clock, Info, AlertTriangle, X, ZoomIn, ZoomOut, RotateCcw, ExternalLink, Maximize2, BrainCircuit } from 'lucide-react';
+import { Calendar, MapPin, User, Clock, Info, AlertTriangle, X, ZoomIn, ZoomOut, RotateCcw, ExternalLink, Maximize2, BrainCircuit, CalendarClock, Hourglass } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import conflictExamImg from '../../assets/conflict_exam_schedule.webp';
 import { DUMMY_EXAMS } from '../../data/dummyExamData';
@@ -82,14 +82,63 @@ export default function ExamTimetable() {
     return examDate >= today;
   });
 
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const upcomingExams = exams.filter(e => new Date(e.date?.seconds * 1000) >= startOfToday);
+  const nextExam = upcomingExams[0];
+
+  const daysUntil = (seconds: number) => {
+    const d = new Date(seconds * 1000);
+    d.setHours(0, 0, 0, 0);
+    return Math.round((d.getTime() - startOfToday.getTime()) / 86400000);
+  };
+
+  const countdownLabel = (seconds: number) => {
+    const n = daysUntil(seconds);
+    if (n < 0) return 'Done';
+    if (n === 0) return 'Today';
+    if (n === 1) return 'Tomorrow';
+    return `In ${n} days`;
+  };
+
   return (
     <div className="max-w-7xl mx-auto space-y-8">
-        <div className="bg-indigo-600 rounded-[3rem] p-12 text-white shadow-2xl shadow-indigo-200">
-          <h2 className="text-4xl font-black mb-4">Exam Timetable</h2>
-          <p className="text-indigo-100 text-xl font-medium opacity-90 max-w-2xl">
-            Review your upcoming examination schedule, assigned rooms, and proctors. Ensure you have your Universidad de Dagupan ID Card during exams.
-          </p>
-        </div>
+        {/* ── Hero ──────────────────────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="relative overflow-hidden rounded-[3rem] bg-gradient-to-br from-indigo-700 via-indigo-600 to-violet-600 p-10 md:p-12 text-white shadow-2xl shadow-indigo-300/40"
+        >
+          <div className="absolute -top-24 -right-24 w-80 h-80 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-32 left-1/3 w-96 h-96 bg-violet-400/20 rounded-full blur-3xl pointer-events-none" />
+          <CalendarClock className="absolute right-10 top-1/2 -translate-y-1/2 w-48 h-48 text-white/[0.06] hidden md:block pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
+            <div>
+              <span className="inline-flex items-center gap-2 bg-white/15 border border-white/20 backdrop-blur-sm px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest mb-5">
+                <Calendar className="w-3.5 h-3.5" /> 2nd Semester · A.Y. 2025-2026
+              </span>
+              <h2 className="text-4xl md:text-5xl font-black mb-4 tracking-tight">Exam Timetable</h2>
+              <p className="text-indigo-100 text-lg md:text-xl font-medium max-w-2xl leading-relaxed">
+                Review your upcoming examination schedule, assigned rooms, and proctors. Ensure you have your Universidad de Dagupan ID Card during exams.
+              </p>
+            </div>
+
+            <div className="flex gap-3 flex-shrink-0">
+              <div className="bg-white/10 border border-white/20 backdrop-blur-md rounded-3xl px-6 py-4 min-w-[8.5rem]">
+                <p className="text-[10px] font-black uppercase tracking-widest text-indigo-200 mb-1">Upcoming</p>
+                <p className="text-3xl font-black leading-none">{loading ? '—' : upcomingExams.length}</p>
+                <p className="text-xs font-semibold text-indigo-200 mt-1">exams</p>
+              </div>
+              <div className="bg-white text-indigo-700 rounded-3xl px-6 py-4 min-w-[8.5rem] shadow-xl">
+                <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-1 flex items-center gap-1"><Hourglass className="w-3 h-3" /> Next Exam</p>
+                <p className="text-2xl font-black leading-none">{nextExam ? countdownLabel(nextExam.date?.seconds) : '—'}</p>
+                <p className="text-xs font-semibold text-slate-500 mt-1 max-w-[9rem] truncate">{nextExam ? nextExam.subject.split('—')[0].trim() : 'None scheduled'}</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="space-y-6">
