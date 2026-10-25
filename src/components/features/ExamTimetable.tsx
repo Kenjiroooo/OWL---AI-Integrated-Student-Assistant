@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { useAuth } from '../../context/AuthContext';
-import { Calendar, MapPin, User, Clock, Info, AlertTriangle, X, ZoomIn, ZoomOut, RotateCcw, ExternalLink, Maximize2, BrainCircuit, CalendarClock, Hourglass } from 'lucide-react';
+import { Calendar, MapPin, User, Clock, Info, AlertTriangle, X, ZoomIn, ZoomOut, RotateCcw, ExternalLink, Maximize2, BrainCircuit, Megaphone, FileText, ArrowUpRight, ShieldCheck, CalendarClock, Hourglass } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import conflictExamImg from '../../assets/conflict_exam_schedule.webp';
 import { DUMMY_EXAMS } from '../../data/dummyExamData';
@@ -82,6 +82,8 @@ export default function ExamTimetable() {
     return examDate >= today;
   });
 
+  const MASTER_SCHEDULE_URL = 'https://drive.google.com/file/d/1aB-whaM-7_CRp_xqmRI6TblH5y36nXQO/view?fbclid=IwY2xjawTUbBlleHRuA2FlbQIxMQBzcnRjBmFwcF9pZBAyMjIwMzkxNzg4MjAwODkyAAEe-cEg2xeU7dRGT0BNB1gJPO-bvzNQcqlfxBGUW0ZK1z2ZH-YtQbNL3UiES7A_aem_SDlTa8NGlGp9wtLwYrYbqQ&pli=1';
+
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
   const upcomingExams = exams.filter(e => new Date(e.date?.seconds * 1000) >= startOfToday);
@@ -140,41 +142,125 @@ export default function ExamTimetable() {
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="space-y-6">
-            {/* Conflict Exam Announcement */}
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
+        {/* ── Priority Notices: Announcement + Master Schedule ── */}
+        <section aria-labelledby="priority-notices-heading" className="space-y-4">
+          <div className="flex items-center gap-3 ml-2">
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500" />
+            </span>
+            <h3 id="priority-notices-heading" className="text-sm font-black text-slate-500 uppercase tracking-[0.2em]">Priority Notices</h3>
+            <div className="flex-1 h-px bg-gradient-to-r from-slate-200 to-transparent" />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            {/* Official Announcement */}
+            <motion.button
+              id="exam-announcement-card"
+              type="button"
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              whileHover={{ y: -4 }}
               onClick={() => setIsImageModalOpen(true)}
-              className="rounded-[2rem] overflow-hidden border-2 border-amber-300 shadow-lg shadow-amber-100 cursor-pointer group/ann-card transition-all hover:shadow-xl hover:border-amber-400"
+              className="lg:col-span-3 text-left rounded-[2.5rem] overflow-hidden bg-white border-2 border-amber-300 shadow-xl shadow-amber-200/40 group/ann-card transition-shadow hover:shadow-2xl hover:shadow-amber-300/50 flex flex-col"
             >
-              {/* Banner */}
-              <div className="bg-amber-400 px-5 py-3 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <AlertTriangle className="w-5 h-5 text-amber-900 flex-shrink-0" />
-                  <p className="text-amber-900 font-black text-sm uppercase tracking-widest">Official Announcement</p>
+              <div className="bg-gradient-to-r from-amber-400 via-amber-400 to-orange-400 px-6 py-4 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-900/10 flex items-center justify-center flex-shrink-0">
+                    <Megaphone className="w-5 h-5 text-amber-950" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-amber-950 font-black text-xs uppercase tracking-widest leading-none mb-1">Official Announcement</p>
+                    <p className="text-amber-950/90 font-bold text-base leading-tight truncate">Conflict &amp; Special Exam Final Schedule</p>
+                  </div>
                 </div>
-                <span className="text-[11px] font-black text-amber-900/80 uppercase tracking-wider bg-amber-300/60 px-3 py-1 rounded-full flex items-center gap-1.5">
+                <span className="text-[11px] font-black text-amber-950 uppercase tracking-wider bg-white/50 px-3 py-1.5 rounded-full flex items-center gap-1.5 flex-shrink-0">
                   <Maximize2 className="w-3 h-3" /> Tap to view
                 </span>
               </div>
-              {/* Image Preview Container */}
-              <div className="relative overflow-hidden bg-slate-900">
+              <div className="relative overflow-hidden bg-slate-900 flex-1 min-h-[16rem]">
                 <img
                   src={conflictExamImg}
                   alt="Conflict & Special Exam Final Schedule – 2nd Semester A.Y. 2025-2026"
-                  className="w-full object-cover group-hover/ann-card:scale-105 transition-transform duration-500"
+                  className="absolute inset-0 w-full h-full object-cover object-top group-hover/ann-card:scale-105 transition-transform duration-700"
                 />
-                <div className="absolute inset-0 bg-indigo-950/20 group-hover/ann-card:bg-indigo-950/40 transition-all flex items-center justify-center">
-                  <span className="opacity-0 group-hover/ann-card:opacity-100 bg-white/95 text-indigo-800 font-black text-sm px-6 py-3 rounded-full shadow-2xl transform translate-y-3 group-hover/ann-card:translate-y-0 transition-all duration-300 flex items-center gap-2 backdrop-blur-sm">
-                    <ZoomIn className="w-4 h-4 text-indigo-600" /> Click to view announcement
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/10 to-transparent" />
+                <div className="absolute bottom-0 inset-x-0 p-5 flex items-end justify-between gap-3">
+                  <span className="text-white/90 text-xs font-bold flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> Registrar Bulletin · 2nd Sem 2025-2026
+                  </span>
+                  <span className="bg-white/95 text-indigo-800 font-black text-sm px-5 py-2.5 rounded-full shadow-2xl flex items-center gap-2 group-hover/ann-card:bg-white transition-all">
+                    <ZoomIn className="w-4 h-4 text-indigo-600" /> View full notice
                   </span>
                 </div>
               </div>
-            </motion.div>
+            </motion.button>
 
+            {/* Official Master Schedule */}
+            <motion.a
+              id="exam-master-schedule-card"
+              href={MASTER_SCHEDULE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              whileHover={{ y: -4 }}
+              className="lg:col-span-2 relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-indigo-600 via-indigo-700 to-indigo-900 p-8 text-white shadow-xl shadow-indigo-300/40 hover:shadow-2xl hover:shadow-indigo-400/40 transition-shadow group/doc flex flex-col"
+            >
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+              <div className="absolute -bottom-16 -left-10 w-48 h-48 bg-violet-500/20 rounded-full blur-3xl pointer-events-none" />
+
+              <div className="relative z-10 flex items-start justify-between mb-6">
+                <div>
+                  <span className="inline-flex items-center gap-1.5 bg-white/15 border border-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-3">
+                    <ShieldCheck className="w-3 h-3" /> Official
+                  </span>
+                  <h4 className="text-2xl font-black leading-tight">Official Master Schedule</h4>
+                  <p className="text-indigo-200 text-sm font-medium mt-2">Complete examination timetable for all departments.</p>
+                </div>
+                <div className="w-11 h-11 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center flex-shrink-0 group-hover/doc:bg-white group-hover/doc:text-indigo-700 transition-colors">
+                  <ArrowUpRight className="w-5 h-5 group-hover/doc:rotate-45 transition-transform duration-300" />
+                </div>
+              </div>
+
+              {/* Document preview */}
+              <div className="relative z-10 flex-1 flex items-center justify-center py-2">
+                <div className="relative w-full max-w-[15rem]">
+                  <div className="absolute inset-0 bg-white/20 rounded-2xl rotate-6 translate-x-2" />
+                  <div className="absolute inset-0 bg-white/40 rounded-2xl rotate-3 translate-x-1" />
+                  <div className="relative bg-white rounded-2xl shadow-2xl p-5 group-hover/doc:-rotate-1 transition-transform duration-300">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center">
+                        <FileText className="w-4 h-4 text-red-500" />
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <div className="h-1.5 w-3/4 bg-slate-200 rounded-full" />
+                        <div className="h-1.5 w-1/2 bg-slate-100 rounded-full" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-4 gap-1 mb-4">
+                      {Array.from({ length: 12 }).map((_, i) => (
+                        <div key={i} className={`h-2 rounded-sm ${i < 4 ? 'bg-indigo-200' : 'bg-slate-100'}`} />
+                      ))}
+                    </div>
+                    <p className="text-slate-800 font-black text-sm leading-tight truncate">MIDTERM EXAM SCHEDULE</p>
+                    <p className="text-indigo-500 font-bold text-[10px] uppercase tracking-widest mt-0.5">2nd Semester, A.Y. 2025-2026</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative z-10 mt-6 w-full bg-white text-indigo-700 font-black text-sm py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg group-hover/doc:bg-amber-300 group-hover/doc:text-indigo-950 transition-colors">
+                <ExternalLink className="w-4 h-4" /> Open Master Schedule
+              </div>
+            </motion.a>
+          </div>
+        </section>
+
+                {/* ── Personal schedule + protocols ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="space-y-6">
             <div className="flex items-center justify-between ml-2">
               <h3 className="text-xl font-bold text-slate-800 flex items-center gap-3">
                 <Clock className="w-6 h-6 text-indigo-600" /> Upcoming Subjects
@@ -241,7 +327,7 @@ export default function ExamTimetable() {
           </div>
 
           <div className="space-y-8">
-             <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm">
+            <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm">
                   <div className="flex items-center gap-4 mb-8">
                   <Info className="w-8 h-8 text-amber-500" />
                   <h3 className="text-2xl font-bold text-slate-800">Exam Protocols</h3>
@@ -260,42 +346,10 @@ export default function ExamTimetable() {
                   ))}
                 </ul>
              </div>
-
-             <div className="bg-gradient-to-br from-indigo-500 to-indigo-700 p-8 rounded-[3rem] text-white shadow-lg relative overflow-hidden group mb-8">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl -translate-y-10 translate-x-10"></div>
-                
-                <h4 className="text-xl font-bold mb-2 relative z-10">Official Master Schedule</h4>
-                <p className="text-indigo-100 text-sm font-medium mb-6 relative z-10">
-                  View the complete examination timetable for all departments.
-                </p>
-                
-                <a 
-                  href="https://drive.google.com/file/d/1aB-whaM-7_CRp_xqmRI6TblH5y36nXQO/view?fbclid=IwY2xjawTUbBlleHRuA2FlbQIxMQBzcnRjBmFwcF9pZBAyMjIwMzkxNzg4MjAwODkyAAEe-cEg2xeU7dRGT0BNB1gJPO-bvzNQcqlfxBGUW0ZK1z2ZH-YtQbNL3UiES7A_aem_SDlTa8NGlGp9wtLwYrYbqQ&pli=1"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full overflow-hidden rounded-2xl shadow-lg border-2 border-indigo-400/30 hover:border-white/50 hover:shadow-2xl transition-all group/doc relative bg-white/5"
-                >
-                   <div className="h-32 bg-white flex flex-col items-center justify-center">
-                      <Calendar className="w-12 h-12 text-indigo-200 mb-3" />
-                      <div className="w-2/3 h-2 bg-slate-100 rounded-full mb-2"></div>
-                      <div className="w-1/2 h-2 bg-slate-100 rounded-full mb-2"></div>
-                      <div className="w-1/3 h-2 bg-slate-100 rounded-full"></div>
-                   </div>
-                   <div className="bg-white border-t border-slate-100 p-4">
-                      <p className="text-slate-800 font-black text-sm leading-tight mb-1 truncate">MIDTERM EXAM SCHEDULE</p>
-                      <p className="text-indigo-500 font-bold text-[10px] uppercase tracking-widest">2nd Semester, A.Y. 2025-2026</p>
-                   </div>
-                   <div className="absolute inset-0 bg-indigo-900/0 group-hover/doc:bg-indigo-900/20 backdrop-blur-[0px] group-hover/doc:backdrop-blur-[2px] transition-all flex items-center justify-center">
-                      <span className="opacity-0 group-hover/doc:opacity-100 bg-white text-indigo-600 font-bold text-xs px-5 py-2.5 rounded-full shadow-xl transform translate-y-4 group-hover/doc:translate-y-0 transition-all duration-300">
-                         Tap to open
-                      </span>
-                   </div>
-                </a>
-             </div>
           </div>
         </div>
 
-        {/* ── Official Announcement Image Lightbox Modal ────────────────────── */}
+        {/* ── Official Announcement Image Lightbox Modal ──────────────────────────────────────── */}
         <AnimatePresence>
           {isImageModalOpen && (
             <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 md:p-8">
