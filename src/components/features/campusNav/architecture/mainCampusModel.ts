@@ -2420,14 +2420,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   gardenTree.castShadow = true;
   ground.add(gardenTree);
 
-  // D. Parked Courtyard Vehicles (White van & cars from reference photo)
-  const van = new THREE.Group();
-  van.add(box(4.8, 2.0, 2.2, mats.whiteWall, 0, 1.1, 0));
-  van.add(box(1.8, 0.85, 2.22, darkGlass, 1.2, 1.35, 0));
-  van.add(box(2.4, 0.75, 2.22, darkGlass, -0.9, 1.35, 0));
-  van.position.set(18.0, 0.1, -29.0 + C5_SHIFT_Z);
-  ground.add(van);
-  ground.add(createCar(18.0, -30.5 + C5_SHIFT_Z, carDark));
+  // D. Parked Courtyard Vehicles (cleared vehicle at X: 18.0, Z: -25.5 to -27.0)
   ground.add(createCar(18.0, -36.5 + C5_SHIFT_Z, carWhite));
 
   // ── 9. 2F Footbridge Ground Support Piers (from y = 0 to baseY = FH) ──────
