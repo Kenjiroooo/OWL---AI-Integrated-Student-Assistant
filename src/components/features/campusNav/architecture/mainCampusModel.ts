@@ -3167,6 +3167,23 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       portalGrp.add(box(corWidth - 0.1, 0.015, 0.08, yellowLineMat, 0, 0.27, -0.35, false));
       g.add(portalGrp);
 
+      // Vertical structural column posts between 2F and 3F skybridge (along railing lines)
+      if (f === 1) {
+        const tierPosts: Array<[number, number]> = [
+          [14.25, -22.00],
+          [14.25, -23.15],
+          [19.5, -22.00],
+          [19.5, -23.15],
+          [24.5, -24.5],
+          [21.5, -24.5],
+        ];
+        tierPosts.forEach(([cx, cz]) => {
+          g.add(box(0.12, FH, 0.12, mats.metalSilver, cx, baseY + FH / 2, cz));
+          g.add(box(0.18, 0.16, 0.18, blueWall, cx, baseY + FH - 0.08, cz));
+          g.add(box(0.18, 0.16, 0.18, blueWall, cx, baseY + 0.08, cz));
+        });
+      }
+
       // Students walking along the 2F Open-Air Skybridge into the corridor
       g.add(createPedestrian(14.0, -22.575, 0, blueWall, baseY + 0.24));
       g.add(createPedestrian(21.0, -23.25, 0.35, carWhite, baseY + 0.24));
