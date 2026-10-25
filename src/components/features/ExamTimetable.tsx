@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { useAuth } from '../../context/AuthContext';
-import { Calendar, MapPin, User, Clock, Info, AlertTriangle, X, ZoomIn, ZoomOut, RotateCcw, ExternalLink, Maximize2, BrainCircuit, Megaphone, FileText, ArrowUpRight, ShieldCheck, CalendarClock, Hourglass } from 'lucide-react';
+import { Calendar, MapPin, User, Clock, Info, AlertTriangle, X, ZoomIn, ZoomOut, RotateCcw, ExternalLink, Maximize2, BrainCircuit, Megaphone, FileText, ArrowUpRight, Building2, ShieldCheck, CalendarClock, Hourglass } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import conflictExamImg from '../../assets/conflict_exam_schedule.webp';
 import { DUMMY_EXAMS } from '../../data/dummyExamData';
@@ -258,59 +258,121 @@ export default function ExamTimetable() {
           </div>
         </section>
 
-                {/* ── Personal schedule + protocols ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="space-y-6">
+        {/* ── Personal schedule + protocols ──────────────────────────────────────── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <section aria-labelledby="upcoming-subjects-heading" className="lg:col-span-2 space-y-5">
             <div className="flex items-center justify-between ml-2">
-              <h3 className="text-xl font-bold text-slate-800 flex items-center gap-3">
-                <Clock className="w-6 h-6 text-indigo-600" /> Upcoming Subjects
+              <h3 id="upcoming-subjects-heading" className="text-xl font-black text-slate-800 flex items-center gap-3">
+                <span className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center"><Clock className="w-5 h-5 text-indigo-600" /></span>
+                {showAll ? 'All Subjects' : 'Upcoming Subjects'}
+                {usingDummyData && (
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full">Sample</span>
+                )}
               </h3>
-              <button 
-                onClick={() => setShowAll(!showAll)}
-                className="text-sm font-bold text-indigo-600 bg-indigo-50 px-4 py-2 rounded-xl hover:bg-indigo-100 transition-colors"
-              >
-                {showAll ? 'Show Upcoming' : 'Show All'}
-              </button>
+              <div className="flex bg-slate-100 p-1 rounded-2xl">
+                <button
+                  id="exam-filter-upcoming"
+                  onClick={() => setShowAll(false)}
+                  className={`text-sm font-bold px-4 py-2 rounded-xl transition-all ${!showAll ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  Upcoming
+                </button>
+                <button
+                  id="exam-filter-all"
+                  onClick={() => setShowAll(true)}
+                  className={`text-sm font-bold px-4 py-2 rounded-xl transition-all ${showAll ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  All
+                </button>
+              </div>
             </div>
-            
-            {filteredExams.map((exam, idx) => (
-              <motion.div
-                key={exam.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.1 }}
-                className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col gap-6 group hover:shadow-xl hover:shadow-indigo-900/5 transition-all"
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="text-2xl font-black text-slate-800">{exam.subject}</h4>
-                    <div className="flex items-center gap-2 text-slate-500 font-bold text-sm uppercase mt-1">
-                       <Calendar className="w-4 h-4" /> {new Date(exam.date?.seconds * 1000).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
-                    </div>
-                  </div>
-                  <div className="bg-indigo-50 text-indigo-600 px-6 py-3 rounded-2xl font-black text-xl">
-                     {new Date(exam.date?.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-slate-50 p-4 rounded-2xl flex items-center gap-3 border border-slate-100 group-hover:bg-indigo-50/50 transition-colors">
-                    <MapPin className="w-5 h-5 text-indigo-500" />
-                    <div>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Room</p>
-                      <p className="font-bold text-slate-700">{exam.room}</p>
+            {loading && (
+              <div className="space-y-4">
+                {[0, 1, 2].map(i => (
+                  <div key={i} className="h-32 bg-white rounded-[2rem] border border-slate-100 animate-pulse" />
+                ))}
+              </div>
+            )}
+
+            <div className="relative space-y-4">
+              {filteredExams.length > 1 && (
+                <div className="absolute left-[2.6rem] top-10 bottom-10 w-0.5 bg-gradient-to-b from-indigo-200 via-indigo-100 to-transparent hidden sm:block" />
+              )}
+              {filteredExams.map((exam, idx) => {
+                const d = new Date(exam.date?.seconds * 1000);
+                const isNext = nextExam && exam.id === nextExam.id;
+                const isPast = daysUntil(exam.date?.seconds) < 0;
+                const [code, ...rest] = String(exam.subject).split('—');
+                const title = rest.join('—').trim();
+                return (
+                  <motion.div
+                    key={exam.id}
+                    initial={{ opacity: 0, x: -16 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.08 }}
+                    className={`relative bg-white p-5 sm:p-6 rounded-[2rem] border shadow-sm flex flex-col sm:flex-row gap-5 group hover:shadow-xl hover:shadow-indigo-900/5 transition-all ${isNext ? 'border-indigo-300 ring-4 ring-indigo-100' : 'border-slate-100'} ${isPast ? 'opacity-60' : ''}`}
+                  >
+                    {/* Date tile */}
+                    <div className={`relative z-10 flex-shrink-0 w-20 h-20 rounded-3xl flex flex-col items-center justify-center ${isNext ? 'bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-300' : 'bg-indigo-50 text-indigo-700'}`}>
+                      <span className={`text-[10px] font-black uppercase tracking-widest ${isNext ? 'text-indigo-100' : 'text-indigo-400'}`}>{d.toLocaleDateString(undefined, { month: 'short' })}</span>
+                      <span className="text-3xl font-black leading-none">{d.getDate()}</span>
+                      <span className={`text-[10px] font-bold uppercase ${isNext ? 'text-indigo-100' : 'text-indigo-400'}`}>{d.toLocaleDateString(undefined, { weekday: 'short' })}</span>
                     </div>
-                  </div>
-                  <div className="bg-slate-50 p-4 rounded-2xl flex items-center gap-3 border border-slate-100 group-hover:bg-indigo-50/50 transition-colors">
-                    <User className="w-5 h-5 text-indigo-500" />
-                    <div>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Proctor</p>
-                      <p className="font-bold text-slate-700">{exam.proctor}</p>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+                        <div className="min-w-0">
+                          {title ? (
+                            <>
+                              <p className="text-xs font-black text-indigo-500 uppercase tracking-widest">{code.trim()}</p>
+                              <h4 className="text-xl font-black text-slate-800 leading-tight">{title}</h4>
+                            </>
+                          ) : (
+                            <h4 className="text-xl font-black text-slate-800 leading-tight">{exam.subject}</h4>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[11px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full ${isNext ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500'}`}>
+                            {countdownLabel(exam.date?.seconds)}
+                          </span>
+                          <span className="bg-slate-900 text-white px-3.5 py-1.5 rounded-full font-black text-sm flex items-center gap-1.5">
+                            <Clock className="w-3.5 h-3.5" />
+                            {d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="bg-slate-50 px-4 py-3 rounded-2xl flex items-center gap-3 border border-slate-100 group-hover:bg-indigo-50/50 transition-colors">
+                          <MapPin className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Room</p>
+                            <p className="font-bold text-slate-700 text-sm truncate">{exam.room}</p>
+                          </div>
+                        </div>
+                        {exam.building && (
+                          <div className="bg-slate-50 px-4 py-3 rounded-2xl flex items-center gap-3 border border-slate-100 group-hover:bg-indigo-50/50 transition-colors">
+                            <Building2 className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+                            <div className="min-w-0">
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Building</p>
+                              <p className="font-bold text-slate-700 text-sm truncate">{exam.building}</p>
+                            </div>
+                          </div>
+                        )}
+                        <div className="bg-slate-50 px-4 py-3 rounded-2xl flex items-center gap-3 border border-slate-100 group-hover:bg-indigo-50/50 transition-colors">
+                          <User className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Proctor</p>
+                            <p className="font-bold text-slate-700 text-sm truncate">{exam.proctor}</p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                  </motion.div>
+                );
+              })}
+            </div>
 
             {filteredExams.length === 0 && !loading && (
               <div className="bg-slate-50 rounded-[2.5rem] p-16 text-center border-2 border-dashed border-slate-200">
@@ -324,29 +386,49 @@ export default function ExamTimetable() {
                  </button>
               </div>
             )}
-          </div>
+          </section>
 
-          <div className="space-y-8">
-            <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm">
-                  <div className="flex items-center gap-4 mb-8">
-                  <Info className="w-8 h-8 text-amber-500" />
-                  <h3 className="text-2xl font-bold text-slate-800">Exam Protocols</h3>
+          <aside className="space-y-6">
+            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-11 h-11 rounded-2xl bg-amber-50 flex items-center justify-center">
+                  <Info className="w-5 h-5 text-amber-500" />
                 </div>
-                <ul className="space-y-4">
-                  {[
-                    'Arrive at least 15 minutes before the start time.',
-                    'Only Universidad de Dagupan-issued ID cards and examination permits are allowed.',
-                    'Electronic devices must be turned off and surrendered.',
-                    'Latecomers (more than 30 mins) will not be admitted.'
-                  ].map((rule, i) => (
-                    <li key={i} className="flex items-start gap-4 text-slate-600 font-medium leading-relaxed">
-                      <span className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center text-xs font-black text-slate-400 flex-shrink-0 mt-1">{i+1}</span>
-                      {rule}
-                    </li>
-                  ))}
-                </ul>
-             </div>
-          </div>
+                <h3 className="text-xl font-black text-slate-800">Exam Protocols</h3>
+              </div>
+              <ul className="space-y-3">
+                {[
+                  'Arrive at least 15 minutes before the start time.',
+                  'Only Universidad de Dagupan-issued ID cards and examination permits are allowed.',
+                  'Electronic devices must be turned off and surrendered.',
+                  'Latecomers (more than 30 mins) will not be admitted.'
+                ].map((rule, i) => (
+                  <li key={i} className="flex items-start gap-3 text-slate-600 font-medium leading-relaxed text-sm bg-slate-50 rounded-2xl p-3.5 border border-slate-100">
+                    <span className="w-6 h-6 bg-gradient-to-br from-indigo-500 to-violet-500 rounded-full flex items-center justify-center text-[11px] font-black text-white flex-shrink-0">{i+1}</span>
+                    {rule}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <button
+              id="exam-ask-owl"
+              onClick={() => openDrawer('When are the upcoming exams at Universidad de Dagupan this semester?')}
+              className="w-full text-left bg-slate-900 p-7 rounded-[2.5rem] text-white relative overflow-hidden group hover:shadow-2xl hover:shadow-slate-400/40 transition-all active:scale-[0.98]"
+            >
+              <div className="absolute -top-8 -right-8 w-32 h-32 bg-indigo-500/30 rounded-full blur-2xl" />
+              <div className="relative z-10 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                  <BrainCircuit className="w-6 h-6" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-black text-lg leading-tight">Ask OWL</p>
+                  <p className="text-slate-400 text-sm font-medium">Questions about your exams?</p>
+                </div>
+                <ArrowUpRight className="w-5 h-5 text-slate-400 group-hover:text-white group-hover:rotate-45 transition-all" />
+              </div>
+            </button>
+          </aside>
         </div>
 
         {/* ── Official Announcement Image Lightbox Modal ──────────────────────────────────────── */}
