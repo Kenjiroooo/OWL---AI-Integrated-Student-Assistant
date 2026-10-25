@@ -3184,10 +3184,16 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
         });
       }
 
-      // Students walking along the 2F Open-Air Skybridge into the corridor
-      g.add(createPedestrian(14.0, -22.575, 0, blueWall, baseY + 0.24));
-      g.add(createPedestrian(21.0, -23.25, 0.35, carWhite, baseY + 0.24));
-      g.add(createPedestrian(23.8, -28.5, 1.33, carBlue, baseY + 0.24)); // walking through portal into corridor
+      // Students walking along the Skybridges into the corridor
+      if (f === 1) {
+        g.add(createPedestrian(14.0, -22.575, 0, blueWall, baseY + 0.24));
+        g.add(createPedestrian(21.0, -23.25, 0.35, carWhite, baseY + 0.24));
+        g.add(createPedestrian(23.8, -28.5, 1.33, carBlue, baseY + 0.24));
+      } else {
+        g.add(createPedestrian(11.5, -22.575, 0, carDark, baseY + 0.24));
+        g.add(createPedestrian(17.0, -22.575, Math.PI, carWhite, baseY + 0.24));
+        g.add(createPedestrian(23.2, -27.2, 1.33, blueWall, baseY + 0.24));
+      }
     }
 
     floorGroups.push(g);
