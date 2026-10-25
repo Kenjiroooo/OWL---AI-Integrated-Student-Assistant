@@ -2536,8 +2536,8 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     g.add(box(classW - 0.2, 0.85, 0.12, whiteMat, classCx, baseY + 1.05, balcFrontZ));
     g.add(box(classW, 0.12, 0.18, blueWall, classCx, baseY + 1.52, balcFrontZ));
     g.add(box(0.15, 0.85, balcD, whiteMat, classX0 + 0.1, baseY + 1.05, balcZ));
-    if (f > 1) {
-      // 2F right end connects directly into the pedestrian skybridge
+    if (f !== 1 && f !== 2) {
+      // 2F (f=1) and 3F (f=2) right ends connect directly into the pedestrian skybridges
       g.add(box(0.15, 0.85, balcD, whiteMat, classX1 - 0.1, baseY + 1.05, balcZ));
     }
 
@@ -2876,10 +2876,10 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
         wallGrp.position.set(seg.cx, baseY, seg.cz);
         wallGrp.rotation.y = seg.rotY;
 
-        // On 2F (f === 1) for Segment 3 (south end wall meeting footbridge portal at P4),
+        // On 2F (f === 1) and 3F (f === 2) for Segment 3 (south end wall meeting footbridge portal at P4),
         // REMOVE the wall across the 2.25m doorway (the blue square in user instruction)
-        // so students can walk freely through the portal into the 2F corridor!
-        if (f === 1 && seg.idx === 3) {
+        // so students can walk freely through the portal into the corridor!
+        if ((f === 1 || f === 2) && seg.idx === 3) {
           const doorWidth = 2.25;
           const remLen = seg.len - doorWidth;
           const remCx = doorWidth / 2;
