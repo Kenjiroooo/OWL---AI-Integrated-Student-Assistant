@@ -1575,6 +1575,11 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     roughness: 0.35,
     metalness: 0.2,
   });
+  const footbridgeSignMat3F = new THREE.MeshStandardMaterial({
+    map: createFootbridgeSignTexture('3F PEDESTRIAN SKYBRIDGE', 'TOWER BUILDING  ⮂  5-STOREY BUILDING'),
+    roughness: 0.35,
+    metalness: 0.2,
+  });
 
   // ── 5-STOREY COURTYARD BUILDING (Exact 9-Point Pinpointed Boundary) ──────
   // Building Outline shifted inward by +3.5m in Z to connect flush into Student Services / Innovation Wing (at z = -50.5):
@@ -2973,12 +2978,12 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       g.add(cornerRing);
     }
 
-    if (f === 1) {
-      // ── 2F Open-Air Skybridge: Exactly Connected into Balcony Path (Width 1.15m, Z = -22.575) ──
-      // 1. Straight span connects directly to the 2F Balcony at [8.0, -22.575] and extends to [19.5, -22.575]
+    if (f === 1 || f === 2) {
+      // ── Open-Air Skybridge: Connected into Balcony Path (2F on Level 1, 3F on Level 2) ──
+      // 1. Straight span connects directly to the Balcony at [8.0, -22.575] and extends to [19.5, -22.575]
       //    North rail is at Z = -23.15 (flush with balcony front parapet)
       //    South rail is at Z = -22.00 (flush with building rear wall)
-      // 2. Streamlined turning ramp following the user blue lines into the 2F doorway portal
+      // 2. Streamlined turning ramp following the user blue lines into the corridor doorway portal
       const BR_W = 1.15;
 
       // ── 1. Straight Tower Connection Span (X: 8.0 to 19.5, Z = -22.575, rotY = 0) ──
@@ -3015,13 +3020,14 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       for (let sx = -straightLen / 2 + 0.9; sx < straightLen / 2; sx += 1.8) {
         straightSpanGrp.add(box(0.06, 1.08, 0.08, mats.metalSilver, sx, 0.24 + 0.54, BR_W / 2 - 0.04));
       }
-      // Architectural illuminated signage plaque facing the courtyard
+      // Architectural illuminated signage plaque facing the courtyard (2F / 3F)
+      const currentSignMat = f === 1 ? footbridgeSignMat : footbridgeSignMat3F;
       straightSpanGrp.add(
         box(
           5.0,
           0.48,
           0.08,
-          [blueWall, blueWall, blueWall, blueWall, footbridgeSignMat, blueWall],
+          [blueWall, blueWall, blueWall, blueWall, currentSignMat, blueWall],
           0,
           -0.07,
           -BR_W / 2 - 0.06
