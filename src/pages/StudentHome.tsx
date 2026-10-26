@@ -20,7 +20,7 @@ import {
 import { auth } from '../lib/firebase';
 import { signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
-import appLogo from '../assets/app-logo.webp';
+import owlMascot from '../assets/owl-mascot.svg';
 import soeLogo from '../assets/soe-logo.webp';
 
 import { OwlCharacter } from '../components/OwlCharacter';
@@ -99,8 +99,8 @@ export default function StudentHome() {
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-4 sm:gap-6">
           <div className="relative group cursor-pointer" onClick={() => navigate('/')}>
             <div className="absolute -inset-1.5 rounded-[1.3rem] blur opacity-30 group-hover:opacity-60 transition-all duration-500" style={{ background: 'linear-gradient(135deg, #00317e, #00c1fd)' }} />
-            <div className="relative w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-[1.3rem] shadow-xl overflow-hidden border border-blue-50 flex items-center justify-center">
-              <img src={appLogo} alt="OWL Logo" className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500" />
+            <div className="relative w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-[1.3rem] shadow-xl overflow-hidden border border-blue-50 flex items-center justify-center p-1 sm:p-1.5">
+              <img src={owlMascot} alt="OWL Mascot" className="w-full h-full object-contain transform group-hover:scale-105 transition-transform duration-500" />
             </div>
           </div>
           <div className="hidden xs:block">
