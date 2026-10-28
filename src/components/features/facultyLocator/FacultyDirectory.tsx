@@ -1,40 +1,58 @@
 import React from 'react';
-import { getFacultyBySchool, type Faculty } from './facultyData';
+import {
+  getFacultyBySchool,
+  getFacultyStatusMeta,
+  type Faculty,
+  type FacultyStatus,
+} from './facultyData';
 import FacultyCard from './FacultyCard';
 
 interface Props {
   schoolName: string;
   searchQuery: string;
+  statusFilter?: FacultyStatus | 'all';
   onSelectFaculty: (id: string) => void;
 }
 
-export default function FacultyDirectory({ schoolName, searchQuery, onSelectFaculty }: Props) {
+export default function FacultyDirectory({
+  schoolName,
+  searchQuery,
+  statusFilter = 'all',
+  onSelectFaculty,
+}: Props) {
   const allFaculty = getFacultyBySchool(schoolName);
 
-  // Filter within the school if there's a search query
-  const filtered = searchQuery.trim()
-    ? allFaculty.filter((f) => {
-        const q = searchQuery.toLowerCase();
-        return (
-          f.name.toLowerCase().includes(q) ||
-          f.position.toLowerCase().includes(q) ||
-          (f.program?.toLowerCase().includes(q)) ||
-          (f.specialization?.some((s) => s.toLowerCase().includes(q))) ||
-          (f.email?.toLowerCase().includes(q))
-        );
-      })
-    : allFaculty;
+  // Filter within the school by status and search query
+  const filtered = allFaculty.filter((f) => {
+    const statusMatch =
+      statusFilter === 'all' || (f.status || 'available') === statusFilter;
+    if (!statusMatch) return false;
+    if (!searchQuery.trim()) return true;
 
-  // Sort: Dean first, then Program Chairs, then others
+    const q = searchQuery.toLowerCase();
+    const statusLabel = getFacultyStatusMeta(f.status).label.toLowerCase();
+    return (
+      f.name.toLowerCase().includes(q) ||
+      f.position.toLowerCase().includes(q) ||
+      statusLabel.includes(q) ||
+      (f.roleCategory?.toLowerCase().includes(q)) ||
+      (f.program?.toLowerCase().includes(q)) ||
+      (f.specialization?.some((s) => s.toLowerCase().includes(q))) ||
+      (f.email?.toLowerCase().includes(q))
+    );
+  });
+
+  // Sort: Dean first, then Program Head / Chairs, then Faculty Members in verified order
   const sorted = [...filtered].sort((a, b) => {
     const rank = (f: Faculty) => {
-      if (f.supervisorId === null) return 0; // Dean
-      if (f.position.toLowerCase().includes('chair') || f.position.toLowerCase().includes('head')) return 1;
-      return 2;
+      if (f.hierarchyLevel) return f.hierarchyLevel;
+      if (f.supervisorId === null) return 1;
+      if (f.position.toLowerCase().includes('chair') || f.position.toLowerCase().includes('head')) return 2;
+      return 3;
     };
     const diff = rank(a) - rank(b);
     if (diff !== 0) return diff;
-    return a.name.localeCompare(b.name);
+    return allFaculty.indexOf(a) - allFaculty.indexOf(b);
   });
 
   if (sorted.length === 0) {
@@ -48,7 +66,7 @@ export default function FacultyDirectory({ schoolName, searchQuery, onSelectFacu
             No faculty members found
           </p>
           <p style={{ fontSize: 16, fontWeight: 400, color: '#43474f', marginTop: 4 }}>
-            Try another name, position, or specialization.
+            Try another name, position, or status filter.
           </p>
         </div>
       </div>
