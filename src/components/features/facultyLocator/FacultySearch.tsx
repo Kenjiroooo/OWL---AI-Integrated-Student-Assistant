@@ -34,7 +34,7 @@ export default function FacultySearch({ query, onChange, onClear, placeholder }:
           autoComplete="off"
           value={query}
           onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder || 'Search faculty name, department, position...'}
+          placeholder={placeholder || 'Search faculty name, school, position...'}
           className="block w-full h-[80px] pl-20 pr-16 bg-transparent border-none text-[24px] font-semibold rounded-xl focus:ring-0 focus:outline-none"
           style={{
             fontFamily: 'Inter, sans-serif',
@@ -68,7 +68,7 @@ export default function FacultySearch({ query, onChange, onClear, placeholder }:
           color: '#43474f',
         }}
       >
-        Try searching by name (e.g., "Juan Dela Cruz"), position (e.g., "Dean"), or department.
+        Try searching by name (e.g., "Dr. Jose Jay De Vera"), position (e.g., "Dean", "Program Head"), or school.
       </p>
     </section>
   );

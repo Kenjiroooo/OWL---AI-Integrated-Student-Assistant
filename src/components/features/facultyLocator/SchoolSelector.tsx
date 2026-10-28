@@ -1,5 +1,12 @@
 import React from 'react';
-import { SCHOOLS, getSchoolFacultyCount, searchFaculty, type Faculty } from './facultyData';
+import {
+  SCHOOLS,
+  getSchoolFacultyCount,
+  getFacultyBySchool,
+  searchFaculty,
+  getInitials,
+  getFacultyStatusMeta,
+} from './facultyData';
 import FacultySearch from './FacultySearch';
 import { ArrowRight } from 'lucide-react';
 
@@ -69,7 +76,7 @@ export default function SchoolSelector({
             color: '#43474f',
           }}
         >
-          Find faculty members, departments, offices, and schedules across Universidad de Dagupan.
+          Find faculty members, live availability, offices, and schedules across Universidad de Dagupan.
         </p>
       </section>
 
@@ -98,33 +105,68 @@ export default function SchoolSelector({
               >
                 {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} found
               </p>
-              {searchResults.map((f) => (
-                <div
-                  key={f.id}
-                  onClick={() => onSelectFaculty(f.id, f.school)}
-                  className="border rounded-xl p-4 flex items-center gap-4 cursor-pointer hover:shadow-md active:scale-[0.98] transition-all"
-                  style={{
-                    background: '#ffffff',
-                    borderColor: '#c3c6d1',
-                    boxShadow: '0 2px 8px rgba(0,30,64,0.06)',
-                  }}
-                >
+              {searchResults.map((f) => {
+                const statusMeta = getFacultyStatusMeta(f.status);
+                return (
                   <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ background: '#d5e3ff', color: '#001e40', fontWeight: 600, fontSize: 16 }}
+                    key={f.id}
+                    onClick={() => onSelectFaculty(f.id, f.school)}
+                    className="border rounded-xl p-4 flex items-center gap-4 cursor-pointer hover:shadow-md active:scale-[0.98] transition-all"
+                    style={{
+                      background: '#ffffff',
+                      borderColor: '#c3c6d1',
+                      boxShadow: '0 2px 8px rgba(0,30,64,0.06)',
+                    }}
                   >
-                    {f.name.split(' ').filter(p => !['Dr.','Engr.','Prof.','Arch.','Mr.','Ms.','Mrs.','CPA','Chef','Atty.'].includes(p)).map(p => p[0]).join('').slice(0,2)}
+                    <div className="relative flex-shrink-0">
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center"
+                        style={{ background: '#d5e3ff', color: '#001e40', fontWeight: 700, fontSize: 16 }}
+                      >
+                        {getInitials(f.name)}
+                      </div>
+                      <span
+                        title={statusMeta.label}
+                        className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full"
+                        style={{
+                          background: statusMeta.dotColor,
+                          border: '2px solid #ffffff',
+                        }}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="truncate" style={{ fontSize: 18, fontWeight: 600, color: '#191c1d' }}>
+                          {f.name}
+                        </h3>
+                        <span
+                          className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full"
+                          style={{
+                            background: statusMeta.bgColor,
+                            border: `1px solid ${statusMeta.borderColor}`,
+                            color: statusMeta.textColor,
+                            fontSize: 11,
+                            fontWeight: 700,
+                          }}
+                        >
+                          <span
+                            className="w-1.5 h-1.5 rounded-full"
+                            style={{ background: statusMeta.dotColor }}
+                          />
+                          {statusMeta.label}
+                        </span>
+                      </div>
+                      <p className="truncate" style={{ fontSize: 14, fontWeight: 500, color: '#001e40' }}>
+                        {f.position} {f.program ? `· ${f.program}` : ''}
+                      </p>
+                      <p className="truncate" style={{ fontSize: 13, fontWeight: 500, color: '#5d5f5f' }}>
+                        {f.school}
+                      </p>
+                    </div>
+                    <ArrowRight className="flex-shrink-0" size={20} color="#001e40" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="truncate" style={{ fontSize: 18, fontWeight: 600, color: '#191c1d' }}>{f.name}</h3>
-                    <p className="truncate" style={{ fontSize: 14, fontWeight: 500, color: '#001e40' }}>
-                      {f.position} {f.program ? `· ${f.program}` : ''}
-                    </p>
-                    <p className="truncate" style={{ fontSize: 13, fontWeight: 500, color: '#5d5f5f' }}>{f.school}</p>
-                  </div>
-                  <ArrowRight className="flex-shrink-0" size={20} color="#001e40" />
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-16">
@@ -161,6 +203,9 @@ export default function SchoolSelector({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-10">
             {SCHOOLS.map((school) => {
               const count = getSchoolFacultyCount(school.name);
+              const availableCount = getFacultyBySchool(school.name).filter(
+                (f) => (f.status || 'available') === 'available',
+              ).length;
               return (
                 <div
                   key={school.id}
@@ -174,22 +219,36 @@ export default function SchoolSelector({
                   onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = '#001e40'; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = '#c3c6d1'; }}
                 >
-                  {/* School Logo */}
-                  <div
-                    className="w-16 h-16 rounded-full flex items-center justify-center overflow-hidden"
-                    style={{ background: '#edf1f8' }}
-                  >
-                    {SCHOOL_LOGOS[school.id] ? (
-                      <img
-                        src={SCHOOL_LOGOS[school.id]}
-                        alt={`${school.name} logo`}
-                        className="w-14 h-14 object-contain"
-                      />
-                    ) : (
-                      <span className="material-symbols-outlined" style={{ fontSize: 32, color: '#001e40' }}>
-                        {school.icon}
-                      </span>
-                    )}
+                  {/* School Logo + Live Available Pill */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div
+                      className="w-16 h-16 rounded-full flex items-center justify-center overflow-hidden"
+                      style={{ background: '#edf1f8' }}
+                    >
+                      {SCHOOL_LOGOS[school.id] ? (
+                        <img
+                          src={SCHOOL_LOGOS[school.id]}
+                          alt={`${school.name} logo`}
+                          className="w-14 h-14 object-contain"
+                        />
+                      ) : (
+                        <span className="material-symbols-outlined" style={{ fontSize: 32, color: '#001e40' }}>
+                          {school.icon}
+                        </span>
+                      )}
+                    </div>
+
+                    <span
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold"
+                      style={{
+                        background: '#dcfce7',
+                        color: '#15803d',
+                        border: '1px solid #86efac',
+                      }}
+                    >
+                      <span className="w-2 h-2 rounded-full" style={{ background: '#16a34a' }} />
+                      {availableCount} Available
+                    </span>
                   </div>
 
                   {/* Text */}
