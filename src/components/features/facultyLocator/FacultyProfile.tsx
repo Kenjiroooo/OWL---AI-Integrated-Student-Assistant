@@ -1,5 +1,9 @@
 import React from 'react';
-import { getFacultyById, getInitials, type Faculty } from './facultyData';
+import {
+  getFacultyById,
+  getInitials,
+  getFacultyStatusMeta,
+} from './facultyData';
 
 interface Props {
   facultyId: string;
@@ -10,6 +14,7 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
 export default function FacultyProfile({ facultyId, onBack }: Props) {
   const faculty = getFacultyById(facultyId);
+  const supervisor = faculty?.supervisorId ? getFacultyById(faculty.supervisorId) : undefined;
 
   if (!faculty) {
     return (
@@ -38,6 +43,8 @@ export default function FacultyProfile({ facultyId, onBack }: Props) {
     );
   }
 
+  const statusMeta = getFacultyStatusMeta(faculty.status);
+
   return (
     <div
       className="h-full overflow-y-auto"
@@ -65,32 +72,77 @@ export default function FacultyProfile({ facultyId, onBack }: Props) {
             boxShadow: '0 4px 12px rgba(0,30,64,0.12)',
           }}
         >
-          {/* Photo */}
-          {faculty.photo ? (
-            <img
-              src={faculty.photo}
-              alt={faculty.name}
-              className="w-36 h-36 rounded-2xl object-cover flex-shrink-0"
-              style={{ border: '4px solid #d5e3ff', boxShadow: '0 4px 12px rgba(0,30,64,0.1)' }}
-            />
-          ) : (
-            <div
-              className="w-36 h-36 rounded-2xl flex items-center justify-center flex-shrink-0"
+          {/* Photo with Live Status Indicator Dot */}
+          <div className="relative flex-shrink-0">
+            {faculty.photo ? (
+              <img
+                src={faculty.photo}
+                alt={faculty.name}
+                className="w-36 h-36 rounded-2xl object-cover"
+                style={{ border: '4px solid #d5e3ff', boxShadow: '0 4px 12px rgba(0,30,64,0.1)' }}
+              />
+            ) : (
+              <div
+                className="w-36 h-36 rounded-2xl flex items-center justify-center"
+                style={{
+                  background: '#d5e3ff',
+                  color: '#001e40',
+                  fontSize: 36,
+                  fontWeight: 700,
+                  border: '4px solid #d5e3ff',
+                }}
+              >
+                {getInitials(faculty.name)}
+              </div>
+            )}
+            <span
+              title={statusMeta.label}
+              className="absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-full"
               style={{
-                background: '#d5e3ff',
-                color: '#001e40',
-                fontSize: 36,
-                fontWeight: 700,
-                border: '4px solid #d5e3ff',
+                background: statusMeta.dotColor,
+                border: '3px solid #ffffff',
+                boxShadow: `0 0 0 4px ${statusMeta.pulseColor}`,
               }}
-            >
-              {getInitials(faculty.name)}
-            </div>
-          )}
+            />
+          </div>
 
           {/* Info */}
           <div className="flex flex-col gap-3 flex-1 min-w-0 text-center sm:text-left">
             <div>
+              {/* Live Availability Pill + Role Category */}
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-2">
+                <span
+                  className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-bold"
+                  style={{
+                    background: statusMeta.bgColor,
+                    color: statusMeta.textColor,
+                    border: `1.5px solid ${statusMeta.borderColor}`,
+                  }}
+                >
+                  <span
+                    className="w-2.5 h-2.5 rounded-full"
+                    style={{
+                      background: statusMeta.dotColor,
+                      boxShadow: `0 0 0 3px ${statusMeta.pulseColor}`,
+                    }}
+                  />
+                  {statusMeta.label}
+                </span>
+
+                {faculty.roleCategory && (
+                  <span
+                    className="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider"
+                    style={{
+                      background: '#edf3ff',
+                      color: '#003366',
+                      border: '1px solid #b8d1ff',
+                    }}
+                  >
+                    {faculty.roleCategory}
+                  </span>
+                )}
+              </div>
+
               <h1
                 style={{
                   fontFamily: 'Inter, sans-serif',
@@ -127,10 +179,26 @@ export default function FacultyProfile({ facultyId, onBack }: Props) {
               >
                 {faculty.school}
               </p>
+
+              {faculty.statusNote && (
+                <p
+                  className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg"
+                  style={{
+                    background: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    color: '#334155',
+                  }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: 18, color: statusMeta.dotColor }}>
+                    info
+                  </span>
+                  {faculty.statusNote}
+                </p>
+              )}
             </div>
 
             {/* Quick info chips */}
-            <div className="flex flex-wrap gap-2 justify-center sm:justify-start mt-2">
+            <div className="flex flex-wrap gap-2 justify-center sm:justify-start mt-1">
               {faculty.email && (
                 <div
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
@@ -150,6 +218,49 @@ export default function FacultyProfile({ facultyId, onBack }: Props) {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* ── Organizational Placement ────────────────────────────────── */}
+        <div
+          className="rounded-xl p-6"
+          style={{
+            background: '#ffffff',
+            border: '1px solid #c3c6d1',
+            boxShadow: '0 2px 8px rgba(0,30,64,0.06)',
+          }}
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <span className="material-symbols-outlined" style={{ fontSize: 24, color: '#001e40' }}>account_tree</span>
+            <h2
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontSize: 24,
+                lineHeight: '32px',
+                fontWeight: 600,
+                color: '#191c1d',
+              }}
+            >
+              Organizational Hierarchy
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <p style={{ fontSize: 14, fontWeight: 500, color: '#5d5f5f' }}>Academic Unit</p>
+              <p style={{ fontSize: 17, fontWeight: 600, color: '#191c1d' }}>{faculty.school}</p>
+            </div>
+            <div>
+              <p style={{ fontSize: 14, fontWeight: 500, color: '#5d5f5f' }}>Role / Position</p>
+              <p style={{ fontSize: 17, fontWeight: 600, color: '#191c1d' }}>{faculty.position}</p>
+            </div>
+            {supervisor && (
+              <div>
+                <p style={{ fontSize: 14, fontWeight: 500, color: '#5d5f5f' }}>Reports To</p>
+                <p style={{ fontSize: 17, fontWeight: 600, color: '#191c1d' }}>
+                  {supervisor.name} ({supervisor.position})
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -243,7 +354,7 @@ export default function FacultyProfile({ facultyId, onBack }: Props) {
           </div>
         )}
 
-        {/* ── Schedule Table ──────────────────────────────────────────── */}
+        {/* ── Schedule Table (Class, Office & Consultation Hours) ────── */}
         {faculty.schedule && Object.keys(faculty.schedule).length > 0 && (
           <div
             className="rounded-xl p-6"
@@ -253,32 +364,47 @@ export default function FacultyProfile({ facultyId, onBack }: Props) {
               boxShadow: '0 2px 8px rgba(0,30,64,0.06)',
             }}
           >
-            <div className="flex items-center gap-2 mb-4">
-              <span className="material-symbols-outlined" style={{ fontSize: 24, color: '#001e40' }}>calendar_month</span>
-              <h2
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined" style={{ fontSize: 24, color: '#001e40' }}>calendar_month</span>
+                <h2
+                  style={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: 24,
+                    lineHeight: '32px',
+                    fontWeight: 600,
+                    color: '#191c1d',
+                  }}
+                >
+                  Class Schedule, Office &amp; Consultation Hours
+                </h2>
+              </div>
+              <span
+                className="px-3 py-1 rounded-full text-xs font-semibold"
                 style={{
-                  fontFamily: 'Inter, sans-serif',
-                  fontSize: 24,
-                  lineHeight: '32px',
-                  fontWeight: 600,
-                  color: '#191c1d',
+                  background: '#edf3ff',
+                  color: '#003366',
+                  border: '1px solid #b8d1ff',
                 }}
               >
-                Office Schedule &amp; Consultation Hours
-              </h2>
+                Sample Schedule · Presentation Preview
+              </span>
             </div>
 
             <div className="overflow-x-auto rounded-lg" style={{ border: '1px solid #c3c6d1' }}>
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr style={{ background: '#f3f4f5' }}>
-                    <th className="px-4 py-3" style={{ fontSize: 16, fontWeight: 600, color: '#191c1d', borderBottom: '1px solid #c3c6d1' }}>
+                    <th className="px-4 py-3" style={{ fontSize: 15, fontWeight: 700, color: '#191c1d', borderBottom: '1px solid #c3c6d1' }}>
                       Day
                     </th>
-                    <th className="px-4 py-3" style={{ fontSize: 16, fontWeight: 600, color: '#191c1d', borderBottom: '1px solid #c3c6d1' }}>
+                    <th className="px-4 py-3" style={{ fontSize: 15, fontWeight: 700, color: '#191c1d', borderBottom: '1px solid #c3c6d1' }}>
                       Office Hours
                     </th>
-                    <th className="px-4 py-3" style={{ fontSize: 16, fontWeight: 600, color: '#191c1d', borderBottom: '1px solid #c3c6d1' }}>
+                    <th className="px-4 py-3" style={{ fontSize: 15, fontWeight: 700, color: '#191c1d', borderBottom: '1px solid #c3c6d1' }}>
+                      Class Schedule
+                    </th>
+                    <th className="px-4 py-3" style={{ fontSize: 15, fontWeight: 700, color: '#191c1d', borderBottom: '1px solid #c3c6d1' }}>
                       Consultation Hours
                     </th>
                   </tr>
@@ -288,23 +414,36 @@ export default function FacultyProfile({ facultyId, onBack }: Props) {
                     const daySchedule = faculty.schedule?.[day];
                     return (
                       <tr key={day} style={{ borderBottom: '1px solid #e7e8e9' }}>
-                        <td className="px-4 py-3" style={{ fontSize: 16, fontWeight: 600, color: '#191c1d' }}>
+                        <td className="px-4 py-3.5" style={{ fontSize: 15, fontWeight: 600, color: '#191c1d' }}>
                           {day}
                         </td>
-                        <td className="px-4 py-3" style={{ fontSize: 16, fontWeight: 400, color: daySchedule?.office ? '#191c1d' : '#c3c6d1' }}>
+                        <td className="px-4 py-3.5" style={{ fontSize: 15, fontWeight: 400, color: daySchedule?.office ? '#191c1d' : '#c3c6d1' }}>
                           {daySchedule?.office || '—'}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3.5">
+                          {daySchedule?.classSchedule ? (
+                            <span
+                              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg"
+                              style={{ background: '#fff7ed', color: '#9a3412', border: '1px solid #fed7aa', fontSize: 13, fontWeight: 600 }}
+                            >
+                              <span className="material-symbols-outlined" style={{ fontSize: 15 }}>co_present</span>
+                              {daySchedule.classSchedule}
+                            </span>
+                          ) : (
+                            <span style={{ color: '#c3c6d1', fontSize: 15 }}>—</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3.5">
                           {daySchedule?.consultation ? (
                             <span
-                              className="inline-flex items-center gap-1 px-3 py-1 rounded-full"
-                              style={{ background: '#d5e3ff', color: '#001e40', fontSize: 14, fontWeight: 500 }}
+                              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full"
+                              style={{ background: '#dcfce7', color: '#15803d', border: '1px solid #86efac', fontSize: 13, fontWeight: 600 }}
                             >
-                              <span className="material-symbols-outlined" style={{ fontSize: 16 }}>schedule</span>
+                              <span className="material-symbols-outlined" style={{ fontSize: 15 }}>schedule</span>
                               {daySchedule.consultation}
                             </span>
                           ) : (
-                            <span style={{ color: '#c3c6d1', fontSize: 16 }}>—</span>
+                            <span style={{ color: '#c3c6d1', fontSize: 15 }}>—</span>
                           )}
                         </td>
                       </tr>
