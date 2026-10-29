@@ -25,13 +25,16 @@ import {
   Save,
   KeyRound,
   ArrowLeft,
+  Cpu,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { FACULTY_DATA, SCHOOLS } from '../components/features/facultyLocator/facultyData';
 import AdminLogin from '../components/admin/AdminLogin';
 import ChangeAdminCredentialsModal from '../components/admin/ChangeAdminCredentialsModal';
+import AIApiMonitorPanel from '../components/admin/AIApiMonitorPanel';
+import { getAIApiUsageHistory, getLocalDateKey } from '../lib/aiApiMonitor';
 
-type Tab = 'students' | 'evaluations' | 'queue';
+type Tab = 'students' | 'evaluations' | 'ai-monitor' | 'queue';
 
 export default function AdminHome() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -57,6 +60,28 @@ export default function AdminHome() {
   // ── Evaluation Results State ────────────────────────────────────────────
   const [expandedFaculty, setExpandedFaculty] = useState<string | null>(null);
   const [schoolFilter, setSchoolFilter] = useState<string | null>(null);
+  const [todayAiRequests, setTodayAiRequests] = useState<number>(0);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const syncAiCount = async () => {
+      try {
+        const usage = await getAIApiUsageHistory(7);
+        const todayKey = getLocalDateKey();
+        const todayStat =
+          usage.dailyStats.find((s) => s.date === todayKey) ||
+          usage.dailyStats[usage.dailyStats.length - 1];
+        if (todayStat) {
+          setTodayAiRequests(todayStat.totalRequests);
+        }
+      } catch {
+        // ignore
+      }
+    };
+    void syncAiCount();
+    window.addEventListener('owl_ai_api_updated', syncAiCount);
+    return () => window.removeEventListener('owl_ai_api_updated', syncAiCount);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -182,6 +207,7 @@ export default function AdminHome() {
   const navItems = [
     { id: 'students', label: 'Student Directory', icon: Users, count: students.length },
     { id: 'evaluations', label: 'Faculty Evaluations', icon: ClipboardCheck, count: evaluations.length },
+    { id: 'ai-monitor', label: 'AI API Monitor', icon: Cpu, count: todayAiRequests },
     { id: 'queue', label: 'Queue Overview', icon: ListOrdered, count: null },
   ];
 
@@ -316,6 +342,7 @@ export default function AdminHome() {
             <h2 className="text-2xl font-black text-slate-900 tracking-tight">
               {activeTab === 'students' && 'Student Directory'}
               {activeTab === 'evaluations' && 'Faculty Evaluations'}
+              {activeTab === 'ai-monitor' && 'AI API Request Monitor'}
               {activeTab === 'queue' && 'Queue Monitor'}
             </h2>
             <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-0.5 flex items-center gap-1.5">
@@ -669,6 +696,18 @@ export default function AdminHome() {
                     ))
                   )}
                 </div>
+              </motion.div>
+            )}
+
+            {/* ── AI API Monitor Tab ── */}
+            {activeTab === 'ai-monitor' && (
+              <motion.div
+                key="ai-monitor"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+              >
+                <AIApiMonitorPanel />
               </motion.div>
             )}
 
