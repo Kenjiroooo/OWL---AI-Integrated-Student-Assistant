@@ -20,6 +20,21 @@ export interface Building3DResult {
   targetLookAt: THREE.Vector3;
   /** Vertical gap between floors in exploded view (defaults to 4). */
   explodeSpacing?: number;
+  /** Individually selectable buildings inside a unified campus model. */
+  focusTargets?: BuildingFocusTarget[];
+}
+
+/** A selectable building inside a unified campus scene (click-to-focus + glow). */
+export interface BuildingFocusTarget {
+  id: string;
+  /** Meshes that belong to this building (used for picking + glow highlight). */
+  meshes: THREE.Mesh[];
+  /** Ground footprint polygon as [x, z] pairs (used for the glowing ground outline). */
+  footprint: [number, number][];
+  /** Camera position looking at the building's front facade. */
+  cameraPos: THREE.Vector3;
+  /** Point the camera looks at when focused. */
+  lookAt: THREE.Vector3;
 }
 
 // ── Shared Materials ────────────────────────────────────────────────────────

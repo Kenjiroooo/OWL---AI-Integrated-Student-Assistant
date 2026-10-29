@@ -8,7 +8,13 @@
 // is null.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type CampusBuildingId = 'udd-main' | 'udd-main-tower' | 'udd-main-front' | 'udd-fame';
+export type CampusBuildingId =
+  | 'udd-main'
+  | 'udd-main-tower'
+  | 'udd-main-admin'
+  | 'udd-main-v'
+  | 'udd-main-front'
+  | 'udd-fame';
 
 /** Virtual "camera" pose applied to the photo panel (percent / degrees). */
 export interface CameraPose {
@@ -116,30 +122,96 @@ export const CAMPUS_BUILDINGS: readonly CampusBuilding[] = [
   },
   {
     id: 'udd-main-tower',
-    name: 'UDD Main Campus Tower',
-    shortName: 'Main Tower',
+    name: 'L Building (Tower Building)',
+    shortName: 'L Building',
     campus: 'Main Campus • Dagupan City',
     description:
-      'The tall white building of the Universidad de Dagupan Main Campus, recognizable by its blue horizontal floor bands, balconies, and the vertical UDD lettering on its tower.',
+      'The iconic L Building (Tower Building) of Universidad de Dagupan Main Campus, featuring the vertical UDD lettered signage tower, covered entrance canopy, multi-pane classroom ribbon windows, and direct connecting skybridge access to the V Building.',
     visibleFeatures: [
-      'White facade with blue floor bands',
-      'Balconies and window rows',
       'Tower with vertical "UDD" lettering',
-      'Covered entrance canopy',
+      'Covered entrance canopy with arched steel trusses',
+      'Horizontal blue floor bands & classroom balconies',
+      'Multi-pane square grid windows & AC condenser units',
+      'Direct connecting skybridge footbridges to V Building',
+      'Notice boards & flag pole terrace',
     ],
     referenceImage: '/campus-buildings/udd-main-tower.JPG',
     referenceImageAlt:
-      'Photograph of the UDD Main Campus Tower: a tall white building with blue horizontal floor bands and a tower bearing vertical UDD lettering.',
+      'Photograph of the L Building (Tower Building) at UDD Main Campus: a tall white building with blue horizontal floor bands and a tower bearing vertical UDD lettering.',
     modelPath: 'procedural-3d',
     floors: [
-      { level: 0, label: 'Ground Concourse & Entrance Canopy' },
-      { level: 1, label: '2nd Floor Lecture Rooms' },
-      { level: 2, label: '3rd Floor Academic Laboratories' },
-      { level: 3, label: '4th Floor Classrooms & Balcony' },
-      { level: 4, label: '5th Floor Senior Department' },
-      { level: 5, label: 'UDD Tower & Roof Core' },
+      { level: 0, label: 'Ground Concourse, Entrance Canopy & Flagpole Terrace' },
+      { level: 1, label: '2nd Floor Lecture Rooms & Skybridge Portal' },
+      { level: 2, label: '3rd Floor Academic Laboratories & Skybridge Portal' },
+      { level: 3, label: '4th Floor Classrooms & Balconies' },
+      { level: 4, label: '5th Floor Senior Department & AC Ledges' },
+      { level: 5, label: 'Main Tower Rooftop & Vertical UDD Signage Core' },
     ],
     defaultPose: { scale: 1.06, x: 0, y: 2, rotateX: 0, rotateY: 0 },
+    establishingPose: { scale: 0.62, x: 0, y: 10, rotateX: 14, rotateY: 0 },
+    orbitPose: { scale: 1.0, x: -5, y: 3, rotateX: 4, rotateY: 14 },
+    theme: { skyTop: '#0b1f3f', skyBottom: '#1e4b8f', accent: '#60a5fa' },
+  },
+  {
+    id: 'udd-main-admin',
+    name: 'Administration Building',
+    shortName: 'Admin Building',
+    campus: 'Main Campus • Dagupan City',
+    description:
+      'The Student Services & Administration Building, featuring the 2-storey administrative hall, executive office suites, vertical architectural louvers with Universidad de Dagupan seal, and the modern 2-Storey Innovation & Research Wing.',
+    visibleFeatures: [
+      'Administrative & Student Services Hall',
+      '2-storey blue portal box & executive offices',
+      'Vertical architectural louvers with UDD crest',
+      '2-Storey Innovation & Research Wing on terrace',
+      'Covered entrance colonnade facing courtyard concourse',
+      'Rooftop solar pergola & HVAC chillers',
+    ],
+    referenceImage: '/campus-buildings/udd-main-front.JPG',
+    referenceImageAlt:
+      'Photograph of the Administration Building at UDD Main Campus: a blue-and-white facade with the Universidad de Dagupan emblem, large glass windows and covered entrance.',
+    modelPath: 'procedural-3d',
+    floors: [
+      { level: 0, label: 'Ground Floor Administrative Hall & Covered Colonnade' },
+      { level: 1, label: '2nd Floor Student Services, Registrar & Accounting' },
+      { level: 2, label: '3rd Floor Executive Suites & University Boardroom' },
+      { level: 3, label: '4th Floor Innovation Wing 1F & Garden Promenade' },
+      { level: 4, label: '5th Floor Innovation Research Lab & Balcony' },
+      { level: 5, label: 'Rooftop Solar Pergola & Mechanical Plant' },
+    ],
+    defaultPose: { scale: 1.14, x: 0, y: 6, rotateX: 0, rotateY: 0 },
+    establishingPose: { scale: 0.62, x: 0, y: 10, rotateX: 14, rotateY: 0 },
+    orbitPose: { scale: 1.02, x: 5, y: 4, rotateX: 4, rotateY: -14 },
+    theme: { skyTop: '#0a2540', skyBottom: '#0e5a8a', accent: '#38bdf8' },
+  },
+  {
+    id: 'udd-main-v',
+    name: 'V Building (5-Storey Building)',
+    shortName: 'V Building',
+    campus: 'Main Campus • Dagupan City',
+    description:
+      'The 5-Storey Courtyard V Building, constructed to the exact 9-point pinpointed boundary, featuring signature blue zigzag balcony spandrels, multi-storey corner clear glass atrium tower, 5F louvered academic hall with UDD crest seal, solar panel roof decks, and 12-meter telecommunications lattice antenna tower.',
+    visibleFeatures: [
+      '5-Storey building with exact 9-point boundary (734.2m² footprint)',
+      'Signature sky-blue zigzag balcony spandrels',
+      'Multi-storey corner clear glass atrium tower',
+      '45° angled Universidad de Dagupan crest seal',
+      '2nd & 3rd floor open-air pedestrian skybridges to L Building',
+      'Flat roof decks with solar arrays & 12m lattice tower',
+    ],
+    referenceImage: '/campus-buildings/udd-main.jpg',
+    referenceImageAlt:
+      'Photograph of the V Building (5-Storey Building) at UDD Main Campus: courtyard facade with blue zigzag spandrels and corner glass atrium.',
+    modelPath: 'procedural-3d',
+    floors: [
+      { level: 0, label: 'Ground Concourse, Parking Row & Structural Piers' },
+      { level: 1, label: '2nd Floor Lecture Rooms & Skybridge Portal' },
+      { level: 2, label: '3rd Floor Academic Labs & Skybridge Portal' },
+      { level: 3, label: '4th Floor Open Corridors & Zigzag Balconies' },
+      { level: 4, label: '5th Floor Ribbon Louvers & UDD Crest Seal' },
+      { level: 5, label: 'Rooftop Solar Arrays & 12m Telecommunications Tower' },
+    ],
+    defaultPose: { scale: 1.05, x: 0, y: 2, rotateX: 0, rotateY: 0 },
     establishingPose: { scale: 0.62, x: 0, y: 10, rotateX: 14, rotateY: 0 },
     orbitPose: { scale: 1.0, x: -5, y: 3, rotateX: 4, rotateY: 14 },
     theme: { skyTop: '#0b1f3f', skyBottom: '#1e4b8f', accent: '#60a5fa' },
@@ -207,7 +279,7 @@ export const CAMPUS_BUILDINGS: readonly CampusBuilding[] = [
 
 /** Buildings grouped per campus showcase. */
 export const CAMPUS_GROUPS = {
-  main: ['udd-main'],
+  main: ['udd-main-tower', 'udd-main-admin', 'udd-main-v'],
   fame: ['udd-fame'],
 } as const satisfies Record<string, readonly CampusBuildingId[]>;
 
@@ -217,7 +289,7 @@ export function getCampusBuildings(group: CampusGroupId): CampusBuilding[] {
   return CAMPUS_GROUPS[group].map((id) => getBuilding(id));
 }
 
-export const DEFAULT_BUILDING_ID: CampusBuildingId = 'udd-main';
+export const DEFAULT_BUILDING_ID: CampusBuildingId = 'udd-main-tower';
 
 export function getBuilding(id: CampusBuildingId): CampusBuilding {
   const b = CAMPUS_BUILDINGS.find((x) => x.id === id);

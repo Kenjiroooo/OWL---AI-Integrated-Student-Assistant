@@ -20,6 +20,8 @@ import type { ShapePoint, TrackerMode } from './ShapeTrackerOverlay';
 const MODEL_FACTORIES: Record<CampusBuildingId, () => Building3DResult> = {
   'udd-main': buildUnifiedMainCampus3D,
   'udd-main-tower': buildUnifiedMainCampus3D,
+  'udd-main-admin': buildUnifiedMainCampus3D,
+  'udd-main-v': buildUnifiedMainCampus3D,
   'udd-main-front': buildUnifiedMainCampus3D,
   'udd-fame': buildFameBuilding3D,
 };
