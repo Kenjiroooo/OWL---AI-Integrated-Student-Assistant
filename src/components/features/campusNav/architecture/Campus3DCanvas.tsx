@@ -285,6 +285,7 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
     cinematicTarget: {
       active: boolean;
       progress: number;
+      speed?: number;
       startCam: THREE.Vector3;
       startLook: THREE.Vector3;
       endCam: THREE.Vector3;
@@ -368,6 +369,7 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
       stateRef.current.cinematicTarget = {
         active: true,
         progress: 0,
+        speed: 1.15,
         startCam: camera.position.clone(),
         startLook: controls.target.clone(),
         endCam: targetModel.defaultCameraPos.clone(),
@@ -498,15 +500,36 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
       grid.position.y = -0.48;
       scene.add(grid);
 
-      // 7. Procedural Buildings (only those belonging to this campus)
+      // 7. Procedural Buildings
       const models: Partial<Record<CampusBuildingId, Building3DResult>> = {};
+      const isMainCampus = buildingIds.some((id) => id.startsWith('udd-main'));
+
+      let unifiedCampus: Building3DResult | null = null;
+      if (isMainCampus) {
+        unifiedCampus = buildUnifiedMainCampus3D();
+        unifiedCampus.root.scale.set(1, 1, 1);
+        unifiedCampus.root.visible = true;
+        scene.add(unifiedCampus.root);
+      }
+
       for (const id of buildingIds) {
-        const m = MODEL_FACTORIES[id]();
-        // Start hidden; the animation loop scales the active one in.
-        m.root.scale.setScalar(id === activeBuildingId ? 1 : 0.001);
-        m.root.visible = id === activeBuildingId;
-        scene.add(m.root);
-        models[id] = m;
+        if (id.startsWith('udd-main') && unifiedCampus) {
+          const focusTarget = unifiedCampus.focusTargets?.find((t) => t.id === id);
+          models[id] = {
+            root: unifiedCampus.root,
+            floorGroups: unifiedCampus.floorGroups,
+            defaultCameraPos: focusTarget ? focusTarget.cameraPos.clone() : unifiedCampus.defaultCameraPos.clone(),
+            targetLookAt: focusTarget ? focusTarget.lookAt.clone() : unifiedCampus.targetLookAt.clone(),
+            explodeSpacing: unifiedCampus.explodeSpacing ?? 4.5,
+            focusTargets: unifiedCampus.focusTargets,
+          };
+        } else {
+          const m = MODEL_FACTORIES[id]();
+          m.root.scale.setScalar(id === activeBuildingId ? 1 : 0.001);
+          m.root.visible = id === activeBuildingId;
+          scene.add(m.root);
+          models[id] = m;
+        }
       }
 
       // 8. Interactive Shape / Lasso Tracker Group
@@ -531,6 +554,7 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
       stateRef.current.cinematicTarget = {
         active: true,
         progress: 0,
+        speed: 0.9,
         startCam: initModel.defaultCameraPos.clone().multiplyScalar(1.7).add(new THREE.Vector3(0, 12, 0)),
         startLook: initModel.targetLookAt.clone(),
         endCam: initModel.defaultCameraPos.clone(),
@@ -546,18 +570,23 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
 
         const { activeId, isExploded, cinematicTarget } = stateRef.current;
 
-        // Transition model visibility (smooth scale in/out)
+        // Transition model visibility (smooth scale in/out for multi-scene campuses)
         const scaleTarget = new THREE.Vector3();
         for (const [id, m] of Object.entries(models) as [CampusBuildingId, Building3DResult][]) {
-          const s = id === activeId ? 1 : 0.001;
-          m.root.scale.lerp(scaleTarget.setScalar(s), delta * 5);
-          m.root.visible = m.root.scale.x > 0.01;
+          if (!isMainCampus) {
+            const s = id === activeId ? 1 : 0.001;
+            m.root.scale.lerp(scaleTarget.setScalar(s), delta * 5);
+            m.root.visible = m.root.scale.x > 0.01;
+          } else {
+            m.root.scale.set(1, 1, 1);
+            m.root.visible = true;
+          }
         }
 
         // Exploded View Floor Separation
         const activeData = models[activeId];
         if (activeData) {
-          const explodeSpacing = activeData.explodeSpacing ?? 4;
+          const explodeSpacing = activeData.explodeSpacing ?? 4.5;
           activeData.floorGroups.forEach((floorGroup, idx) => {
             // Keep ground floor fixed; elevate subsequent floors
             const targetElevation = isExploded && idx > 0 ? idx * explodeSpacing : 0;
@@ -565,9 +594,10 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
           });
         }
 
-        // Cinematic Flythrough Controller
+        // Cinematic Flythrough Controller (Smooth and fast transitions)
         if (cinematicTarget && cinematicTarget.active) {
-          cinematicTarget.progress += delta * 0.45;
+          const speed = cinematicTarget.speed ?? 1.15;
+          cinematicTarget.progress += delta * speed;
 
           if (cinematicTarget.progress >= 1) {
             cinematicTarget.active = false;
@@ -580,15 +610,13 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
             const t = cinematicTarget.progress;
             const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
-            // Arc interpolation around building
             const currentPos = new THREE.Vector3().lerpVectors(
               cinematicTarget.startCam,
               cinematicTarget.endCam,
               ease
             );
-            // Add gentle orbital lateral curve
-            const arcOffset = Math.sin(ease * Math.PI) * 6;
-            currentPos.x += arcOffset;
+            // Parabolic flyover height arc
+            currentPos.y += Math.sin(ease * Math.PI) * 2.2;
 
             camera.position.copy(currentPos);
             controls.target.lerpVectors(cinematicTarget.startLook, cinematicTarget.endLook, ease);
