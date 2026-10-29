@@ -38,6 +38,7 @@ interface Props {
   /** Buildings to build into this scene (only these are instantiated). */
   buildingIds: readonly CampusBuildingId[];
   activeBuildingId: CampusBuildingId;
+  onSelectBuilding?: (id: CampusBuildingId) => void;
   exploded: boolean;
   cinematicNonce: number; // Incrementing counter to trigger cinematic flythrough
   onCinematicComplete?: () => void;
@@ -341,6 +342,7 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
   {
     buildingIds,
     activeBuildingId,
+    onSelectBuilding,
     exploded,
     cinematicNonce,
     onCinematicComplete,
@@ -383,6 +385,10 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
     onHoverCoord,
     onCloseShape,
   };
+
+  const onSelectBuildingRef = useRef(onSelectBuilding);
+  onSelectBuildingRef.current = onSelectBuilding;
+  const pointerDownPosRef = useRef<{ x: number; y: number; time: number } | null>(null);
 
   // References to keep animation state across renders without re-initializing WebGL
   const stateRef = useRef<{
@@ -688,7 +694,7 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
         }
       }
 
-      // 8. Interactive Shape / Lasso Tracker Group
+      // 9. Interactive Shape / Lasso Tracker Group
       const trackerGroup = new THREE.Group();
       trackerGroup.name = 'building-tracker-group';
       scene.add(trackerGroup);
@@ -711,7 +717,7 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
         active: true,
         progress: 0,
         speed: 0.9,
-        startCam: initModel.defaultCameraPos.clone().multiplyScalar(1.7).add(new THREE.Vector3(0, 12, 0)),
+        startCam: initModel.defaultCameraPos.clone().multiplyScalar(1.5).add(new THREE.Vector3(0, 10, 0)),
         startLook: initModel.targetLookAt.clone(),
         endCam: initModel.defaultCameraPos.clone(),
         endLook: initModel.targetLookAt.clone(),
@@ -959,7 +965,13 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
   const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const { trackerActive, trackerMode, trackerSnap, trackerPoints, isShapeClosed, onPointsChange, onCloseShape } =
       propsRef.current;
-    if (!trackerActive) return;
+
+    if (!trackerActive) {
+      if (e.button === 0) {
+        pointerDownPosRef.current = { x: e.clientX, y: e.clientY, time: performance.now() };
+      }
+      return;
+    }
 
     // Right-click is reserved for OrbitControls camera 360° rotation
     if (e.button === 2) return;
@@ -1012,9 +1024,46 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
     }
   };
 
-  const handlePointerUp = () => {
+  const handlePointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (isLassoDraggingRef.current) {
       isLassoDraggingRef.current = false;
+    }
+
+    if (!propsRef.current.trackerActive && pointerDownPosRef.current && e.button === 0) {
+      const down = pointerDownPosRef.current;
+      pointerDownPosRef.current = null;
+      const dist = Math.hypot(e.clientX - down.x, e.clientY - down.y);
+      const elapsed = performance.now() - down.time;
+
+      // Click or tap detected (short movement and quick tap)
+      if (dist < 8 && elapsed < 450) {
+        const canvas = canvasRef.current;
+        const camera = stateRef.current.camera;
+        const scene = stateRef.current.scene;
+        if (canvas && camera && scene) {
+          const rect = canvas.getBoundingClientRect();
+          const mouse = new THREE.Vector2(
+            ((e.clientX - rect.left) / rect.width) * 2 - 1,
+            -((e.clientY - rect.top) / rect.height) * 2 + 1
+          );
+
+          const raycaster = new THREE.Raycaster();
+          raycaster.setFromCamera(mouse, camera);
+          const intersects = raycaster.intersectObjects(scene.children, true);
+
+          for (const hit of intersects) {
+            let cur: THREE.Object3D | null = hit.object;
+            while (cur && !cur.userData?.buildingId && cur !== scene) {
+              cur = cur.parent;
+            }
+            if (cur?.userData?.buildingId) {
+              const bId = cur.userData.buildingId as CampusBuildingId;
+              onSelectBuildingRef.current?.(bId);
+              break;
+            }
+          }
+        }
+      }
     }
   };
 

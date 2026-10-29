@@ -259,6 +259,7 @@ export default function CampusArchitectureShowcase({
           ref={canvas3DRef}
           buildingIds={buildings.map((b) => b.id)}
           activeBuildingId={activeId}
+          onSelectBuilding={handleSelect}
           exploded={exploded}
           cinematicNonce={cinematicNonce}
           trackerActive={trackerActive}
