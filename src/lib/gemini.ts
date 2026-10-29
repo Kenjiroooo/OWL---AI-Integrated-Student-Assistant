@@ -1,5 +1,6 @@
 import { db } from './firebase';
 import { collection, getDocs } from 'firebase/firestore';
+import { recordAIApiRequest } from './aiApiMonitor';
 
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -247,6 +248,7 @@ export async function askOwl(
       { role: 'user', content: userMessage }
     ];
 
+    const reqStart = performance.now();
     const response = await fetch("/api/askOwlChat", {
       method: "POST",
       signal,
@@ -257,8 +259,15 @@ export async function askOwl(
         messages: messages
       })
     });
+    const latencyMs = Math.round(performance.now() - reqStart);
 
     if (!response.ok) {
+      void recordAIApiRequest({
+        endpoint: 'askOwlChat',
+        status: response.status === 429 ? 'rate_limited' : 'error',
+        statusCode: response.status,
+        latencyMs,
+      });
       if (response.status === 429) {
         return "I'm getting a lot of questions right now! 🦉 Please wait a moment and try again.";
       }
@@ -267,6 +276,17 @@ export async function askOwl(
 
     const data = await response.json();
     const text = data.choices?.[0]?.message?.content?.trim();
+    const usageTokens =
+      data.usage?.total_tokens ??
+      Math.round((userMessage.length + (text?.length || 0)) / 3.8 + 420);
+
+    void recordAIApiRequest({
+      endpoint: 'askOwlChat',
+      status: 'success',
+      statusCode: response.status,
+      latencyMs,
+      estimatedTokens: usageTokens,
+    });
 
     if (!text) {
       return "I'm sorry, I couldn't generate a response right now. Please try asking again! 🦉";

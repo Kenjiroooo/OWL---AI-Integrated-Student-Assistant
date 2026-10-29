@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { collection, addDoc, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { recordAIApiRequest } from '../../lib/aiApiMonitor';
 import {
   ClipboardCheck,
   Star,
@@ -297,6 +298,7 @@ export default function FeedbackCenter() {
       // ── Moderate comment before submission ──────────────────────────────
       if (comment.trim()) {
         setModerating(true);
+        const modStartTime = performance.now();
         try {
           const modRes = await fetch('/api/moderateEvaluation', {
             method: 'POST',
@@ -305,6 +307,13 @@ export default function FeedbackCenter() {
               comment: comment.trim(),
               facultyName: selectedFaculty.name,
             }),
+          });
+          const modLatencyMs = Math.round(performance.now() - modStartTime);
+          void recordAIApiRequest({
+            endpoint: 'moderateEvaluation',
+            status: modRes.ok ? 'success' : modRes.status === 429 ? 'rate_limited' : 'error',
+            statusCode: modRes.status,
+            latencyMs: modLatencyMs,
           });
           const modData = await modRes.json();
           if (!modData.passed) {
@@ -317,6 +326,13 @@ export default function FeedbackCenter() {
             return;
           }
         } catch (modErr) {
+          const modLatencyMs = Math.round(performance.now() - modStartTime);
+          void recordAIApiRequest({
+            endpoint: 'moderateEvaluation',
+            status: 'error',
+            statusCode: 500,
+            latencyMs: modLatencyMs,
+          });
           console.error('Comment moderation error:', modErr);
           // Fail open — allow submission if moderation API is unreachable
         } finally {

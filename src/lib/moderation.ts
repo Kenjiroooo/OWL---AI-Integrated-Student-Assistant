@@ -6,6 +6,8 @@
  * to automatically prevent trolls, jokes, profanity, and spam from reaching public boards.
  */
 
+import { recordAIApiRequest } from './aiApiMonitor';
+
 export interface ModerationResult {
   passed: boolean;
   reason?: string;
@@ -84,6 +86,7 @@ export async function moderateLostFoundReport(
   }
 
   // If proxy is down, it will fall back naturally
+  const textStartTime = performance.now();
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout
@@ -103,6 +106,14 @@ export async function moderateLostFoundReport(
     });
 
     clearTimeout(timeoutId);
+    const textLatencyMs = Math.round(performance.now() - textStartTime);
+
+    void recordAIApiRequest({
+      endpoint: 'moderateContent',
+      status: response.ok ? 'success' : response.status === 429 ? 'rate_limited' : 'error',
+      statusCode: response.status,
+      latencyMs: textLatencyMs,
+    });
 
     if (!response.ok) {
       console.error('AI text moderation request failed with status:', response.status);
@@ -125,6 +136,7 @@ export async function moderateLostFoundReport(
 
     // Second pass: Image Moderation via Gemini (if an image is provided)
     if (report.imageBase64) {
+      const imgStartTime = performance.now();
       try {
         const imgRes = await fetch('/api/moderateImage', {
           method: 'POST',
@@ -136,6 +148,14 @@ export async function moderateLostFoundReport(
             itemName: report.itemName,
             description: report.description,
           }),
+        });
+
+        const imgLatencyMs = Math.round(performance.now() - imgStartTime);
+        void recordAIApiRequest({
+          endpoint: 'moderateImage',
+          status: imgRes.ok ? 'success' : imgRes.status === 429 ? 'rate_limited' : 'error',
+          statusCode: imgRes.status,
+          latencyMs: imgLatencyMs,
         });
 
         if (imgRes.ok) {
@@ -156,6 +176,13 @@ export async function moderateLostFoundReport(
           };
         }
       } catch (imgError: any) {
+        const imgLatencyMs = Math.round(performance.now() - imgStartTime);
+        void recordAIApiRequest({
+          endpoint: 'moderateImage',
+          status: 'error',
+          statusCode: 500,
+          latencyMs: imgLatencyMs,
+        });
         console.error('Image moderation encountered an error:', imgError);
         return {
           passed: false,
@@ -170,6 +197,13 @@ export async function moderateLostFoundReport(
       category: 'clean'
     };
   } catch (error) {
+    const textLatencyMs = Math.round(performance.now() - textStartTime);
+    void recordAIApiRequest({
+      endpoint: 'moderateContent',
+      status: 'error',
+      statusCode: 500,
+      latencyMs: textLatencyMs,
+    });
     console.warn('AI moderation encountered an error, using heuristic fallback:', error);
     return fastCheck;
   }
