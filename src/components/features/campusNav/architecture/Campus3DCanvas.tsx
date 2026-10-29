@@ -225,6 +225,118 @@ function createHoverCursor(hover: { x: number; z: number }, snapToFirst: boolean
   return group;
 }
 
+/** Architectural Building Glow Highlight (Neon ground outline, vertical translucent ribbon, ground fill & corner beacon rings) */
+function createBuildingGlow(footprint: [number, number][]): THREE.Group {
+  const group = new THREE.Group();
+  group.name = 'building-glow-highlight';
+  if (!footprint || footprint.length < 3) return group;
+
+  const pts: [number, number][] = [...footprint, footprint[0]];
+
+  // 1. Bright Cyan Neon Outline Line on ground
+  const linePositions: number[] = [];
+  for (const [x, z] of pts) {
+    linePositions.push(x, 0.14, z);
+  }
+  const lineGeo = new THREE.BufferGeometry();
+  lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(linePositions, 3));
+  const lineMat = new THREE.LineBasicMaterial({
+    color: 0x00f0ff,
+    transparent: true,
+    opacity: 0.95,
+    depthTest: true,
+  });
+  const line = new THREE.Line(lineGeo, lineMat);
+  line.renderOrder = 950;
+  group.add(line);
+
+  // 2. Translucent vertical glowing boundary ribbon (0.75m height)
+  const ribbonPositions: number[] = [];
+  const ribbonIndices: number[] = [];
+  const h = 0.75;
+
+  for (let i = 0; i < pts.length; i++) {
+    const [x, z] = pts[i];
+    ribbonPositions.push(x, 0.05, z);
+    ribbonPositions.push(x, 0.05 + h, z);
+  }
+
+  for (let i = 0; i < pts.length - 1; i++) {
+    const b0 = i * 2;
+    const t0 = i * 2 + 1;
+    const b1 = (i + 1) * 2;
+    const t1 = (i + 1) * 2 + 1;
+    ribbonIndices.push(b0, b1, t0);
+    ribbonIndices.push(b1, t1, t0);
+  }
+
+  const ribbonGeo = new THREE.BufferGeometry();
+  ribbonGeo.setAttribute('position', new THREE.Float32BufferAttribute(ribbonPositions, 3));
+  ribbonGeo.setIndex(ribbonIndices);
+  ribbonGeo.computeVertexNormals();
+
+  const ribbonMat = new THREE.MeshBasicMaterial({
+    color: 0x00e5ff,
+    transparent: true,
+    opacity: 0.38,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+    depthTest: true,
+  });
+  const ribbonMesh = new THREE.Mesh(ribbonGeo, ribbonMat);
+  ribbonMesh.renderOrder = 949;
+  group.add(ribbonMesh);
+
+  // 3. Ground translucent polygon fill
+  try {
+    const shape = new THREE.Shape();
+    shape.moveTo(footprint[0][0], -footprint[0][1]);
+    for (let i = 1; i < footprint.length; i++) {
+      shape.lineTo(footprint[i][0], -footprint[i][1]);
+    }
+    shape.closePath();
+
+    const shapeGeo = new THREE.ShapeGeometry(shape);
+    const shapeMat = new THREE.MeshBasicMaterial({
+      color: 0x0284c7,
+      transparent: true,
+      opacity: 0.24,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+      depthTest: true,
+    });
+    const shapeMesh = new THREE.Mesh(shapeGeo, shapeMat);
+    shapeMesh.rotation.x = -Math.PI / 2;
+    shapeMesh.position.y = 0.08;
+    shapeMesh.renderOrder = 948;
+    group.add(shapeMesh);
+  } catch {
+    // ignore non-convex fill errors if any
+  }
+
+  // 4. Corner pulse glowing markers & ground halo rings
+  footprint.forEach(([px, pz]) => {
+    const sphere = new THREE.Mesh(
+      new THREE.SphereGeometry(0.28, 12, 12),
+      new THREE.MeshBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.9 })
+    );
+    sphere.position.set(px, 0.16, pz);
+    sphere.renderOrder = 951;
+    group.add(sphere);
+
+    const ring = new THREE.Mesh(
+      new THREE.RingGeometry(0.35, 0.6, 16),
+      new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.7, side: THREE.DoubleSide })
+    );
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.set(px, 0.13, pz);
+    ring.renderOrder = 950;
+    group.add(ring);
+  });
+
+  return group;
+}
+
 const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3DCanvas(
   {
     buildingIds,
@@ -282,6 +394,8 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
     activeId: CampusBuildingId;
     isExploded: boolean;
     trackerGroup: THREE.Group | null;
+    glowGroup: THREE.Group | null;
+    highlightLight: THREE.PointLight | null;
     cinematicTarget: {
       active: boolean;
       progress: number;
@@ -300,8 +414,42 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
     activeId: activeBuildingId,
     isExploded: exploded,
     trackerGroup: null,
+    glowGroup: null,
+    highlightLight: null,
     cinematicTarget: null,
   });
+
+  const updateGlowHighlight = (targetBuildingId: CampusBuildingId) => {
+    const { scene, models } = stateRef.current;
+    if (!scene) return;
+
+    if (stateRef.current.glowGroup) {
+      scene.remove(stateRef.current.glowGroup);
+      stateRef.current.glowGroup.traverse((obj) => {
+        if ((obj as THREE.Mesh).isMesh || (obj as THREE.Line).isLine) {
+          const m = obj as THREE.Mesh;
+          m.geometry?.dispose();
+          if (Array.isArray(m.material)) m.material.forEach((mat) => mat.dispose());
+          else m.material?.dispose();
+        }
+      });
+      stateRef.current.glowGroup = null;
+    }
+
+    const buildingResult = models[targetBuildingId] ?? Object.values(models)[0];
+    if (!buildingResult) return;
+
+    const focusTarget = buildingResult.focusTargets?.find((t) => t.id === targetBuildingId);
+    if (focusTarget && focusTarget.footprint.length >= 3) {
+      const glow = createBuildingGlow(focusTarget.footprint);
+      scene.add(glow);
+      stateRef.current.glowGroup = glow;
+
+      if (stateRef.current.highlightLight) {
+        stateRef.current.highlightLight.position.copy(focusTarget.lookAt).add(new THREE.Vector3(0, 5, 4));
+      }
+    }
+  };
 
   const [webGLFailed, setWebGLFailed] = useState(false);
 
@@ -375,6 +523,8 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
         endCam: targetModel.defaultCameraPos.clone(),
         endLook: targetModel.targetLookAt.clone(),
       };
+
+      updateGlowHighlight(activeBuildingId);
     }
   }, [activeBuildingId]);
 
@@ -500,7 +650,13 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
       grid.position.y = -0.48;
       scene.add(grid);
 
-      // 7. Procedural Buildings
+      // 7. Architectural Highlight Spotlight (Illuminates the active building front entrance)
+      const highlightLight = new THREE.PointLight(0x38bdf8, 2.8, 55, 1.1);
+      highlightLight.position.set(0, 10, -25);
+      scene.add(highlightLight);
+      stateRef.current.highlightLight = highlightLight;
+
+      // 8. Procedural Buildings
       const models: Partial<Record<CampusBuildingId, Building3DResult>> = {};
       const isMainCampus = buildingIds.some((id) => id.startsWith('udd-main'));
 
@@ -561,7 +717,10 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
         endLook: initModel.targetLookAt.clone(),
       };
 
-      // 8. Render & Animation Loop
+      // Set initial building glow highlight
+      updateGlowHighlight(activeBuildingId);
+
+      // 10. Render & Animation Loop
       const clock = new THREE.Clock();
 
       const animate = () => {
@@ -624,6 +783,26 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
           }
         } else {
           controls.update();
+        }
+
+        // Pulsing glow effect
+        const glow = stateRef.current.glowGroup;
+        if (glow) {
+          const elapsed = clock.getElapsedTime();
+          const pulse = 0.35 + 0.12 * Math.sin(elapsed * 3.5);
+          glow.traverse((child) => {
+            if ((child as THREE.Mesh).isMesh) {
+              const m = child as THREE.Mesh;
+              if (m.material && !Array.isArray(m.material) && 'opacity' in m.material) {
+                if (m.material.transparent) {
+                  (m.material as THREE.Material & { opacity: number }).opacity = pulse;
+                }
+              }
+            }
+          });
+        }
+        if (highlightLight) {
+          highlightLight.intensity = 2.4 + 0.6 * Math.sin(clock.getElapsedTime() * 4);
         }
 
         renderer.render(scene, camera);
