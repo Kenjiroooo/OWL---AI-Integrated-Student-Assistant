@@ -20,7 +20,7 @@
 // Exploded view: 6 tiers [Ground + Chapel + Gate, 2F, 3F, 4F, 5F + Seal, Roof + Penthouse].
 // ─────────────────────────────────────────────────────────────────────────────
 import * as THREE from 'three';
-import { getMaterials, createEmblemTexture, type Building3DResult } from './proceduralModels';
+import { getMaterials, createEmblemTexture, type Building3DResult, type BuildingFocusTarget } from './proceduralModels';
 
 // ── Palette (sampled from the architectural renders) ────────────────────────
 const C = {
@@ -3509,11 +3509,92 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   floorGroups.push(roof);
   root.add(roof);
 
+  // ── Classify and Tag Meshes per Building ─────────────────────────────────
+  const towerMeshes: THREE.Mesh[] = [];
+  const adminMeshes: THREE.Mesh[] = [];
+  const vBuildingMeshes: THREE.Mesh[] = [];
+
+  root.traverse((obj) => {
+    if ((obj as THREE.Mesh).isMesh) {
+      const mesh = obj as THREE.Mesh;
+      const b3 = new THREE.Box3().setFromObject(mesh);
+      if (b3.max.y <= 0.35 && b3.min.y <= 0.05) {
+        // Skip ground pavement / baseline markings
+        return;
+      }
+      const c = b3.getCenter(new THREE.Vector3());
+
+      // 1. Administration Building (Student Services & 2-Storey Innovation Wing)
+      if (c.x >= -34.0 && c.x <= -17.5 && c.z >= -51.0 && c.z <= -18.5) {
+        mesh.userData.buildingId = 'udd-main-admin';
+        adminMeshes.push(mesh);
+      }
+      // 2. L Building (Tower Building: Tower core, 6-storey academic block, front canopy)
+      else if (c.x >= -17.5 && c.x <= 9.5 && c.z >= -27.5 && c.z <= 6.0) {
+        mesh.userData.buildingId = 'udd-main-tower';
+        towerMeshes.push(mesh);
+      }
+      // 3. V Building (5-Storey Building: 9-point courtyard wings, atrium, roof lattice)
+      else if (
+        (c.x > -17.5 && c.z < -26.0 && c.z > -72.0) ||
+        (c.x <= -17.5 && c.z <= -50.5 && c.z > -72.0)
+      ) {
+        mesh.userData.buildingId = 'udd-main-v';
+        vBuildingMeshes.push(mesh);
+      }
+    }
+  });
+
+  const focusTargets: BuildingFocusTarget[] = [
+    {
+      id: 'udd-main-tower',
+      meshes: towerMeshes,
+      footprint: [
+        [-16.0, 4.0],
+        [8.0, 4.0],
+        [8.0, -22.25],
+        [-16.0, -22.25],
+      ],
+      cameraPos: new THREE.Vector3(12, 14, -48),
+      lookAt: new THREE.Vector3(-4, 9, -22),
+    },
+    {
+      id: 'udd-main-admin',
+      meshes: adminMeshes,
+      footprint: [
+        [-18.0, -20.0],
+        [-18.0, -50.5],
+        [-31.0, -50.5],
+        [-31.0, -20.0],
+      ],
+      cameraPos: new THREE.Vector3(4, 12, -35),
+      lookAt: new THREE.Vector3(-24.5, 7, -35),
+    },
+    {
+      id: 'udd-main-v',
+      meshes: vBuildingMeshes,
+      footprint: [
+        [-31.0, -50.5],
+        [-8.0, -50.5],
+        [17.0, -54.0],
+        [23.0, -30.5],
+        [32.0, -33.5],
+        [24.0, -65.0],
+        [-9.0, -59.0],
+        [-8.5, -59.5],
+        [-31.0, -59.0],
+      ],
+      cameraPos: new THREE.Vector3(0, 16, -28),
+      lookAt: new THREE.Vector3(14, 10, -52),
+    },
+  ];
+
   return {
     root,
     floorGroups,
-    defaultCameraPos: new THREE.Vector3(34, 28, 52),
-    targetLookAt: new THREE.Vector3(-4.0, 7.0, -22.0),
+    defaultCameraPos: focusTargets[0].cameraPos.clone(),
+    targetLookAt: focusTargets[0].lookAt.clone(),
     explodeSpacing: 4.5,
+    focusTargets,
   };
 }
