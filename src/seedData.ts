@@ -47,7 +47,7 @@ export async function seedDummyData() {
     },
     {
       question: "What are the enrollment steps for new students?",
-      answer: "1) Submit admission requirements online or at the Registrar's Office. 2) Take the entrance exam if applicable. 3) Receive your assessment. 4) Pay tuition at the Finance Office or via online payment. 5) Claim your class schedule and school ID.",
+      answer: "1. **Get an Enlistment Form** – Proceed to Room V204 to obtain your enlistment form.\n\n2. **List Your Subjects** – Identify all the subjects you need to enroll in and fill them out in the enlistment form.\n\n3. **Submit Your Form** – Submit your completed enlistment form at the Enlistment Counter.\n\n4. **Pay the Enrollment Fee** – Proceed to the Cashier located on the ground floor of the Administration Building to pay your enrollment fee.\n\n5. **Complete Your Enrollment** – Go to your department's designated room to finalize your enrollment and have your White Form printed.\n\n6. **You're Officially Enrolled!** – Congratulations! You have successfully completed the enrollment process.",
       category: "Enrollment",
     },
     {
