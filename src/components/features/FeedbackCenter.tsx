@@ -838,24 +838,6 @@ export default function FeedbackCenter() {
                   setComment(e.target.value);
                   setCommentError('');
                 }}
-                onFocus={(e) => {
-                  const target = e.target;
-                  setTimeout(() => {
-                    const keyboardHeight = 360;
-                    const headerHeight = 90;
-                    const rect = target.getBoundingClientRect();
-                    const visibleBottom = window.innerHeight - keyboardHeight - 20;
-                    if (rect.bottom > visibleBottom || rect.top < headerHeight + 20) {
-                      const targetY = headerHeight + 35;
-                      const currentScrollY = window.scrollY || window.pageYOffset;
-                      const scrollTarget = currentScrollY + rect.top - targetY;
-                      window.scrollTo({
-                        top: Math.max(0, scrollTarget),
-                        behavior: 'smooth',
-                      });
-                    }
-                  }, 150);
-                }}
                 placeholder="Share your thoughts about this professor..."
                 className={`w-full h-32 bg-sky-50/50 border-2 rounded-2xl p-5 text-sm font-medium outline-none focus:ring-4 transition-all resize-none placeholder:text-slate-300 ${
                   commentError
