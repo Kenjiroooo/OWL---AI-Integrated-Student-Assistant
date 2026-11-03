@@ -20,7 +20,7 @@ const FALLBACK_FAQS = [
     id: 'faq-2',
     question: 'What are the enrollment steps for new students?',
     answer:
-      '1) Submit admission requirements online or at the Registrar\'s Office. 2) Take the entrance exam if applicable. 3) Receive your assessment. 4) Pay tuition at the Finance Office or via online payment. 5) Claim your class schedule and school ID.',
+      "1. **Get an Enlistment Form** – Proceed to Room V204 to obtain your enlistment form.\n\n2. **List Your Subjects** – Identify all the subjects you need to enroll in and fill them out in the enlistment form.\n\n3. **Submit Your Form** – Submit your completed enlistment form at the Enlistment Counter.\n\n4. **Pay the Enrollment Fee** – Proceed to the Cashier located on the ground floor of the Administration Building to pay your enrollment fee.\n\n5. **Complete Your Enrollment** – Go to your department's designated room to finalize your enrollment and have your White Form printed.\n\n6. **You're Officially Enrolled!** – Congratulations! You have successfully completed the enrollment process.",
     category: 'Enrollment',
   },
   {
@@ -71,6 +71,27 @@ const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
   Finance:         { bg: 'rgba(139,92,246,0.1)',  text: '#7c3aed' },
 };
 
+// ── Format helper (supports paragraphs & **bold** text) ──────────────────────
+
+function renderFormattedAnswer(answer: string) {
+  return answer.split(/\n\n+/).map((paragraph, pIdx) => {
+    const parts = paragraph.split(/(\*\*.*?\*\*)/g);
+    return (
+      <p key={pIdx} className="whitespace-pre-line">
+        {parts.map((part, i) =>
+          part.startsWith('**') && part.endsWith('**') ? (
+            <strong key={i} className="font-black text-slate-900">
+              {part.slice(2, -2)}
+            </strong>
+          ) : (
+            part
+          )
+        )}
+      </p>
+    );
+  });
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function InquiryCenter() {
@@ -80,13 +101,17 @@ export default function InquiryCenter() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const { openDrawer } = useOwlAssistant();
 
-  // Fetch from Firestore and merge — Firestore data wins if present
+  // Fetch from Firestore and merge — keep FALLBACK_FAQS order/answers and append any extra Firestore FAQs
   useEffect(() => {
     const fetchFaqs = async () => {
       try {
         const snap = await getDocs(collection(db, 'inquiryBase'));
         if (!snap.empty) {
-          setFaqs(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+          const fallbackQuestions = new Set(FALLBACK_FAQS.map(f => f.question.toLowerCase()));
+          const extraDocs = snap.docs
+            .map(doc => ({ id: doc.id, ...(doc.data() as any) }))
+            .filter(d => d.question && !fallbackQuestions.has(d.question.toLowerCase()));
+          setFaqs([...FALLBACK_FAQS, ...extraDocs]);
         }
       } catch {
         // Firestore unavailable — keep using fallback
@@ -267,9 +292,9 @@ export default function InquiryCenter() {
                           style={{ background: 'linear-gradient(135deg, #f0f9ff, #e0f2fe)', border: '1px solid rgba(2,132,199,0.1)' }}
                         >
                           <Quote className="w-8 h-8 text-sky-200 absolute left-4 top-4" />
-                          <p className="text-slate-700 text-lg font-medium leading-relaxed relative z-10">
-                            {faq.answer}
-                          </p>
+                          <div className="text-slate-700 text-lg font-medium leading-relaxed relative z-10 space-y-3">
+                            {renderFormattedAnswer(faq.answer)}
+                          </div>
                         </div>
 
                         {/* Ask OWL follow-up */}
