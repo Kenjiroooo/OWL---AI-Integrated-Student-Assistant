@@ -5,7 +5,6 @@ import { OwlAssistantProvider } from './context/OwlAssistantContext';
 import OwlAIFab from './components/OwlAIFab';
 import OwlChatDrawer from './components/OwlChatDrawer';
 import { AuthProvider } from './context/AuthContext';
-import GlobalKeyboard from './components/GlobalKeyboard';
 
 // Helper to handle dynamic import failures (stale chunk caching)
 const lazyWithRetry = (componentImport: () => Promise<any>) => {
@@ -67,7 +66,6 @@ export default function App() {
           {/* Global OWL AI Floating Button + Drawer (visible on all pages) */}
           <OwlAIFab />
           <OwlChatDrawer />
-          <GlobalKeyboard />
         </OwlAssistantProvider>
       </BrowserRouter>
     </AuthProvider>
