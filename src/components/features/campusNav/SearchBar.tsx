@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Search, MapPin } from 'lucide-react';
+import { detectCampusHighlight, type CampusHighlightId } from '../../../lib/gemini';
 
 interface Props {
-  onLocate: () => void;
+  onLocate: (campusId?: CampusHighlightId) => void;
 }
 
 export default function SearchBar({ onLocate }: Props) {
@@ -10,9 +11,14 @@ export default function SearchBar({ onLocate }: Props) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const detected = detectCampusHighlight(query);
+    if (detected) {
+      onLocate(detected);
+      return;
+    }
     const q = query.toLowerCase();
-    if (q.includes('udd') || q.includes('universidad') || q.includes('dagupan') || q.includes('university')) {
-      onLocate();
+    if (q.includes('udd') || q.includes('universidad') || q.includes('dagupan') || q.includes('university') || q.includes('main')) {
+      onLocate('main');
     }
   };
 
@@ -22,7 +28,7 @@ export default function SearchBar({ onLocate }: Props) {
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
         <input
           type="text"
-          placeholder="Search for Universidad de Dagupan..."
+          placeholder="Search Main Campus, FAME Building, E Building, Gym..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="w-full pl-12 pr-32 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-slate-800 placeholder:text-slate-400 font-medium"
