@@ -1,10 +1,16 @@
 import React, { useState, useRef, useEffect, FormEvent } from 'react';
-import { Send, ArrowLeft, MessageSquare, Square } from 'lucide-react';
+import { Send, ArrowLeft, Square, MapPin } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { OwlCharacter } from '../components/OwlCharacter';
-import { askOwl, type ChatMessage } from '../lib/gemini';
-import { VirtualKeyboard } from '../components/ui/VirtualKeyboard';
+import {
+    askOwl,
+    detectCampusHighlight,
+    isAffirmativeReply,
+    CAMPUS_HIGHLIGHT_LABELS,
+    type ChatMessage,
+    type CampusHighlightId,
+} from '../lib/gemini';
 import { speak, cancelSpeech, unlockAudio } from '../lib/owlSpeech';
 
 interface Message {
@@ -24,9 +30,10 @@ const INITIAL_MESSAGES: Message[] = [
 ];
 
 const SUGGESTED_PROMPTS = [
-    "Where is room 204?",
     "What is the enrollment process?",
-    "Where is the UdD campus located?"
+    "Where is the FAME Building?",
+    "Where is the E Building?",
+    "Where is the UdD Main Campus located?"
 ];
 
 function chunkText(text: string, maxChars: number = 170): string[] {
@@ -53,7 +60,7 @@ export default function OwlChatPage() {
     const [isTyping, setIsTyping] = useState(false);
     const [isTalking, setIsTalking] = useState(false);
     const [currentPage, setCurrentPage] = useState(0);
-    const [showKeyboard, setShowKeyboard] = useState(false);
+    const [pendingCampusHighlight, setPendingCampusHighlight] = useState<CampusHighlightId | null>(null);
 
     const abortControllerRef = useRef<AbortController | null>(null);
     const hasBoundaryFiredRef = useRef(false);
@@ -81,11 +88,40 @@ export default function OwlChatPage() {
         };
     }, []);
 
+    const navigateToCampusMap = (campusId: CampusHighlightId) => {
+        handleStop();
+        setPendingCampusHighlight(null);
+        navigate(`/feature/campus-nav?highlight=${campusId}`);
+    };
+
     const handleSend = async (e?: FormEvent, presetPrompt?: string) => {
         e?.preventDefault();
         unlockAudio();
         const text = presetPrompt || input;
         if (!text.trim() || isTyping) return;
+
+        // If OWL asked whether to direct the user to Campus Navigation and the user replies "yes"
+        if (pendingCampusHighlight && isAffirmativeReply(text)) {
+            const targetCampus = detectCampusHighlight(text) || pendingCampusHighlight;
+            setInput('');
+            navigateToCampusMap(targetCampus);
+            return;
+        }
+
+        // If user says "no" / "no thanks" to the Campus Navigation prompt
+        if (pendingCampusHighlight && /^(no|nope|nah|no thanks|not now|cancel)$/i.test(text.trim())) {
+            const userMsg: Message = { id: Date.now().toString(), role: 'user', content: text, timestamp: new Date() };
+            const aiMsg: Message = {
+                id: (Date.now() + 1).toString(),
+                role: 'ai',
+                content: 'No problem! Let me know if you have any other questions about Universidad de Dagupan.',
+                timestamp: new Date(),
+            };
+            setMessages(prev => [...prev, userMsg, aiMsg]);
+            setInput('');
+            setPendingCampusHighlight(null);
+            return;
+        }
 
         const userMsg: Message = { id: Date.now().toString(), role: 'user', content: text, timestamp: new Date() };
         setMessages(prev => [...prev, userMsg]);
@@ -93,6 +129,7 @@ export default function OwlChatPage() {
         setIsTyping(true);
         hasBoundaryFiredRef.current = false;
 
+        const detectedFromQuestion = detectCampusHighlight(text);
         abortControllerRef.current = new AbortController();
 
         try {
@@ -110,6 +147,9 @@ export default function OwlChatPage() {
                 timestamp: new Date()
             };
             setMessages(prev => [...prev, aiMsg]);
+
+            const detectedTarget = detectedFromQuestion || detectCampusHighlight(aiResponse);
+            setPendingCampusHighlight(detectedTarget);
 
             // Speak the AI's response via universal multi-tier speech engine
             const chunks = chunkText(aiResponse, 170);
@@ -146,7 +186,6 @@ export default function OwlChatPage() {
             setMessages(prev => [...prev, errorMsg]);
         } finally {
             setIsTyping(false);
-            setShowKeyboard(false);
         }
     };
 
@@ -276,6 +315,27 @@ export default function OwlChatPage() {
             {/* Input Area */}
             <div className="p-4 md:p-6 w-full bg-white border-t border-slate-200/60 z-20 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
                 <div className="max-w-2xl mx-auto">
+                    {pendingCampusHighlight && !isTyping && (
+                        <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
+                            <motion.button
+                                initial={{ opacity: 0, y: 6 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                whileHover={{ scale: 1.03 }}
+                                whileTap={{ scale: 0.97 }}
+                                onClick={() => navigateToCampusMap(pendingCampusHighlight)}
+                                className="px-5 py-2.5 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-bold shadow-md shadow-blue-200 flex items-center gap-2"
+                            >
+                                <MapPin className="w-4 h-4" />
+                                Yes, open Campus Navigation ({CAMPUS_HIGHLIGHT_LABELS[pendingCampusHighlight]})
+                            </motion.button>
+                            <button
+                                onClick={() => setPendingCampusHighlight(null)}
+                                className="px-4 py-2.5 rounded-full border border-slate-200 bg-slate-50 text-slate-600 text-sm font-semibold hover:bg-slate-100 transition-colors"
+                            >
+                                No, thanks
+                            </button>
+                        </div>
+                    )}
                     {showSuggestions && (
                         <div className="flex flex-wrap gap-2 mb-4 justify-center">
                             {SUGGESTED_PROMPTS.map(prompt => (
@@ -294,11 +354,9 @@ export default function OwlChatPage() {
                     <form onSubmit={handleSend} className="relative flex items-center group">
                         <input
                             type="text"
-                            inputMode="none"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            onFocus={() => setShowKeyboard(true)}
-                            placeholder="Message OWL AI Assistant..."
+                            placeholder={pendingCampusHighlight ? 'Type "yes" to open Campus Navigation, or ask another question...' : 'Message OWL AI Assistant...'}
                             className="w-full bg-slate-50 border border-slate-200 rounded-full py-4 pl-6 pr-14 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all text-slate-800 placeholder:text-slate-400 shadow-sm"
                         />
                         {(isTyping || isTalking) ? (
@@ -324,27 +382,6 @@ export default function OwlChatPage() {
                     </p>
                 </div>
             </div>
-            
-            {/* Keyboard Spacer */}
-            <motion.div 
-                initial={false}
-                animate={{ height: showKeyboard ? 340 : 0 }}
-                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="w-full bg-[#f1f5f9] flex-shrink-0"
-            />
-
-            {/* Virtual Keyboard */}
-            <VirtualKeyboard
-                show={showKeyboard}
-                value={input}
-                onChange={setInput}
-                onSubmit={() => {
-                    if (input.trim() && !isTyping) {
-                        handleSend();
-                    }
-                }}
-                onClose={() => setShowKeyboard(false)}
-            />
         </div>
     );
 }
