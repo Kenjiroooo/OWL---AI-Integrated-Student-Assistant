@@ -10,17 +10,79 @@ export interface ChatMessage {
   content: string;
 }
 
+export type CampusHighlightId = 'main' | 'fame' | 'engineering' | 'shs' | 'gym';
+
+export const CAMPUS_HIGHLIGHT_LABELS: Record<CampusHighlightId, string> = {
+  main: 'Main Campus',
+  fame: 'FAME Building',
+  engineering: 'E Building (Engineering Building)',
+  shs: 'School of Health Sciences',
+  gym: 'LCR Arzadon Gymnasium',
+};
+
+/**
+ * Detects which campus or building a message is asking about or referring to.
+ */
+export function detectCampusHighlight(text: string): CampusHighlightId | null {
+  const q = text.toLowerCase();
+  if (/\bfame\b|fame building|fame campus/.test(q)) {
+    return 'fame';
+  }
+  if (/\be[\s-]?building\b|engineering building|engineering complex|building e\b/.test(q)) {
+    return 'engineering';
+  }
+  if (/\barzadon\b|\bgym\b|gymnasium|bonuan/.test(q)) {
+    return 'gym';
+  }
+  if (/health sciences|\bshs\b|nursing building|campus clinic/.test(q)) {
+    return 'shs';
+  }
+  if (
+    /main campus|main building|administration building|\ba[\s-]?building\b|\bv[\s-]?building\b|\bl[\s-]?building\b|front building|room\s*v?\d+|v204|registrar|finance office|cashier|where is udd|udd campus|campus location|where.*located/.test(
+      q
+    )
+  ) {
+    return 'main';
+  }
+  return null;
+}
+
+/**
+ * Returns true when the user replies affirmatively (e.g. "yes", "sure", "okay")
+ * to being directed to Campus Navigation.
+ */
+export function isAffirmativeReply(text: string): boolean {
+  const clean = text.trim().toLowerCase().replace(/[.!?]+$/g, '');
+  return /^(yes|yep|yeah|yup|sure|ok|okay|oo|opo|sige|go|go ahead|please|yes please|direct me|show me|open map|take me there|yes direct me|yes show me)(\b.*)?$/.test(
+    clean
+  );
+}
+
 // ── Hardcoded Map Locations ──────────────────────────────────────────────────
 // These locations are hardcoded in the frontend map components and must be provided
 // to the AI so it knows about them regardless of Firestore data.
 const HARDCODED_MAP_LOCATIONS = `
 • Universidad de Dagupan Main Campus (Dagupan City): Formerly known as Colegio de Dagupan. A premier institution of higher learning in North Luzon, providing quality education and modern facilities.
-• Universidad de Dagupan Fame Building: The Fame Building campus of Universidad de Dagupan.
+• FAME Building (Universidad de Dagupan Fame Building): The Fame Building campus of Universidad de Dagupan. Location / Address: Arellano Street, Pantal, Dagupan City, Pangasinan 2400.
 • LCR Arzadon Gymnasium: A major indoor university facility at Universidad de Dagupan used for large-scale academic, athletic, ceremonial, and student activities, including presentations, institutional events, and commencement-related programs. Located in Bonuan Binloc, Dagupan City.
 • UdD School of Health Sciences: Dedicated to developing competent, compassionate, and skilled healthcare professionals.
-• UdD Engineering Building (E-Building): Serves as a dedicated academic facility for engineering students, providing classrooms, laboratories, and learning spaces.
+• E Building (UdD Engineering Building / E-Building): Serves as a dedicated academic facility for engineering students, providing classrooms, laboratories, and learning spaces. Address / Location: Arellano Street, Pantal, Dagupan City, Pangasinan 2400.
 • Administration Building (A Building): The central administration and academic building of the Main Campus.
 `;
+
+const HARDCODED_ENROLLMENT_STEPS = `Q: What are the enrollment steps for new students? / What is the enrollment process?
+A:
+1. Get an Enlistment Form – Proceed to Room V204 to obtain your enlistment form.
+
+2. List Your Subjects – Identify all the subjects you need to enroll in and fill them out in the enlistment form.
+
+3. Submit Your Form – Submit your completed enlistment form at the Enlistment Counter.
+
+4. Pay the Enrollment Fee – Proceed to the Cashier located on the ground floor of the Administration Building to pay your enrollment fee.
+
+5. Complete Your Enrollment – Go to your department's designated room to finalize your enrollment and have your White Form printed.
+
+6. You're Officially Enrolled! – Congratulations! You have successfully completed the enrollment process.`;
 
 const HARDCODED_UNIVERSITY_HYMN = `UNIVERSIDAD DE DAGUPAN HYMN
 
@@ -94,11 +156,13 @@ async function fetchCampusContext(): Promise<CampusContext> {
       return `• ${d.name} — ${d.department || 'N/A'}, Office: ${d.officeLocation || 'N/A'}, Email: ${d.email || 'N/A'}`;
     }).join('\n');
 
-    // Format FAQ data
-    const faqs = faqsSnap.docs.map(doc => {
-      const d = doc.data();
-      return `Q: ${d.question}\nA: ${d.answer}`;
-    }).join('\n\n');
+    // Format FAQ data (exclude outdated enrollment steps from Firestore so HARDCODED_ENROLLMENT_STEPS is authoritative)
+    const firestoreFaqs = faqsSnap.docs
+      .map(doc => doc.data())
+      .filter(d => d.question && !/enrollment steps for new students/i.test(d.question))
+      .map(d => `Q: ${d.question}\nA: ${d.answer}`)
+      .join('\n\n');
+    const faqs = [HARDCODED_ENROLLMENT_STEPS, firestoreFaqs].filter(Boolean).join('\n\n');
 
     // Format announcements data
     const announcements = announcementsSnap.docs.map(doc => {
@@ -115,7 +179,7 @@ async function fetchCampusContext(): Promise<CampusContext> {
     return {
       buildings: '(Campus building data is currently unavailable)',
       faculty: '(Faculty data is currently unavailable)',
-      faqs: '(FAQ data is currently unavailable)',
+      faqs: HARDCODED_ENROLLMENT_STEPS,
       announcements: '(Announcements data is currently unavailable)',
     };
   }
@@ -191,6 +255,14 @@ STRICT RULES:
 - Never guess, speculate, or invent information.
 - If multiple official pages contain relevant information, combine them into one accurate response.
 - The official Universidad de Dagupan website and the provided database context are your single source of truth.
+- Whenever a user asks about the enrollment process or enrollment steps (including for new students), ALWAYS give these exact 6 steps:
+  1. Get an Enlistment Form – Proceed to Room V204 to obtain your enlistment form.
+  2. List Your Subjects – Identify all the subjects you need to enroll in and fill them out in the enlistment form.
+  3. Submit Your Form – Submit your completed enlistment form at the Enlistment Counter.
+  4. Pay the Enrollment Fee – Proceed to the Cashier located on the ground floor of the Administration Building to pay your enrollment fee.
+  5. Complete Your Enrollment – Go to your department's designated room to finalize your enrollment and have your White Form printed.
+  6. You're Officially Enrolled! – Congratulations! You have successfully completed the enrollment process.
+- Whenever a user asks about a campus, building, room, or location (such as Main Campus, FAME Building, E Building / Engineering Building, Administration Building, V Building, School of Health Sciences, or LCR Arzadon Gymnasium), after giving the details, ALWAYS ask them at the end: "Would you like me to direct you to Campus Navigation for detailed information on the campus?"
 
 ## INTERNAL UNIVERSITY DATABASE
 
@@ -293,7 +365,13 @@ export async function askOwl(
     }
 
     // Strip markdown formatting for cleaner kiosk display and TTS
-    const cleanText = text.replace(/[*#_]/g, '');
+    let cleanText = text.replace(/[*#_]/g, '');
+
+    // Ensure campus/building location inquiries always offer to direct to Campus Navigation
+    const detectedCampus = detectCampusHighlight(userMessage);
+    if (detectedCampus && !/campus navigation/i.test(cleanText)) {
+      cleanText += '\n\nWould you like me to direct you to Campus Navigation for detailed information on the campus?';
+    }
 
     return cleanText;
   } catch (error: any) {
