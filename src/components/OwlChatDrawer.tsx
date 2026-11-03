@@ -1,8 +1,14 @@
 import React, { useRef, useEffect, FormEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Send, Square, ExternalLink, BrainCircuit, Loader2 } from 'lucide-react';
+import { X, Send, Square, ExternalLink, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useOwlAssistant } from '../context/OwlAssistantContext';
+import {
+  CAMPUS_HIGHLIGHT_LABELS,
+  detectCampusHighlight,
+  isAffirmativeReply,
+  type CampusHighlightId,
+} from '../lib/gemini';
 import { OwlCharacter } from './OwlCharacter';
 
 /**
@@ -17,6 +23,8 @@ export default function OwlChatDrawer() {
     closeDrawer,
     messages,
     isTyping,
+    pendingCampusHighlight,
+    clearPendingCampusHighlight,
     sendMessage,
     inputValue,
     setInputValue,
@@ -41,17 +49,39 @@ export default function OwlChatDrawer() {
     }
   }, [isOpen]);
 
+  const navigateToCampusMap = (campusId: CampusHighlightId) => {
+    stopGeneration();
+    clearPendingCampusHighlight();
+    closeDrawer();
+    navigate(`/feature/campus-nav?highlight=${campusId}`);
+  };
+
   const handleSubmit = (e?: FormEvent) => {
     e?.preventDefault();
-    if (inputValue.trim() && !isTyping) {
-      sendMessage(inputValue);
+    const text = inputValue.trim();
+    if (!text || isTyping) return;
+
+    if (pendingCampusHighlight && isAffirmativeReply(text)) {
+      const targetCampus = detectCampusHighlight(text) || pendingCampusHighlight;
+      setInputValue('');
+      navigateToCampusMap(targetCampus);
+      return;
     }
+
+    if (pendingCampusHighlight && /^(no|nope|nah|no thanks|not now|cancel)$/i.test(text)) {
+      setInputValue('');
+      clearPendingCampusHighlight();
+      return;
+    }
+
+    sendMessage(text);
   };
 
   const QUICK_PROMPTS = [
-    'Where is this office?',
-    'Help me understand this',
-    'What should I do next?',
+    'What is the enrollment process?',
+    'Where is the FAME Building?',
+    'Where is the E Building?',
+    'Where is the Main Campus?',
   ];
 
   return (
@@ -126,7 +156,7 @@ export default function OwlChatDrawer() {
                     </div>
                   )}
                   <div
-                    className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed font-medium shadow-sm ${
+                    className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed font-medium shadow-sm whitespace-pre-line ${
                       msg.role === 'user'
                         ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-br-sm'
                         : 'bg-white text-slate-700 border border-slate-100 rounded-bl-sm'
@@ -155,6 +185,25 @@ export default function OwlChatDrawer() {
               <div ref={messagesEndRef} />
             </div>
 
+            {/* ── Campus Navigation Confirmation Bar ─────────────────── */}
+            {pendingCampusHighlight && !isTyping && (
+              <div className="px-4 py-3 bg-blue-50/80 border-t border-blue-100 flex-shrink-0 flex flex-col gap-2">
+                <button
+                  onClick={() => navigateToCampusMap(pendingCampusHighlight)}
+                  className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold shadow-sm flex items-center justify-center gap-2 hover:opacity-95 transition-all"
+                >
+                  <MapPin className="w-4 h-4" />
+                  Yes, open Campus Navigation ({CAMPUS_HIGHLIGHT_LABELS[pendingCampusHighlight]})
+                </button>
+                <button
+                  onClick={clearPendingCampusHighlight}
+                  className="w-full py-1.5 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-700 transition-colors"
+                >
+                  No, stay in chat
+                </button>
+              </div>
+            )}
+
             {/* ── Quick Prompts (shown only when only greeting message) ── */}
             {messages.length === 1 && !isTyping && (
               <div className="px-4 py-3 bg-slate-50 border-t border-slate-100 flex-shrink-0">
@@ -181,7 +230,7 @@ export default function OwlChatDrawer() {
                   type="text"
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  placeholder="Ask OWL anything..."
+                  placeholder={pendingCampusHighlight ? 'Type "yes" to open map...' : 'Ask OWL anything...'}
                   className="flex-1 bg-slate-50 border border-slate-200 rounded-full py-3 px-5 text-sm font-medium text-slate-800 placeholder:text-slate-400 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
                 />
                 {isTyping ? (

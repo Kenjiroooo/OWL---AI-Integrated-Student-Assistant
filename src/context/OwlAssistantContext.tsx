@@ -5,7 +5,12 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { askOwl, type ChatMessage } from '../lib/gemini';
+import {
+  askOwl,
+  detectCampusHighlight,
+  type ChatMessage,
+  type CampusHighlightId,
+} from '../lib/gemini';
 import { getFeatureContext } from '../data/featureAIContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -26,6 +31,9 @@ interface OwlAssistantContextType {
   messages: DrawerMessage[];
   /** Whether the AI is currently generating a response */
   isTyping: boolean;
+  /** Campus target pending confirmation to open Campus Navigation */
+  pendingCampusHighlight: CampusHighlightId | null;
+  clearPendingCampusHighlight: () => void;
   /** Open the drawer (optionally with a pre-filled message) */
   openDrawer: (prefillMessage?: string) => void;
   /** Close the drawer */
@@ -50,6 +58,8 @@ const OwlAssistantContext = createContext<OwlAssistantContextType>({
   currentFeatureId: null,
   messages: [],
   isTyping: false,
+  pendingCampusHighlight: null,
+  clearPendingCampusHighlight: () => {},
   openDrawer: () => {},
   closeDrawer: () => {},
   toggleDrawer: () => {},
@@ -99,12 +109,18 @@ export const OwlAssistantProvider: React.FC<{ children: React.ReactNode }> = ({
   ]);
   const [isTyping, setIsTyping] = useState(false);
   const [inputValue, setInputValue] = useState('');
+  const [pendingCampusHighlight, setPendingCampusHighlight] = useState<CampusHighlightId | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  const clearPendingCampusHighlight = useCallback(() => {
+    setPendingCampusHighlight(null);
+  }, []);
 
   const setFeatureContext = useCallback((featureId: string | null) => {
     setCurrentFeatureId(featureId);
     // Reset messages to a context-aware greeting when moving to a new feature
     setMessages([buildGreeting(featureId)]);
+    setPendingCampusHighlight(null);
   }, []);
 
   const openDrawer = useCallback((prefillMessage?: string) => {
@@ -141,6 +157,8 @@ export const OwlAssistantProvider: React.FC<{ children: React.ReactNode }> = ({
       setIsTyping(true);
       setInputValue('');
 
+      const detectedFromQuestion = detectCampusHighlight(text);
+
       // Build feature-aware context prefix for the system prompt
       const featureCtx = getFeatureContext(currentFeatureId);
       const contextPrefix = `CURRENT CONTEXT: ${featureCtx}\n\nAnswer based on this context first, then use your general UdD knowledge.`;
@@ -166,6 +184,9 @@ export const OwlAssistantProvider: React.FC<{ children: React.ReactNode }> = ({
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, aiMsg]);
+
+        const detectedTarget = detectedFromQuestion || detectCampusHighlight(response);
+        setPendingCampusHighlight(detectedTarget);
       } catch (err: any) {
         if (err?.name === 'AbortError') return;
         const errMsg: DrawerMessage = {
@@ -190,6 +211,8 @@ export const OwlAssistantProvider: React.FC<{ children: React.ReactNode }> = ({
         currentFeatureId,
         messages,
         isTyping,
+        pendingCampusHighlight,
+        clearPendingCampusHighlight,
         openDrawer,
         closeDrawer,
         toggleDrawer,
