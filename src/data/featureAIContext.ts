@@ -10,7 +10,7 @@ export const FEATURE_AI_CONTEXT: Record<string, string> = {
   academic:
     'The student is currently viewing their Academic Hub, which shows their GPA (1.45), current semester grades, enrollment checklist, and curriculum progress. Help them understand their academic standing, explain their grades, suggest study strategies, or guide them on enrollment requirements.',
   'campus-nav':
-    'The student is currently using the Campus Navigation map of Universidad de Dagupan. Help them find specific buildings, rooms, offices, or give directions around the campus. Key landmarks: Main Building (admin, Registrar, Finance), Library (3rd Floor Main), Student Affairs (Building F), Linkage Office, BSCS/IT Department.',
+    'The student is currently using the Campus Navigation map of Universidad de Dagupan. Help them find specific buildings, rooms, offices, or give directions around the campus. Key landmarks: Main Building (admin, Registrar, Finance), Library (3rd Floor Main), Student Affairs (Building F), Linkage Office, BSCS/IT Department, FAME Building (Location: Arellano Street, Pantal, Dagupan City, Pangasinan 2400), and E Building / Engineering Building (Address: Arellano Street, Pantal, Dagupan City, Pangasinan 2400).',
   transport:
     'The student is viewing the SakayUDD Campus Transport page which shows the e-jeepney live timetable and routes for Universidad de Dagupan. Help them with questions about e-jeep schedules, routes, stops, fares, or how to use the SakayUDD app.',
   exam:
