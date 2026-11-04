@@ -23,11 +23,102 @@ import os
 import io
 import sys
 import signal
+import shutil
 import tempfile
 
 PORT = 5050
 PIPER_BIN = os.path.join(os.path.dirname(os.path.abspath(__file__)), "piper", "piper")
 VOICE_MODEL = os.path.join(os.path.dirname(os.path.abspath(__file__)), "piper", "voices", "en_US-amy-medium.onnx")
+
+
+def trigger_rpi_keyboard(visible: bool) -> dict:
+    """
+    Trigger the built-in Raspberry Pi 5 OS virtual keyboard.
+    Supports:
+      1. Squeekboard (Raspberry Pi OS Bookworm Wayland default via D-Bus sm.puri.OSK0)
+      2. wvkbd-mobintl (Raspberry Pi OS Bookworm labwc/wayfire virtual keyboard)
+      3. Onboard (X11/Wayland D-Bus org.onboard.Onboard)
+      4. matchbox-keyboard / florence (X11 fallback)
+    """
+    env = os.environ.copy()
+    uid = os.getuid() if hasattr(os, "getuid") else 1000
+    env.setdefault("XDG_RUNTIME_DIR", f"/run/user/{uid}")
+    env.setdefault("DBUS_SESSION_BUS_ADDRESS", f"unix:path=/run/user/{uid}/bus")
+    env.setdefault("WAYLAND_DISPLAY", "wayland-0")
+    env.setdefault("DISPLAY", ":0")
+
+    bool_str = "true" if visible else "false"
+    tried = []
+
+    # 1. Squeekboard via busctl / gdbus (Raspberry Pi OS Bookworm default)
+    if shutil.which("busctl"):
+        res = subprocess.run(
+            ["busctl", "call", "--user", "sm.puri.OSK0", "/sm/puri/OSK0", "sm.puri.OSK0", "SetVisible", "b", bool_str],
+            env=env,
+            capture_output=True,
+            timeout=2,
+        )
+        tried.append(f"squeekboard(busctl):{res.returncode}")
+        if res.returncode == 0:
+            return {"ok": True, "keyboard": "squeekboard", "visible": visible}
+
+    if shutil.which("gdbus"):
+        res = subprocess.run(
+            [
+                "gdbus", "call", "--session",
+                "--dest", "sm.puri.OSK0",
+                "--object-path", "/sm/puri/OSK0",
+                "--method", "sm.puri.OSK0.SetVisible",
+                bool_str,
+            ],
+            env=env,
+            capture_output=True,
+            timeout=2,
+        )
+        tried.append(f"squeekboard(gdbus):{res.returncode}")
+        if res.returncode == 0:
+            return {"ok": True, "keyboard": "squeekboard", "visible": visible}
+
+    # 2. wvkbd-mobintl (Raspberry Pi OS labwc / Wayland)
+    wvkbd_bin = shutil.which("wvkbd-mobintl") or shutil.which("wvkbd")
+    if wvkbd_bin:
+        sig = "-SIGUSR2" if visible else "-SIGUSR1"
+        res = subprocess.run(["pkill", sig, "-f", "wvkbd"], env=env, capture_output=True, timeout=2)
+        if res.returncode != 0 and visible:
+            # Start wvkbd-mobintl in background if not yet running
+            subprocess.Popen([wvkbd_bin, "-L", "280"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            return {"ok": True, "keyboard": "wvkbd-launched", "visible": visible}
+        tried.append(f"wvkbd:{res.returncode}")
+        if res.returncode == 0:
+            return {"ok": True, "keyboard": "wvkbd", "visible": visible}
+
+    # 3. Onboard via D-Bus
+    if shutil.which("dbus-send"):
+        method = "org.onboard.Onboard.Keyboard.Show" if visible else "org.onboard.Onboard.Keyboard.Hide"
+        res = subprocess.run(
+            [
+                "dbus-send", "--type=method_call",
+                "--dest=org.onboard.Onboard",
+                "/org/onboard/Onboard/Keyboard",
+                method,
+            ],
+            env=env,
+            capture_output=True,
+            timeout=2,
+        )
+        tried.append(f"onboard:{res.returncode}")
+        if res.returncode == 0:
+            return {"ok": True, "keyboard": "onboard", "visible": visible}
+
+    # 4. matchbox-keyboard fallback
+    if shutil.which("matchbox-keyboard"):
+        if visible:
+            subprocess.Popen(["matchbox-keyboard"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        else:
+            subprocess.run(["pkill", "-f", "matchbox-keyboard"], env=env, capture_output=True, timeout=2)
+        return {"ok": True, "keyboard": "matchbox-keyboard", "visible": visible}
+
+    return {"ok": False, "visible": visible, "tried": tried}
 
 
 class TTSHandler(http.server.BaseHTTPRequestHandler):
@@ -38,6 +129,17 @@ class TTSHandler(http.server.BaseHTTPRequestHandler):
 
         if parsed.path == "/health":
             self._send_json(200, {"status": "ok", "engine": "piper", "voice": "en_US-amy-medium"})
+            return
+
+        if parsed.path == "/keyboard":
+            params = urllib.parse.parse_qs(parsed.query)
+            action = params.get("action", ["show"])[0].strip().lower()
+            visible = action != "hide"
+            try:
+                result = trigger_rpi_keyboard(visible)
+                self._send_json(200, result)
+            except Exception as e:
+                self._send_json(500, {"ok": False, "error": str(e)})
             return
 
         if parsed.path == "/tts":
@@ -124,22 +226,18 @@ class TTSHandler(http.server.BaseHTTPRequestHandler):
 
 
 def main():
-    # Verify piper binary exists
+    # Warn if piper binary or voice model is not yet installed (server still runs for /keyboard)
     if not os.path.isfile(PIPER_BIN):
-        print(f"[ERROR] Piper binary not found at: {PIPER_BIN}")
-        print("Run setup-piper-tts.sh first to install Piper.")
-        sys.exit(1)
+        print(f"[WARN] Piper binary not found at: {PIPER_BIN} (TTS disabled, /keyboard active)")
 
     if not os.path.isfile(VOICE_MODEL):
-        print(f"[ERROR] Voice model not found at: {VOICE_MODEL}")
-        print("Run setup-piper-tts.sh first to download the voice model.")
-        sys.exit(1)
+        print(f"[WARN] Voice model not found at: {VOICE_MODEL} (TTS disabled, /keyboard active)")
 
     server = http.server.HTTPServer(("0.0.0.0", PORT), TTSHandler)
     print(f"[PiperTTS] Server running on http://0.0.0.0:{PORT}")
     print(f"[PiperTTS] Piper binary: {PIPER_BIN}")
     print(f"[PiperTTS] Voice model: {VOICE_MODEL}")
-    print(f"[PiperTTS] Endpoints: GET /tts?text=... | GET /health")
+    print(f"[PiperTTS] Endpoints: GET /tts?text=... | GET /keyboard?action=show|hide | GET /health")
 
     # Graceful shutdown on SIGTERM/SIGINT
     def shutdown(sig, frame):
