@@ -1,10 +1,11 @@
-import React, { lazy, Suspense } from 'react';
+import React, { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { OwlAssistantProvider } from './context/OwlAssistantContext';
 import OwlAIFab from './components/OwlAIFab';
 import OwlChatDrawer from './components/OwlChatDrawer';
 import { AuthProvider } from './context/AuthContext';
+import { initRpiVirtualKeyboard } from './lib/rpiKeyboard';
 
 // Helper to handle dynamic import failures (stale chunk caching)
 const lazyWithRetry = (componentImport: () => Promise<any>) => {
@@ -34,6 +35,11 @@ const LoadingScreen = () => (
 );
 
 export default function App() {
+  // Automatically invoke the Raspberry Pi 5 built-in virtual keyboard when any input is focused
+  useEffect(() => {
+    return initRpiVirtualKeyboard();
+  }, []);
+
   return (
     <AuthProvider>
       <BrowserRouter>
