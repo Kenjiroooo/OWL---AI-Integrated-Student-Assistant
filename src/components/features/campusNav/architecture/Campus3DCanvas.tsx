@@ -17,6 +17,8 @@ import { buildSHSBuilding3D } from './shsModel';
 import { buildEngineeringBuilding3D } from './engModel';
 import { buildUnifiedMainCampus3D } from './mainCampusModel';
 import type { ShapePoint, TrackerMode } from './ShapeTrackerOverlay';
+import { detectRenderQualityProfile, AdaptiveResolutionController } from './renderQuality';
+import { optimizeBuildingScene } from './optimizeScene';
 
 /** Procedural model factory per building id. */
 const MODEL_FACTORIES: Record<CampusBuildingId, () => Building3DResult> = {
@@ -394,6 +396,13 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
   onSelectBuildingRef.current = onSelectBuilding;
   const pointerDownPosRef = useRef<{ x: number; y: number; time: number } | null>(null);
 
+  const [debugStats, setDebugStats] = useState<{
+    fps: number;
+    drawCalls: number;
+    triangles: number;
+    profile: string;
+  } | null>(null);
+
   // References to keep animation state across renders without re-initializing WebGL
   const stateRef = useRef<{
     renderer: THREE.WebGLRenderer | null;
@@ -405,7 +414,9 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
     isExploded: boolean;
     trackerGroup: THREE.Group | null;
     glowGroup: THREE.Group | null;
+    glowPulseMaterials: Array<THREE.Material & { opacity: number }>;
     highlightLight: THREE.PointLight | null;
+    lastInteractionTime: number;
     cinematicTarget: {
       active: boolean;
       progress: number;
@@ -425,9 +436,15 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
     isExploded: exploded,
     trackerGroup: null,
     glowGroup: null,
+    glowPulseMaterials: [],
     highlightLight: null,
+    lastInteractionTime: performance.now(),
     cinematicTarget: null,
   });
+
+  const markInteraction = () => {
+    stateRef.current.lastInteractionTime = performance.now();
+  };
 
   const updateGlowHighlight = (targetBuildingId: CampusBuildingId) => {
     const { scene, models } = stateRef.current;
@@ -444,6 +461,7 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
         }
       });
       stateRef.current.glowGroup = null;
+      stateRef.current.glowPulseMaterials = [];
     }
 
     const buildingResult = models[targetBuildingId] ?? Object.values(models)[0];
@@ -452,13 +470,24 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
     const focusTarget = buildingResult.focusTargets?.find((t) => t.id === targetBuildingId);
     if (focusTarget && focusTarget.footprint.length >= 3) {
       const glow = createBuildingGlow(focusTarget.footprint);
+      const pulseMats: Array<THREE.Material & { opacity: number }> = [];
+      glow.traverse((child) => {
+        if ((child as THREE.Mesh).isMesh) {
+          const m = child as THREE.Mesh;
+          if (m.material && !Array.isArray(m.material) && 'opacity' in m.material && m.material.transparent) {
+            pulseMats.push(m.material as THREE.Material & { opacity: number });
+          }
+        }
+      });
       scene.add(glow);
       stateRef.current.glowGroup = glow;
+      stateRef.current.glowPulseMaterials = pulseMats;
 
       if (stateRef.current.highlightLight) {
         stateRef.current.highlightLight.position.copy(focusTarget.lookAt).add(new THREE.Vector3(0, 5, 4));
       }
     }
+    markInteraction();
   };
 
   const [webGLFailed, setWebGLFailed] = useState(false);
@@ -472,6 +501,7 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
       camera.getWorldDirection(dir);
       camera.position.addScaledVector(dir, 6.5);
       controls.update();
+      markInteraction();
     },
     zoomOut: () => {
       const { camera, controls } = stateRef.current;
@@ -480,6 +510,7 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
       camera.getWorldDirection(dir);
       camera.position.addScaledVector(dir, -6.5);
       controls.update();
+      markInteraction();
     },
     orbitLeft: () => {
       const { camera, controls } = stateRef.current;
@@ -488,6 +519,7 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
       offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), -0.25);
       camera.position.copy(controls.target).add(offset);
       controls.update();
+      markInteraction();
     },
     orbitRight: () => {
       const { camera, controls } = stateRef.current;
@@ -496,6 +528,7 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
       offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), 0.25);
       camera.position.copy(controls.target).add(offset);
       controls.update();
+      markInteraction();
     },
     resetView: () => {
       const { camera, controls, models, activeId } = stateRef.current;
@@ -510,6 +543,7 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
         endCam: model.defaultCameraPos.clone(),
         endLook: model.targetLookAt.clone(),
       };
+      markInteraction();
     },
   }));
 
@@ -519,7 +553,7 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
     stateRef.current.activeId = activeBuildingId;
 
     if (prevId !== activeBuildingId) {
-      const { camera, controls, models } = stateRef.current;
+      const { camera, controls, models, renderer } = stateRef.current;
       if (!camera || !controls) return;
       const targetModel = models[activeBuildingId];
       if (!targetModel) return;
@@ -534,12 +568,20 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
         endLook: targetModel.targetLookAt.clone(),
       };
 
+      if (renderer) {
+        renderer.shadowMap.needsUpdate = true;
+      }
       updateGlowHighlight(activeBuildingId);
+      markInteraction();
     }
   }, [activeBuildingId]);
 
   useEffect(() => {
     stateRef.current.isExploded = exploded;
+    if (stateRef.current.renderer) {
+      stateRef.current.renderer.shadowMap.needsUpdate = true;
+    }
+    markInteraction();
   }, [exploded]);
 
   // Trigger cinematic sequence on nonce change
@@ -571,6 +613,7 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
       endCam,
       endLook,
     };
+    markInteraction();
   }, [cinematicNonce]);
 
   // Main WebGL Scene Initialization
@@ -585,19 +628,25 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
       const width = container.clientWidth || window.innerWidth;
       const height = container.clientHeight || window.innerHeight;
 
-      // 1. Renderer
+      // 1. Renderer & Raspberry Pi 5 Quality Profile
       const renderer = new THREE.WebGLRenderer({
         canvas,
         antialias: true,
         alpha: false,
         powerPreference: 'high-performance',
       });
+      const qualityProfile = detectRenderQualityProfile(renderer.getContext());
+      const resolutionController = new AdaptiveResolutionController(qualityProfile);
+
       renderer.setSize(width, height);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setPixelRatio(qualityProfile.basePixelRatio);
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.15;
       renderer.shadowMap.enabled = true;
-      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.shadowMap.type = qualityProfile.shadowMapType;
+      // Bake static shadows once; re-bake only when floors explode or active building changes
+      renderer.shadowMap.autoUpdate = false;
+      renderer.shadowMap.needsUpdate = true;
 
       // 2. Scene & Fog
       const scene = new THREE.Scene();
@@ -616,20 +665,19 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
       controls.maxDistance = 350;
       controls.maxPolarAngle = Math.PI / 2 - 0.02; // Keep camera above ground
       controls.target.set(0, 10, 0);
+      controls.addEventListener('change', markInteraction);
+      controls.addEventListener('start', markInteraction);
 
-      // 5. Lighting Setup
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.55);
-      scene.add(ambientLight);
-
-      const hemiLight = new THREE.HemisphereLight(0xe0f2fe, 0x1e293b, 0.7);
+      // 5. Lighting Setup (Consolidated HemisphereLight + DirectionalLights)
+      const hemiLight = new THREE.HemisphereLight(0xe8f4ff, 0x26354d, 1.2);
       hemiLight.position.set(0, 50, 0);
       scene.add(hemiLight);
 
       const sunLight = new THREE.DirectionalLight(0xfff5e6, 2.2);
       sunLight.position.set(45, 60, 35);
       sunLight.castShadow = true;
-      sunLight.shadow.mapSize.width = 2048;
-      sunLight.shadow.mapSize.height = 2048;
+      sunLight.shadow.mapSize.width = qualityProfile.shadowMapSize;
+      sunLight.shadow.mapSize.height = qualityProfile.shadowMapSize;
       sunLight.shadow.camera.near = 10;
       sunLight.shadow.camera.far = 320;
       sunLight.shadow.camera.left = -80;
@@ -654,25 +702,31 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
       ground.rotation.x = -Math.PI / 2;
       ground.position.y = -0.5;
       ground.receiveShadow = true;
+      ground.matrixAutoUpdate = false;
+      ground.updateMatrix();
       scene.add(ground);
 
       const grid = new THREE.GridHelper(500, 100, 0x1e3a8a, 0x0f2347);
       grid.position.y = -0.48;
+      grid.matrixAutoUpdate = false;
+      grid.updateMatrix();
       scene.add(grid);
 
-      // 7. Architectural Highlight Spotlight (Illuminates the active building front entrance)
-      const highlightLight = new THREE.PointLight(0x38bdf8, 2.8, 55, 1.1);
-      highlightLight.position.set(0, 10, -25);
-      scene.add(highlightLight);
-      stateRef.current.highlightLight = highlightLight;
+      // 7. Architectural Highlight Spotlight (Desktop only; Pi 5 uses zero-cost emissive footprint glow)
+      if (!qualityProfile.isEmbeddedOrPi) {
+        const highlightLight = new THREE.PointLight(0x38bdf8, 2.8, 55, 1.1);
+        highlightLight.position.set(0, 10, -25);
+        scene.add(highlightLight);
+        stateRef.current.highlightLight = highlightLight;
+      }
 
-      // 8. Procedural Buildings
+      // 8. Procedural Buildings (with automatic per-floor static geometry merging)
       const models: Partial<Record<CampusBuildingId, Building3DResult>> = {};
       const isMainCampus = buildingIds.some((id) => id.startsWith('udd-main'));
 
       let unifiedCampus: Building3DResult | null = null;
       if (isMainCampus) {
-        unifiedCampus = buildUnifiedMainCampus3D();
+        unifiedCampus = optimizeBuildingScene(buildUnifiedMainCampus3D(), qualityProfile.isEmbeddedOrPi);
         unifiedCampus.root.scale.set(1, 1, 1);
         unifiedCampus.root.visible = true;
         scene.add(unifiedCampus.root);
@@ -690,7 +744,7 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
             focusTargets: unifiedCampus.focusTargets,
           };
         } else {
-          const m = MODEL_FACTORIES[id]();
+          const m = optimizeBuildingScene(MODEL_FACTORIES[id](), qualityProfile.isEmbeddedOrPi);
           m.root.scale.setScalar(id === activeBuildingId ? 1 : 0.001);
           m.root.visible = id === activeBuildingId;
           scene.add(m.root);
@@ -729,42 +783,63 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
 
       // Set initial building glow highlight
       updateGlowHighlight(activeBuildingId);
+      renderer.shadowMap.needsUpdate = true;
 
-      // 10. Render & Animation Loop
+      // 10. Render & Animation Loop (Zero-allocation + Smart Idle Throttling)
       const clock = new THREE.Clock();
+      const scaleTargetVec = new THREE.Vector3();
+      const currentPosVec = new THREE.Vector3();
+      const modelEntries = Object.entries(models) as [CampusBuildingId, Building3DResult][];
+      let lastIdleRenderTime = 0;
+      let lastDebugUpdateTime = 0;
 
       const animate = () => {
         animFrameId = requestAnimationFrame(animate);
+        const nowMs = performance.now();
         const delta = Math.min(clock.getDelta(), 0.1);
 
-        const { activeId, isExploded, cinematicTarget } = stateRef.current;
+        const { activeId, isExploded, cinematicTarget, glowPulseMaterials, highlightLight, lastInteractionTime } =
+          stateRef.current;
+
+        let sceneAnimating = false;
 
         // Transition model visibility (smooth scale in/out for multi-scene campuses)
-        const scaleTarget = new THREE.Vector3();
-        for (const [id, m] of Object.entries(models) as [CampusBuildingId, Building3DResult][]) {
-          if (!isMainCampus) {
+        if (!isMainCampus) {
+          for (let i = 0; i < modelEntries.length; i++) {
+            const [id, m] = modelEntries[i];
             const s = id === activeId ? 1 : 0.001;
-            m.root.scale.lerp(scaleTarget.setScalar(s), delta * 5);
-            m.root.visible = m.root.scale.x > 0.01;
-          } else {
-            m.root.scale.set(1, 1, 1);
-            m.root.visible = true;
+            if (Math.abs(m.root.scale.x - s) > 0.001) {
+              m.root.scale.lerp(scaleTargetVec.setScalar(s), delta * 5);
+              m.root.visible = m.root.scale.x > 0.01;
+              sceneAnimating = true;
+              renderer.shadowMap.needsUpdate = true;
+            }
           }
         }
 
-        // Exploded View Floor Separation
+        // Exploded View Floor Separation (with epsilon check so settled floors do zero work)
         const activeData = models[activeId];
         if (activeData) {
           const explodeSpacing = activeData.explodeSpacing ?? 4.5;
-          activeData.floorGroups.forEach((floorGroup, idx) => {
-            // Keep ground floor fixed; elevate subsequent floors
-            const targetElevation = isExploded && idx > 0 ? idx * explodeSpacing : 0;
-            floorGroup.position.y = THREE.MathUtils.lerp(floorGroup.position.y, targetElevation, delta * 4.5);
-          });
+          const floors = activeData.floorGroups;
+          for (let idx = 1; idx < floors.length; idx++) {
+            const floorGroup = floors[idx];
+            const targetElevation = isExploded ? idx * explodeSpacing : 0;
+            const diff = Math.abs(floorGroup.position.y - targetElevation);
+            if (diff > 0.002) {
+              floorGroup.position.y = THREE.MathUtils.lerp(floorGroup.position.y, targetElevation, delta * 4.5);
+              sceneAnimating = true;
+              renderer.shadowMap.needsUpdate = true;
+            } else if (diff > 0) {
+              floorGroup.position.y = targetElevation;
+              renderer.shadowMap.needsUpdate = true;
+            }
+          }
         }
 
         // Cinematic Flythrough Controller (Smooth and fast transitions)
         if (cinematicTarget && cinematicTarget.active) {
+          sceneAnimating = true;
           const speed = cinematicTarget.speed ?? 1.15;
           cinematicTarget.progress += delta * speed;
 
@@ -773,54 +848,68 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
             camera.position.copy(cinematicTarget.endCam);
             controls.target.copy(cinematicTarget.endLook);
             controls.update();
+            markInteraction();
             onCinematicComplete?.();
           } else {
-            // Smooth ease-in-out cubic
             const t = cinematicTarget.progress;
             const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
-            const currentPos = new THREE.Vector3().lerpVectors(
-              cinematicTarget.startCam,
-              cinematicTarget.endCam,
-              ease
-            );
-            // Parabolic flyover height arc
-            currentPos.y += Math.sin(ease * Math.PI) * 2.2;
+            currentPosVec.lerpVectors(cinematicTarget.startCam, cinematicTarget.endCam, ease);
+            currentPosVec.y += Math.sin(ease * Math.PI) * 2.2;
 
-            camera.position.copy(currentPos);
+            camera.position.copy(currentPosVec);
             controls.target.lerpVectors(cinematicTarget.startLook, cinematicTarget.endLook, ease);
             controls.update();
           }
         } else {
-          controls.update();
+          const controlsChanged = controls.update();
+          if (controlsChanged) {
+            sceneAnimating = true;
+          }
         }
 
-        // Pulsing glow effect
-        const glow = stateRef.current.glowGroup;
-        if (glow) {
-          const elapsed = clock.getElapsedTime();
+        const timeSinceInteraction = nowMs - lastInteractionTime;
+        const isActivelyInteracting = sceneAnimating || timeSinceInteraction < 1200;
+
+        // When completely stationary, throttle background redraws to ~15 FPS (every 66ms)
+        // so the Raspberry Pi 5 GPU stays cool and avoids thermal throttling.
+        if (!isActivelyInteracting && nowMs - lastIdleRenderTime < 66) {
+          return;
+        }
+        lastIdleRenderTime = nowMs;
+
+        // Pulsing glow effect using pre-cached materials array (no per-frame traverse)
+        const elapsed = clock.getElapsedTime();
+        if (glowPulseMaterials.length > 0) {
           const pulse = 0.35 + 0.12 * Math.sin(elapsed * 3.5);
-          glow.traverse((child) => {
-            if ((child as THREE.Mesh).isMesh) {
-              const m = child as THREE.Mesh;
-              if (m.material && !Array.isArray(m.material) && 'opacity' in m.material) {
-                if (m.material.transparent) {
-                  (m.material as THREE.Material & { opacity: number }).opacity = pulse;
-                }
-              }
-            }
-          });
+          for (let i = 0; i < glowPulseMaterials.length; i++) {
+            glowPulseMaterials[i].opacity = pulse;
+          }
         }
         if (highlightLight) {
-          highlightLight.intensity = 2.4 + 0.6 * Math.sin(clock.getElapsedTime() * 4);
+          highlightLight.intensity = 2.4 + 0.6 * Math.sin(elapsed * 4);
         }
 
         renderer.render(scene, camera);
+
+        if (isActivelyInteracting) {
+          resolutionController.recordFrame(delta, renderer);
+        }
+
+        if (qualityProfile.showDebugOverlay && nowMs - lastDebugUpdateTime > 500) {
+          lastDebugUpdateTime = nowMs;
+          setDebugStats({
+            fps: resolutionController.getFps(),
+            drawCalls: renderer.info.render.calls,
+            triangles: renderer.info.render.triangles,
+            profile: qualityProfile.isEmbeddedOrPi ? 'Pi 5 / Embedded' : 'Desktop',
+          });
+        }
       };
 
       animate();
 
-      // 9. Resize Handling
+      // 11. Resize Handling
       const handleResize = () => {
         if (!containerRef.current) return;
         const w = containerRef.current.clientWidth;
@@ -828,6 +917,7 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
         camera.aspect = w / h;
         camera.updateProjectionMatrix();
         renderer.setSize(w, h);
+        markInteraction();
       };
 
       const resizeObserver = new ResizeObserver(handleResize);
@@ -1100,6 +1190,13 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
 
   return (
     <div ref={containerRef} className="absolute inset-0 w-full h-full overflow-hidden select-none">
+      {debugStats && (
+        <div className="absolute top-3 left-3 z-50 bg-slate-950/85 border border-sky-500/40 text-sky-100 text-xs font-mono px-3 py-2 rounded-lg pointer-events-none">
+          <div>Profile: {debugStats.profile}</div>
+          <div>FPS: {debugStats.fps} | Draw Calls: {debugStats.drawCalls}</div>
+          <div>Triangles: {debugStats.triangles.toLocaleString()}</div>
+        </div>
+      )}
       <canvas
         ref={canvasRef}
         onPointerDown={handlePointerDown}
