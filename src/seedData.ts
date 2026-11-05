@@ -75,6 +75,11 @@ export async function seedDummyData() {
       answer: "The Finance Office is at the Administration Building (A Building), open Monday–Friday 8:00 AM–5:00 PM. For online payment instructions and bank details, visit the official UdD website at udd.edu.ph.",
       category: "Finance",
     },
+    {
+      question: "What is Kuwago Café and what does it offer?",
+      answer: "Kuwago Café is a campus-based coffee shop and food establishment at Universidad de Dagupan offering rice meals, snacks, milk tea, iced coffee, hot coffee, and fruit tea across two shop locations on campus. Services include dine-in, takeaway, advance ordering for pickup, and order customization. Specific menu items, prices, and operating hours should be confirmed with café staff.",
+      category: "Dining",
+    },
   ];
 
   faqs.forEach(q => {

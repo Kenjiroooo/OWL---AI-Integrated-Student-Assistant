@@ -58,6 +58,13 @@ const FALLBACK_FAQS = [
       'The Finance Office is at the Administration Building (A Building), open Monday–Friday 8:00 AM–5:00 PM. For online payment instructions and bank details, visit the official UdD website at udd.edu.ph.',
     category: 'Finance',
   },
+  {
+    id: 'faq-8',
+    question: 'What is Kuwago Café and what does it offer?',
+    answer:
+      '**Kuwago Café** is a campus coffee shop and food establishment located within Universidad de Dagupan catering to students, faculty members, and university employees.\n\n**Menu Categories:**\n• Rice Meals\n• Snacks\n• Milk Tea\n• Iced Coffee\n• Hot Coffee\n• Fruit Tea\n\n**Locations:** Operates two shop locations within Universidad de Dagupan. Exact building names, room numbers, and operating hours should be confirmed with café management.\n\n**Services:** Food and beverage ordering, dine-in, takeaway, advance ordering for pickup, and order customization (subject to availability). Specific items, ingredients, sizes, and prices should be retrieved from the latest approved café menu.',
+    category: 'Dining',
+  },
 ];
 
 // ── Category badge colors ─────────────────────────────────────────────────────
@@ -69,6 +76,7 @@ const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
   'Student Affairs': { bg: 'rgba(245,158,11,0.1)', text: '#b45309' },
   'Health Services': { bg: 'rgba(244,63,94,0.1)',  text: '#e11d48' },
   Finance:         { bg: 'rgba(139,92,246,0.1)',  text: '#7c3aed' },
+  Dining:          { bg: 'rgba(234,88,12,0.1)',   text: '#ea580c' },
 };
 
 // ── Format helper (supports paragraphs & **bold** text) ──────────────────────

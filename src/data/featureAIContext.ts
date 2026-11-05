@@ -20,9 +20,9 @@ export const FEATURE_AI_CONTEXT: Record<string, string> = {
   faculty:
     'The student is using the Faculty Locator to find professors and faculty members at Universidad de Dagupan. Help them find a specific professor, their office location, department, consultation hours, or contact email.',
   feedback:
-    'The student is on the Feedback Center page, which is a suggestion box for campus improvements. Help them articulate their feedback clearly, identify which category it falls under (General, Facilities, Academic, Food Service), or direct them to the correct department for urgent concerns.',
+    'The student is on the Feedback Center page, which is a suggestion box for campus improvements. Help them articulate their feedback clearly, identify which category it falls under (General, Facilities, Academic, Food Service / Kuwago Café), or direct them to the correct department for urgent concerns.',
   inquiry:
-    'The student is browsing the Inquiry Center FAQ which answers common questions about campus life, academics, and services at Universidad de Dagupan. Help them find answers to their questions about enrollment, requirements, schedules, or campus services.',
+    'The student is browsing the Inquiry Center FAQ which answers common questions about campus life, academics, Kuwago Café dining, and services at Universidad de Dagupan. Help them find answers to their questions about enrollment, requirements, schedules, dining options, or campus services.',
   'lost-found':
     'The student is on the Lost & Found board where campus items are reported as lost or found. Help them describe a lost item accurately so others can identify it, or help them find if a specific item has been reported found on campus.',
 };
