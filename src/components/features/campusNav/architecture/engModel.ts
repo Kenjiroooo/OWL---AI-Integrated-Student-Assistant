@@ -57,6 +57,7 @@
 // ].
 // ─────────────────────────────────────────────────────────────────────────────
 import * as THREE from 'three';
+import { getCachedBoxGeometry, getCachedCylinderGeometry } from './geometryCache';
 import { getMaterials, type Building3DResult } from './proceduralModels';
 
 const PALETTE = {
@@ -415,7 +416,7 @@ function box(
   castShadow = true,
   receiveShadow = true
 ): THREE.Mesh {
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  const m = new THREE.Mesh(getCachedBoxGeometry(w, h, d), mat);
   m.position.set(x, y, z);
   m.castShadow = castShadow;
   m.receiveShadow = receiveShadow;
@@ -433,7 +434,7 @@ function rod(
 ): THREE.Mesh {
   const dir = new THREE.Vector3().subVectors(p2, p1);
   const len = dir.length();
-  const m = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, len, 12), mat);
+  const m = new THREE.Mesh(getCachedCylinderGeometry(radius, radius, len, 12), mat);
   m.position.copy(p1).add(p2).multiplyScalar(0.5);
   m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
   m.castShadow = true;
