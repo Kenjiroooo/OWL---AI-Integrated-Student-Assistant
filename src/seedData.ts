@@ -41,7 +41,7 @@ export async function seedDummyData() {
   // 4. FAQ
   const faqs = [
     {
-      question: "How do I request a Transcript of Records?",
+      question: "How do I request a Transcript of Records (TOR)?",
       answer: "Visit the Registrar's Office at the Administration Building (A Building). Fill out the request form, pay the processing fee at the Finance Office, and allow 3–5 working days. Bring a valid school ID.",
       category: "Registrar",
     },

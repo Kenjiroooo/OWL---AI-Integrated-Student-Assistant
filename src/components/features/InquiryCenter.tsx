@@ -11,7 +11,7 @@ import { useOwlAssistant } from '../../context/OwlAssistantContext';
 const FALLBACK_FAQS = [
   {
     id: 'faq-1',
-    question: 'How do I request a Transcript of Records?',
+    question: 'How do I request a Transcript of Records (TOR)?',
     answer:
       "Visit the Registrar's Office at the Administration Building (A Building). Fill out the request form, pay the processing fee at the Finance Office, and allow 3–5 working days. Bring a valid school ID.",
     category: 'Registrar',
@@ -110,7 +110,7 @@ export default function InquiryCenter() {
           const fallbackQuestions = new Set(FALLBACK_FAQS.map(f => f.question.toLowerCase()));
           const extraDocs = snap.docs
             .map(doc => ({ id: doc.id, ...(doc.data() as any) }))
-            .filter(d => d.question && !fallbackQuestions.has(d.question.toLowerCase()));
+            .filter(d => d.question && !fallbackQuestions.has(d.question.toLowerCase()) && !/transcript of records/i.test(d.question));
           setFaqs([...FALLBACK_FAQS, ...extraDocs]);
         }
       } catch {
