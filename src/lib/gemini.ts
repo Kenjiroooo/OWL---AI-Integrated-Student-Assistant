@@ -74,6 +74,48 @@ const HARDCODED_MAP_LOCATIONS = `
 const HARDCODED_TOR_INFO = `Q: How do I request a Transcript of Records (TOR)? / How to get a TOR?
 A: Visit the Registrar's Office at the Administration Building (A Building). Fill out the request form, pay the processing fee at the Finance Office, and allow 3–5 working days. Bring a valid school ID.`;
 
+const HARDCODED_KUWAGO_CAFE_KNOWLEDGE = `KUWAGO CAFÉ KNOWLEDGE BASE
+1. Business Overview:
+Kuwago Café is a coffee shop and food establishment located within Universidad de Dagupan (UDD), Dagupan City, Pangasinan, Philippines. It primarily caters to the university community, including students, faculty members, and university employees. The café provides food and beverage options for customers looking for convenient meals, refreshments, and snacks while on campus.
+
+2. Products and Menu Categories:
+Kuwago Café offers the following general product categories:
+• Rice Meals
+• Snacks
+• Milk Tea
+• Iced Coffee
+• Hot Coffee
+• Fruit Tea
+(Important: Specific menu items, ingredients, sizes, and prices should be retrieved from the latest approved café menu. Do not invent menu items, ingredients, or prices.)
+
+3. Location and Branches:
+Kuwago Café operates two shop locations within Universidad de Dagupan, according to available project documentation. Both locations serve the university community. Exact building names, room numbers, and operating hours should be confirmed with café management.
+
+4. Target Customers:
+• Universidad de Dagupan students
+• UDD faculty members
+• University employees
+• Authorized university community members
+
+5. Services:
+• Food and beverage ordering
+• Dine-in
+• Takeaway
+• Advance ordering for pickup
+• Order customization, subject to menu availability
+
+6. AI Assistant Guidelines for Kuwago Café:
+- Identify Kuwago Café as a coffee shop and food establishment inside Universidad de Dagupan.
+- Provide information about available food and beverage categories (Rice Meals, Snacks, Milk Tea, Iced Coffee, Hot Coffee, Fruit Tea).
+- Do not invent menu items, ingredients, or prices.
+- Confirm current availability before promising that a particular product can be ordered.
+- Refer customers to café staff for questions involving special requests, exact prices, or unavailable products.
+- Provide accurate information about ordering, pickup, and branch locations (two branches inside UdD; exact building names, room numbers, and operating hours should be confirmed with café management).
+- If information is unavailable, politely explain that confirmation from café staff is needed.
+
+7. Suggested Description:
+Kuwago Café is a campus-based café at Universidad de Dagupan offering rice meals, snacks, coffee, milk tea, and fruit tea. It serves students, faculty members, and university employees who want convenient food and beverages within the university.`;
+
 const HARDCODED_ENROLLMENT_STEPS = `Q: What are the enrollment steps for new students? / What is the enrollment process?
 A:
 1. Get an Enlistment Form – Proceed to Room V204 to obtain your enlistment form.
@@ -310,6 +352,14 @@ STRICT RULES:
   4. Pay the Enrollment Fee – Proceed to the Cashier located on the ground floor of the Administration Building to pay your enrollment fee.
   5. Complete Your Enrollment – Go to your department's designated room to finalize your enrollment and have your White Form printed.
   6. You're Officially Enrolled! – Congratulations! You have successfully completed the enrollment process.
+- When answering questions about Kuwago Café:
+  1. Identify Kuwago Café as a coffee shop and food establishment inside Universidad de Dagupan catering to students, faculty members, and university employees.
+  2. Provide information about available food and beverage categories: Rice Meals, Snacks, Milk Tea, Iced Coffee, Hot Coffee, and Fruit Tea.
+  3. Do NOT invent menu items, ingredients, or prices. State that specific menu items, ingredients, sizes, and prices should be retrieved from the latest approved café menu.
+  4. State that Kuwago Café operates two shop locations within Universidad de Dagupan. Both locations serve the university community. Exact building names, room numbers, and operating hours should be confirmed with café management.
+  5. Note available services: food and beverage ordering, dine-in, takeaway, advance ordering for pickup, and order customization (subject to menu availability).
+  6. Confirm current availability before promising that a particular product can be ordered. Refer customers to café staff for special requests or unavailable products.
+  7. If information is unavailable, politely explain that confirmation from café staff is needed.
 - Whenever a user asks about a campus, building, room, or location (such as Main Campus, FAME Building, E Building / Engineering Building, Administration Building, V Building, School of Health Sciences, or LCR Arzadon Gymnasium), after giving the details, ALWAYS ask them at the end: "Would you like me to direct you to Campus Navigation for detailed information on the campus?"
 
 ## INTERNAL UNIVERSITY DATABASE
@@ -319,6 +369,9 @@ ${ctx.buildings || 'No building data available at the moment.'}
 
 ### 🗺️ Additional Campus Map Landmarks
 ${HARDCODED_MAP_LOCATIONS}
+
+### ☕ Kuwago Café (Campus Dining & Food Establishment)
+${HARDCODED_KUWAGO_CAFE_KNOWLEDGE}
 
 ### 🎶 University Hymn
 ${HARDCODED_UNIVERSITY_HYMN}
