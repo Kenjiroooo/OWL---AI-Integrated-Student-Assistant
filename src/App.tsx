@@ -4,6 +4,7 @@ import { Loader2 } from 'lucide-react';
 import { OwlAssistantProvider } from './context/OwlAssistantContext';
 import OwlAIFab from './components/OwlAIFab';
 import OwlChatDrawer from './components/OwlChatDrawer';
+import OwlIdleWatchdog from './components/OwlIdleWatchdog';
 import { AuthProvider } from './context/AuthContext';
 import { initRpiVirtualKeyboard } from './lib/rpiKeyboard';
 
@@ -72,6 +73,9 @@ export default function App() {
           {/* Global OWL AI Floating Button + Drawer (visible on all pages) */}
           <OwlAIFab />
           <OwlChatDrawer />
+
+          {/* 40s Idle Timer -> OWL "Are you still there?" + 10s Countdown -> StartPage (/) */}
+          <OwlIdleWatchdog />
         </OwlAssistantProvider>
       </BrowserRouter>
     </AuthProvider>
