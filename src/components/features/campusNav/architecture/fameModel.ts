@@ -17,6 +17,7 @@
 // Exploded view: floorGroups = [ground, 2F, 3F, 4F, cantilevered top box].
 // ─────────────────────────────────────────────────────────────────────────────
 import * as THREE from 'three';
+import { getCachedBoxGeometry, getCachedCylinderGeometry } from './geometryCache';
 import { getMaterials, createEmblemTexture, type Building3DResult } from './proceduralModels';
 
 // ── Palette (sampled from the photograph) ───────────────────────────────────
@@ -223,7 +224,7 @@ function box(
   z: number,
   shadow = true
 ): THREE.Mesh {
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  const m = new THREE.Mesh(getCachedBoxGeometry(w, h, d), mat);
   m.position.set(x, y, z);
   m.castShadow = shadow;
   m.receiveShadow = true;
@@ -234,7 +235,7 @@ function box(
 function rod(a: THREE.Vector3, b: THREE.Vector3, r: number, mat: THREE.Material): THREE.Mesh {
   const dir = new THREE.Vector3().subVectors(b, a);
   const len = dir.length();
-  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 10), mat);
+  const m = new THREE.Mesh(getCachedCylinderGeometry(r, r, len, 10), mat);
   m.position.copy(a).addScaledVector(dir, 0.5);
   m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
   m.castShadow = true;
