@@ -2435,8 +2435,8 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   // and 5-Storey Entrance (28.5, -31.5)
   const footbridgePiers: Array<[number, number, number]> = [
     [8.0, -22.575, 0],
-    [14.25, -22.575, 0],
-    [19.5, -22.575, 0],
+
+
     [23.5, -23.5, 0.5],
     [24.065, -30.77, -0.248],
   ];
