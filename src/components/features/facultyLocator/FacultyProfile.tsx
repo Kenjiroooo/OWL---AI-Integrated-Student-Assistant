@@ -382,12 +382,14 @@ export default function FacultyProfile({ facultyId, onBack }: Props) {
               <span
                 className="px-3 py-1 rounded-full text-xs font-semibold"
                 style={{
-                  background: '#edf3ff',
-                  color: '#003366',
-                  border: '1px solid #b8d1ff',
+                  background: faculty.school === 'School of Engineering' ? '#dcfce7' : '#edf3ff',
+                  color: faculty.school === 'School of Engineering' ? '#15803d' : '#003366',
+                  border: faculty.school === 'School of Engineering' ? '1px solid #86efac' : '1px solid #b8d1ff',
                 }}
               >
-                Sample Schedule · Presentation Preview
+                {faculty.school === 'School of Engineering'
+                  ? '1st Semester S.Y. 2026–2027 · Official Schedule'
+                  : 'Sample Schedule · Presentation Preview'}
               </span>
             </div>
 
@@ -422,13 +424,18 @@ export default function FacultyProfile({ facultyId, onBack }: Props) {
                         </td>
                         <td className="px-4 py-3.5">
                           {daySchedule?.classSchedule ? (
-                            <span
-                              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg"
-                              style={{ background: '#fff7ed', color: '#9a3412', border: '1px solid #fed7aa', fontSize: 13, fontWeight: 600 }}
-                            >
-                              <span className="material-symbols-outlined" style={{ fontSize: 15 }}>co_present</span>
-                              {daySchedule.classSchedule}
-                            </span>
+                            <div className="flex flex-col items-start gap-1.5">
+                              {daySchedule.classSchedule.split(' | ').map((block, idx) => (
+                                <span
+                                  key={idx}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg"
+                                  style={{ background: '#fff7ed', color: '#9a3412', border: '1px solid #fed7aa', fontSize: 13, fontWeight: 600 }}
+                                >
+                                  <span className="material-symbols-outlined" style={{ fontSize: 15 }}>co_present</span>
+                                  {block}
+                                </span>
+                              ))}
+                            </div>
                           ) : (
                             <span style={{ color: '#c3c6d1', fontSize: 15 }}>—</span>
                           )}

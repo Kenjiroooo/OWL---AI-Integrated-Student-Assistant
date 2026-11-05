@@ -142,7 +142,7 @@ const SCHEDULE_TEMPLATE_C: { [day: string]: FacultyDaySchedule } = {
 
 export const FACULTY_DATA: Faculty[] = [
   // ════════════════════════════════════════════════════════════════════════════
-  // School of Engineering (Verified Organizational Hierarchy)
+  // School of Engineering (Official 1st Semester S.Y. 2026–2027 Schedules)
   // ════════════════════════════════════════════════════════════════════════════
 
   // ── School Leadership (Dean) ──
@@ -155,13 +155,14 @@ export const FACULTY_DATA: Faculty[] = [
     hierarchyLevel: 1,
     status: 'available',
     statusNote: 'Available at Dean\'s Office · Consultation Open',
+    program: 'Civil & Computer Engineering',
     office: { building: 'Engineering Building', room: 'Dean\'s Office (Room E-101)' },
     schedule: {
-      'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '1:00 PM – 2:30 PM (Grad Seminar)', consultation: '9:30 AM – 11:30 AM' },
-      'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: 'Administrative & Academic Review',  consultation: '2:00 PM – 4:00 PM' },
-      'Wednesday': { office: '8:00 AM – 5:00 PM', classSchedule: '1:00 PM – 2:30 PM (Grad Seminar)', consultation: '9:30 AM – 11:30 AM' },
-      'Thursday':  { office: '8:00 AM – 5:00 PM', classSchedule: 'Academic Council & Dept Meetings',  consultation: '2:00 PM – 4:00 PM' },
-      'Friday':    { office: '8:00 AM – 4:00 PM', classSchedule: 'Research & Thesis Consultation',    consultation: '10:00 AM – 12:00 PM' },
+      'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 9:00 AM · In Class', consultation: '9:30 AM – 11:30 AM' },
+      'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class', consultation: '2:00 PM – 4:00 PM' },
+      'Wednesday': { office: '8:00 AM – 5:00 PM', classSchedule: '11:00 AM – 5:00 PM · In Class', consultation: '8:30 AM – 10:30 AM' },
+      'Thursday':  { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 12:00 PM · In Class', consultation: '2:00 PM – 4:00 PM' },
+      'Friday':    { office: '8:00 AM – 5:00 PM', consultation: '9:00 AM – 12:00 PM (Dean\'s Office & Thesis Consultation)' },
     },
     email: 'jj.devera@udd.edu.ph',
     contactNumber: '(075) 522-8295 loc. 201',
@@ -179,13 +180,14 @@ export const FACULTY_DATA: Faculty[] = [
     hierarchyLevel: 2,
     status: 'available',
     statusNote: 'Available at Program Head\'s Office · Advising Open',
+    program: 'Electronics & Electrical Engineering',
     office: { building: 'Engineering Building', room: 'Faculty & Program Office (Room E-102)' },
     schedule: {
-      'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 10:00 AM (Room E-201)',  consultation: '10:00 AM – 12:00 PM' },
-      'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '9:00 AM – 12:00 PM (Eng\'g Lab)',  consultation: '1:30 PM – 4:00 PM' },
-      'Wednesday': { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 10:00 AM (Room E-201)',  consultation: '10:00 AM – 12:00 PM' },
-      'Thursday':  { office: '8:00 AM – 5:00 PM', classSchedule: '9:00 AM – 12:00 PM (Eng\'g Lab)',  consultation: '1:30 PM – 4:00 PM' },
-      'Friday':    { office: '8:00 AM – 4:00 PM', classSchedule: 'Program Advising & Capstone Eval', consultation: '9:00 AM – 11:30 AM' },
+      'Monday':    { office: '8:00 AM – 5:00 PM', consultation: '9:00 AM – 12:00 PM · Program Advising' },
+      'Tuesday':   { office: '8:00 AM – 5:00 PM', consultation: '9:00 AM – 12:00 PM · Program Advising' },
+      'Wednesday': { office: '8:00 AM – 5:00 PM', consultation: '9:00 AM – 12:00 PM · Program Advising' },
+      'Thursday':  { office: '8:00 AM – 5:00 PM', classSchedule: '2:00 PM – 5:00 PM · In Class', consultation: '9:00 AM – 12:00 PM' },
+      'Friday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
     },
     email: 'r.cabana@udd.edu.ph',
     contactNumber: '(075) 522-8295 loc. 202',
@@ -207,6 +209,10 @@ export const FACULTY_DATA: Faculty[] = [
       'soe-f14',
       'soe-f15',
       'soe-f16',
+      'soe-f17',
+      'soe-f18',
+      'soe-f19',
+      'soe-f20',
     ],
   },
 
@@ -220,8 +226,15 @@ export const FACULTY_DATA: Faculty[] = [
     hierarchyLevel: 3,
     status: 'available',
     statusNote: 'Available at Engineering Faculty Room',
+    program: 'Electronics & Civil Engineering',
     office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-201)' },
-    schedule: SCHEDULE_TEMPLATE_A,
+    schedule: {
+      'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class', consultation: '1:00 PM – 3:00 PM' },
+      'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '11:00 AM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class', consultation: '8:30 AM – 10:30 AM' },
+      'Wednesday': { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class' },
+      'Thursday':  { office: '8:00 AM – 5:00 PM', consultation: '9:00 AM – 12:00 PM' },
+      'Friday':    { office: '8:00 AM – 5:00 PM', consultation: '9:00 AM – 12:00 PM' },
+    },
     email: 'rr.pinlac@udd.edu.ph',
     supervisorId: 'soe-program-head',
   },
@@ -233,9 +246,16 @@ export const FACULTY_DATA: Faculty[] = [
     roleCategory: 'Faculty Members',
     hierarchyLevel: 3,
     status: 'in-class',
-    statusNote: 'In Class · Lecture Room E-204 (until 12:00 PM)',
+    statusNote: 'In Class',
+    program: 'Civil, Electrical, Electronics & Computer Engineering',
     office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-201)' },
-    schedule: SCHEDULE_TEMPLATE_B,
+    schedule: {
+      'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '10:00 AM – 11:00 AM · In Class', consultation: '1:00 PM – 3:00 PM' },
+      'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '2:00 PM – 5:00 PM · In Class', consultation: '9:00 AM – 11:30 AM' },
+      'Wednesday': { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 10:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 3:00 PM – 5:00 PM · In Class', consultation: '10:00 AM – 11:00 AM' },
+      'Thursday':  { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 12:00 PM · In Class | 3:00 PM – 4:00 PM · In Class', consultation: '1:00 PM – 3:00 PM' },
+      'Friday':    { office: '8:00 AM – 5:00 PM', consultation: '9:00 AM – 12:00 PM (Research & Thesis Advising)' },
+    },
     email: 'ra.bandong@udd.edu.ph',
     supervisorId: 'soe-program-head',
   },
@@ -248,8 +268,15 @@ export const FACULTY_DATA: Faculty[] = [
     hierarchyLevel: 3,
     status: 'available',
     statusNote: 'Available for Student Consultation',
+    program: 'Electronics & Computer Engineering',
     office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-201)' },
-    schedule: SCHEDULE_TEMPLATE_C,
+    schedule: {
+      'Monday':    { office: '8:00 AM – 5:00 PM', consultation: '9:00 AM – 12:00 PM' },
+      'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class' },
+      'Wednesday': { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class' },
+      'Thursday':  { office: '8:00 AM – 5:00 PM', consultation: '8:00 AM – 12:00 PM (Vacant / Consultation)' },
+      'Friday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:00 PM – 5:00 PM (Vacant / Consultation)' },
+    },
     email: 'j.lim@udd.edu.ph',
     supervisorId: 'soe-program-head',
   },
@@ -261,9 +288,16 @@ export const FACULTY_DATA: Faculty[] = [
     roleCategory: 'Faculty Members',
     hierarchyLevel: 3,
     status: 'in-class',
-    statusNote: 'In Class · Computer Engineering Lab 1',
+    statusNote: 'In Class',
+    program: 'Electrical & Electronics Engineering',
     office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-202)' },
-    schedule: SCHEDULE_TEMPLATE_A,
+    schedule: {
+      'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
+      'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class' },
+      'Wednesday': { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
+      'Thursday':  { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
+      'Friday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
+    },
     email: 'jb.macaranas@udd.edu.ph',
     supervisorId: 'soe-program-head',
   },
@@ -276,8 +310,15 @@ export const FACULTY_DATA: Faculty[] = [
     hierarchyLevel: 3,
     status: 'available',
     statusNote: 'Available at Faculty Office',
+    program: 'Civil Engineering',
     office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-202)' },
-    schedule: SCHEDULE_TEMPLATE_B,
+    schedule: {
+      'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 3:00 PM – 5:00 PM · In Class', consultation: '2:00 PM – 3:00 PM' },
+      'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class' },
+      'Wednesday': { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 10:00 AM · In Class | 10:00 AM – 12:00 PM · In Class', consultation: '1:30 PM – 4:00 PM' },
+      'Thursday':  { office: '8:00 AM – 5:00 PM', consultation: '8:00 AM – 5:00 PM (Vacant / Consultation)' },
+      'Friday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:00 PM – 5:00 PM (Vacant / Consultation)' },
+    },
     email: 'r.almendares@udd.edu.ph',
     supervisorId: 'soe-program-head',
   },
@@ -288,10 +329,17 @@ export const FACULTY_DATA: Faculty[] = [
     position: 'Faculty Member',
     roleCategory: 'Faculty Members',
     hierarchyLevel: 3,
-    status: 'on-leave',
-    statusNote: 'On Official Seminar / Academic Leave Today',
+    status: 'in-class',
+    statusNote: 'In Class',
+    program: 'Civil Engineering',
     office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-202)' },
-    schedule: SCHEDULE_TEMPLATE_C,
+    schedule: {
+      'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class' },
+      'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 2:00 PM – 4:00 PM · In Class', consultation: '4:00 PM – 5:00 PM' },
+      'Wednesday': { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 1:00 PM · In Class | 2:00 PM – 5:00 PM · In Class', consultation: '1:00 PM – 2:00 PM' },
+      'Thursday':  { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 10:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:00 PM – 4:30 PM' },
+      'Friday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class', consultation: '1:00 PM – 4:00 PM' },
+    },
     email: 'e.ano@udd.edu.ph',
     supervisorId: 'soe-program-head',
   },
@@ -304,8 +352,15 @@ export const FACULTY_DATA: Faculty[] = [
     hierarchyLevel: 3,
     status: 'available',
     statusNote: 'Available for Consultation',
+    program: 'Civil & Electrical Engineering',
     office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-202)' },
-    schedule: SCHEDULE_TEMPLATE_A,
+    schedule: {
+      'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
+      'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 10:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 3:00 PM – 5:00 PM · In Class', consultation: '2:00 PM – 3:00 PM' },
+      'Wednesday': { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class' },
+      'Thursday':  { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 2:00 PM – 5:00 PM · In Class', consultation: '11:00 AM – 1:30 PM' },
+      'Friday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 12:00 PM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
+    },
     email: 'cr.seda@udd.edu.ph',
     supervisorId: 'soe-program-head',
   },
@@ -317,9 +372,16 @@ export const FACULTY_DATA: Faculty[] = [
     roleCategory: 'Faculty Members',
     hierarchyLevel: 3,
     status: 'in-class',
-    statusNote: 'In Class · Electronics Lab (Room E-301)',
+    statusNote: 'In Class',
+    program: 'Electrical & Civil Engineering',
     office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-203)' },
-    schedule: SCHEDULE_TEMPLATE_B,
+    schedule: {
+      'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 10:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 3:00 PM – 5:00 PM · In Class', consultation: '2:00 PM – 3:00 PM' },
+      'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 10:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
+      'Wednesday': { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
+      'Thursday':  { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class' },
+      'Friday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class', consultation: '1:00 PM – 4:00 PM' },
+    },
     email: 'rm.valdez@udd.edu.ph',
     supervisorId: 'soe-program-head',
   },
@@ -332,8 +394,15 @@ export const FACULTY_DATA: Faculty[] = [
     hierarchyLevel: 3,
     status: 'available',
     statusNote: 'Available at Engineering Faculty Room',
+    program: 'Computer Engineering',
     office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-203)' },
-    schedule: SCHEDULE_TEMPLATE_C,
+    schedule: {
+      'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class' },
+      'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
+      'Wednesday': { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
+      'Thursday':  { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
+      'Friday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
+    },
     email: 'dls.tigno@udd.edu.ph',
     supervisorId: 'soe-program-head',
   },
@@ -345,24 +414,38 @@ export const FACULTY_DATA: Faculty[] = [
     roleCategory: 'Faculty Members',
     hierarchyLevel: 3,
     status: 'in-class',
-    statusNote: 'In Class · Room E-206',
+    statusNote: 'In Class',
+    program: 'Electronics & Communications Engineering',
     office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-203)' },
-    schedule: SCHEDULE_TEMPLATE_A,
+    schedule: {
+      'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '11:00 AM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class', consultation: '8:30 AM – 10:30 AM' },
+      'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class' },
+      'Wednesday': { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class' },
+      'Thursday':  { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
+      'Friday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class', consultation: '1:00 PM – 4:00 PM' },
+    },
     email: 'j.manuel@udd.edu.ph',
     supervisorId: 'soe-program-head',
   },
   {
     id: 'soe-f11',
-    name: 'Engr. John Misa',
+    name: 'Engr. John Vincent Misa',
     school: 'School of Engineering',
     position: 'Faculty Member',
     roleCategory: 'Faculty Members',
     hierarchyLevel: 3,
     status: 'available',
-    statusNote: 'Available for Advising & Consultation',
+    statusNote: 'Available for Advising & Chemistry Lab Consultation',
+    program: 'General Engineering & Chemical Sciences',
     office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-203)' },
-    schedule: SCHEDULE_TEMPLATE_B,
-    email: 'j.misa@udd.edu.ph',
+    schedule: {
+      'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 2:00 PM – 5:00 PM · In Class', consultation: '11:00 AM – 1:30 PM' },
+      'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
+      'Wednesday': { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 2:00 PM – 5:00 PM · In Class', consultation: '11:00 AM – 1:30 PM' },
+      'Thursday':  { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
+      'Friday':    { office: '8:00 AM – 5:00 PM', consultation: '9:00 AM – 12:00 PM' },
+    },
+    email: 'jv.misa@udd.edu.ph',
     supervisorId: 'soe-program-head',
   },
   {
@@ -374,8 +457,15 @@ export const FACULTY_DATA: Faculty[] = [
     hierarchyLevel: 3,
     status: 'available',
     statusNote: 'Available · Thesis & Project Consultation Open',
+    program: 'Computer Engineering',
     office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-204)' },
-    schedule: SCHEDULE_TEMPLATE_C,
+    schedule: {
+      'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
+      'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 2:00 PM – 5:00 PM · In Class', consultation: '11:00 AM – 1:30 PM' },
+      'Wednesday': { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class' },
+      'Thursday':  { office: '8:00 AM – 5:00 PM', classSchedule: '9:00 AM – 10:00 AM · In Class', consultation: '10:30 AM – 12:00 PM · 2:00 PM – 4:00 PM' },
+      'Friday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class', consultation: '1:00 PM – 4:00 PM' },
+    },
     email: 'sg.macapagal@udd.edu.ph',
     supervisorId: 'soe-program-head',
   },
@@ -387,9 +477,16 @@ export const FACULTY_DATA: Faculty[] = [
     roleCategory: 'Faculty Members',
     hierarchyLevel: 3,
     status: 'in-class',
-    statusNote: 'In Class · Room E-303',
+    statusNote: 'In Class',
+    program: 'Electrical Engineering',
     office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-204)' },
-    schedule: SCHEDULE_TEMPLATE_A,
+    schedule: {
+      'Monday':    { office: '8:00 AM – 5:00 PM', consultation: '9:00 AM – 12:00 PM' },
+      'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
+      'Wednesday': { office: '8:00 AM – 5:00 PM', classSchedule: '11:00 AM – 1:00 PM · In Class | 2:00 PM – 4:00 PM · In Class', consultation: '8:30 AM – 10:30 AM' },
+      'Thursday':  { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 2:00 PM – 4:00 PM · In Class', consultation: '4:00 PM – 5:00 PM' },
+      'Friday':    { office: '8:00 AM – 5:00 PM', consultation: '9:00 AM – 12:00 PM' },
+    },
     email: 'bj.resuello@udd.edu.ph',
     supervisorId: 'soe-program-head',
   },
@@ -400,10 +497,17 @@ export const FACULTY_DATA: Faculty[] = [
     position: 'Faculty Member',
     roleCategory: 'Faculty Members',
     hierarchyLevel: 3,
-    status: 'on-leave',
-    statusNote: 'On Leave / Off-Campus Field Assignment',
+    status: 'available',
+    statusNote: 'Available · Steel Design & Structural Consultation',
+    program: 'Civil Engineering',
     office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-204)' },
-    schedule: SCHEDULE_TEMPLATE_B,
+    schedule: {
+      'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 1:00 PM · In Class | 2:00 PM – 5:00 PM · In Class', consultation: '1:00 PM – 2:00 PM' },
+      'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 12:00 PM · In Class | 12:00 PM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class' },
+      'Wednesday': { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class', consultation: '1:00 PM – 4:00 PM' },
+      'Thursday':  { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 10:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class', consultation: '10:00 AM – 11:00 AM' },
+      'Friday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
+    },
     email: 'rf.orias@udd.edu.ph',
     supervisorId: 'soe-program-head',
   },
@@ -416,8 +520,15 @@ export const FACULTY_DATA: Faculty[] = [
     hierarchyLevel: 3,
     status: 'available',
     statusNote: 'Available at Design Studio / Faculty Office',
+    program: 'Civil & Architectural Engineering',
     office: { building: 'Engineering Building', room: 'Architecture & Design Studio (E-205)' },
-    schedule: SCHEDULE_TEMPLATE_C,
+    schedule: {
+      'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
+      'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class' },
+      'Wednesday': { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 10:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
+      'Thursday':  { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 10:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
+      'Friday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
+    },
     email: 'zg.resuello@udd.edu.ph',
     supervisorId: 'soe-program-head',
   },
@@ -430,9 +541,100 @@ export const FACULTY_DATA: Faculty[] = [
     hierarchyLevel: 3,
     status: 'available',
     statusNote: 'Available at Engineering Faculty Room',
+    program: 'Electronics & Electrical Engineering',
     office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-204)' },
-    schedule: SCHEDULE_TEMPLATE_A,
+    schedule: {
+      'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 10:00 AM · In Class | 2:00 PM – 5:00 PM · In Class', consultation: '10:00 AM – 12:00 PM' },
+      'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
+      'Wednesday': { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 10:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class', consultation: '10:00 AM – 11:00 AM' },
+      'Thursday':  { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 10:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class', consultation: '10:00 AM – 11:00 AM' },
+      'Friday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
+    },
     email: 'j.balolong@udd.edu.ph',
+    supervisorId: 'soe-program-head',
+  },
+  {
+    id: 'soe-f17',
+    name: 'Engr. Glenn Muyargas',
+    school: 'School of Engineering',
+    position: 'Faculty Member',
+    roleCategory: 'Faculty Members',
+    hierarchyLevel: 3,
+    status: 'available',
+    statusNote: 'Available · Engineering Mathematics Consultation',
+    program: 'Engineering Mathematics',
+    office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-201)' },
+    schedule: {
+      'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '11:00 AM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class', consultation: '8:30 AM – 10:30 AM' },
+      'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
+      'Wednesday': { office: '8:00 AM – 5:00 PM', consultation: '9:00 AM – 12:00 PM' },
+      'Thursday':  { office: '8:00 AM – 5:00 PM', consultation: '9:00 AM – 12:00 PM' },
+      'Friday':    { office: '8:00 AM – 5:00 PM', consultation: '9:00 AM – 12:00 PM' },
+    },
+    email: 'g.muyargas@udd.edu.ph',
+    supervisorId: 'soe-program-head',
+  },
+  {
+    id: 'soe-f18',
+    name: 'Engr. Mark Jecel Rapir',
+    school: 'School of Engineering',
+    position: 'Faculty Member',
+    roleCategory: 'Faculty Members',
+    hierarchyLevel: 3,
+    status: 'available',
+    statusNote: 'Available · Digital IC Design Consultation',
+    program: 'Electronics Engineering',
+    office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-202)' },
+    schedule: {
+      'Monday':    { office: '8:00 AM – 5:00 PM', consultation: 'By Appointment' },
+      'Tuesday':   { office: '8:00 AM – 5:00 PM', consultation: 'By Appointment' },
+      'Wednesday': { office: '8:00 AM – 5:00 PM', consultation: 'By Appointment' },
+      'Thursday':  { office: '8:00 AM – 5:00 PM', consultation: 'By Appointment' },
+      'Friday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class', consultation: '11:00 AM – 1:00 PM' },
+    },
+    email: 'mj.rapir@udd.edu.ph',
+    supervisorId: 'soe-program-head',
+  },
+  {
+    id: 'soe-f19',
+    name: 'Engr. Christina Solar',
+    school: 'School of Engineering',
+    position: 'Faculty Member',
+    roleCategory: 'Faculty Members',
+    hierarchyLevel: 3,
+    status: 'on-leave',
+    statusNote: 'No Scheduled Teaching Load (0 Units) · On Leave / Special Assignment',
+    program: 'School of Engineering',
+    office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-203)' },
+    schedule: {
+      'Monday':    { office: 'On Leave / Special Assignment' },
+      'Tuesday':   { office: 'On Leave / Special Assignment' },
+      'Wednesday': { office: 'On Leave / Special Assignment' },
+      'Thursday':  { office: 'On Leave / Special Assignment' },
+      'Friday':    { office: 'On Leave / Special Assignment' },
+    },
+    email: 'c.solar@udd.edu.ph',
+    supervisorId: 'soe-program-head',
+  },
+  {
+    id: 'soe-f20',
+    name: 'Engr. Lynn Manaoat',
+    school: 'School of Engineering',
+    position: 'Faculty Member',
+    roleCategory: 'Faculty Members',
+    hierarchyLevel: 3,
+    status: 'available',
+    statusNote: 'Available · Environmental Science & Chemistry Consultation',
+    program: 'General Engineering & Environmental Sciences',
+    office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-204)' },
+    schedule: {
+      'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class' },
+      'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '2:00 PM – 5:00 PM · In Class', consultation: '9:00 AM – 12:00 PM' },
+      'Wednesday': { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class', consultation: '1:00 PM – 4:00 PM' },
+      'Thursday':  { office: '8:00 AM – 5:00 PM', classSchedule: '2:00 PM – 5:00 PM · In Class', consultation: '9:00 AM – 12:00 PM' },
+      'Friday':    { office: '8:00 AM – 5:00 PM', consultation: '9:00 AM – 12:00 PM' },
+    },
+    email: 'l.manaoat@udd.edu.ph',
     supervisorId: 'soe-program-head',
   },
 
@@ -1009,16 +1211,148 @@ export const FACULTY_DATA: Faculty[] = [
   },
 ];
 
-// ─── Helper Functions ─────────────────────────────────────────────────────────
+// ─── Helper Functions (Real-Time Schedule-Driven Availability) ───────────────
+
+interface TimeInterval {
+  startMinutes: number;
+  endMinutes: number;
+  startLabel: string;
+  endLabel: string;
+  rangeLabel: string;
+}
+
+function parseClockToMinutes(clockStr: string): number | null {
+  const m = clockStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!m) return null;
+  let hours = parseInt(m[1], 10);
+  const minutes = parseInt(m[2], 10);
+  const period = m[3].toUpperCase();
+  if (period === 'PM' && hours !== 12) hours += 12;
+  if (period === 'AM' && hours === 12) hours = 0;
+  return hours * 60 + minutes;
+}
+
+function extractTimeIntervals(scheduleText?: string): TimeInterval[] {
+  if (!scheduleText) return [];
+  const intervals: TimeInterval[] = [];
+  const regex = /(\d{1,2}:\d{2}\s*(?:AM|PM))\s*[–-]\s*(\d{1,2}:\d{2}\s*(?:AM|PM))/gi;
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(scheduleText)) !== null) {
+    const startLabel = match[1].trim();
+    const endLabel = match[2].trim();
+    const startMinutes = parseClockToMinutes(startLabel);
+    const endMinutes = parseClockToMinutes(endLabel);
+    if (startMinutes !== null && endMinutes !== null) {
+      intervals.push({
+        startMinutes,
+        endMinutes,
+        startLabel,
+        endLabel,
+        rangeLabel: `${startLabel} – ${endLabel}`,
+      });
+    }
+  }
+  return intervals;
+}
+
+const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+/**
+ * Dynamically computes a faculty member's live availability (`status` and `statusNote`)
+ * based on the current day and time compared against their `schedule`.
+ */
+export function resolveFacultyLiveStatus(faculty: Faculty, now: Date = new Date()): Faculty {
+  // Preserve explicit on-leave status (e.g., 0-unit load / special assignment / official leave)
+  if (faculty.status === 'on-leave') {
+    return faculty;
+  }
+
+  if (!faculty.schedule) {
+    return faculty;
+  }
+
+  const dayName = WEEKDAY_NAMES[now.getDay()];
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const daySchedule = faculty.schedule[dayName];
+
+  if (!daySchedule) {
+    // Weekend (Saturday / Sunday) or unscheduled day
+    return {
+      ...faculty,
+      status: 'available',
+      statusNote: 'No Scheduled Classes Today',
+    };
+  }
+
+  if (daySchedule.office && /on leave/i.test(daySchedule.office)) {
+    return {
+      ...faculty,
+      status: 'on-leave',
+      statusNote: daySchedule.office,
+    };
+  }
+
+  // 1. Check if currently in any scheduled class block today
+  const classIntervals = extractTimeIntervals(daySchedule.classSchedule);
+  const activeClass = classIntervals.find(
+    (interval) => currentMinutes >= interval.startMinutes && currentMinutes < interval.endMinutes,
+  );
+
+  if (activeClass) {
+    return {
+      ...faculty,
+      status: 'in-class',
+      statusNote: `In Class (${activeClass.rangeLabel})`,
+    };
+  }
+
+  // 2. Check if currently in consultation hours today
+  const consultIntervals = extractTimeIntervals(daySchedule.consultation);
+  const activeConsult = consultIntervals.find(
+    (interval) => currentMinutes >= interval.startMinutes && currentMinutes < interval.endMinutes,
+  );
+
+  if (activeConsult) {
+    return {
+      ...faculty,
+      status: 'available',
+      statusNote: `Available for Consultation (${activeConsult.rangeLabel})`,
+    };
+  }
+
+  // 3. Check if there is an upcoming class later today
+  const upcomingClass = classIntervals.find((interval) => interval.startMinutes > currentMinutes);
+  if (upcomingClass) {
+    return {
+      ...faculty,
+      status: 'available',
+      statusNote: `Available · Next Class at ${upcomingClass.startLabel}`,
+    };
+  }
+
+  // 4. Otherwise available with no more classes today
+  return {
+    ...faculty,
+    status: 'available',
+    statusNote: 'Available · No Ongoing Class',
+  };
+}
+
+/** Get all faculty members with real-time schedule-driven status */
+export function getLiveFacultyData(now: Date = new Date()): Faculty[] {
+  return FACULTY_DATA.map((f) => resolveFacultyLiveStatus(f, now));
+}
 
 /** Get all faculty members belonging to a specific school */
 export function getFacultyBySchool(schoolName: string): Faculty[] {
-  return FACULTY_DATA.filter(f => f.school === schoolName);
+  const now = new Date();
+  return FACULTY_DATA.filter(f => f.school === schoolName).map(f => resolveFacultyLiveStatus(f, now));
 }
 
 /** Get a single faculty member by ID */
 export function getFacultyById(id: string): Faculty | undefined {
-  return FACULTY_DATA.find(f => f.id === id);
+  const found = FACULTY_DATA.find(f => f.id === id);
+  return found ? resolveFacultyLiveStatus(found, new Date()) : undefined;
 }
 
 /** Get the computed faculty count for each school */
@@ -1028,7 +1362,8 @@ export function getSchoolFacultyCount(schoolName: string): number {
 
 /** Get the dean (top-level supervisor) of a school */
 export function getSchoolDean(schoolName: string): Faculty | undefined {
-  return FACULTY_DATA.find(f => f.school === schoolName && f.supervisorId === null);
+  const found = FACULTY_DATA.find(f => f.school === schoolName && f.supervisorId === null);
+  return found ? resolveFacultyLiveStatus(found, new Date()) : undefined;
 }
 
 /**
@@ -1071,7 +1406,8 @@ export function getSchoolHierarchy(schoolName: string): FacultyNode | null {
 export function searchFaculty(query: string): Faculty[] {
   if (!query.trim()) return [];
   const q = query.toLowerCase();
-  return FACULTY_DATA.filter(f => {
+  const liveData = getLiveFacultyData();
+  return liveData.filter(f => {
     const statusLabel = getFacultyStatusMeta(f.status).label.toLowerCase();
     return (
       f.name.toLowerCase().includes(q) ||

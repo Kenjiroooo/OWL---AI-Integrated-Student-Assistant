@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { getFacultyById } from './facultyData';
 import SchoolSelector from './SchoolSelector';
 import SchoolFacultyPage from './SchoolFacultyPage';
 import FacultyProfile from './FacultyProfile';
@@ -20,8 +19,17 @@ export default function FacultyLocatorMain() {
   const [selectedSchool, setSelectedSchool] = useState<string | null>(null);
   const [selectedFacultyId, setSelectedFacultyId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  
+  // Live clock tick (every 30s) so schedule-driven availability updates automatically in real time
+  const [, setLiveClockTick] = useState(0);
+
   const { setCustomBack } = useContext(FeatureContext);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLiveClockTick((tick) => tick + 1);
+    }, 30_000);
+    return () => clearInterval(interval);
+  }, []);
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 
