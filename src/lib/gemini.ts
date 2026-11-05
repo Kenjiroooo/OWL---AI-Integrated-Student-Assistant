@@ -1,6 +1,7 @@
 import { db } from './firebase';
 import { collection, getDocs } from 'firebase/firestore';
 import { recordAIApiRequest } from './aiApiMonitor';
+import { getLiveFacultyData, getFacultyStatusMeta } from '../components/features/facultyLocator/facultyData';
 
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -38,7 +39,7 @@ export function detectCampusHighlight(text: string): CampusHighlightId | null {
     return 'shs';
   }
   if (
-    /main campus|main building|administration building|\ba[\s-]?building\b|\bv[\s-]?building\b|\bl[\s-]?building\b|front building|room\s*v?\d+|v204|registrar|finance office|cashier|where is udd|udd campus|campus location|where.*located/.test(
+    /main campus|main building|administration building|\ba[\s-]?building\b|\bv[\s-]?building\b|\bl[\s-]?building\b|front building|room\s*v?\d+|v204|registrar|finance office|cashier|\btor\b|transcript of records|where is udd|udd campus|campus location|where.*located/.test(
       q
     )
   ) {
@@ -70,6 +71,9 @@ const HARDCODED_MAP_LOCATIONS = `
 • Administration Building (A Building): The central administration and academic building of the Main Campus.
 `;
 
+const HARDCODED_TOR_INFO = `Q: How do I request a Transcript of Records (TOR)? / How to get a TOR?
+A: Visit the Registrar's Office at the Administration Building (A Building). Fill out the request form, pay the processing fee at the Finance Office, and allow 3–5 working days. Bring a valid school ID.`;
+
 const HARDCODED_ENROLLMENT_STEPS = `Q: What are the enrollment steps for new students? / What is the enrollment process?
 A:
 1. Get an Enlistment Form – Proceed to Room V204 to obtain your enlistment form.
@@ -83,6 +87,29 @@ A:
 5. Complete Your Enrollment – Go to your department's designated room to finalize your enrollment and have your White Form printed.
 
 6. You're Officially Enrolled! – Congratulations! You have successfully completed the enrollment process.`;
+
+const HARDCODED_LATEST_UDD_UPDATES = `
+• Official Facebook Page: https://www.facebook.com/udd1984 (@udd1984 — Universidad de Dagupan)
+• Recent Licensure & Board Exam Milestones (2026):
+  - 100% Passing Rate in the September 2026 Electrical Engineering Licensure Examination.
+  - Kartherine Reyes Estrellas (UdD alumna) secured Top 1 in the May 2026 Special Professional Licensure Examination (SPLE) for Professional Teachers.
+  - Top 7 placer in the September Philippine Licensure Examination.
+  - Special cash reward incentives announced by the administration for future board exam topnotchers.
+• Competitions, Cybersecurity & Student Achievements (2026):
+  - UdD CyberOwls placed 40th regionally and 4th among participating Philippine teams (August 2026).
+  - UdD-SITE advanced to the national stage at the HackForGov 5 cybersecurity competition.
+  - Enactus UdD secured a spot in the Enactus Philippines National Top 60.
+  - UDD Strix (collegiate esports/athletics team) clinched a 3rd–4th place finish at the Philippine Collegiate Championship.
+• Institutional Partnerships, Accreditations & Global Engagement (2026):
+  - First ISO 21001:2018-certified university in Region 1 (42 years of academic service).
+  - First in Region I to achieve status as a FoodSHAP Authorized Course Provider (June 2026).
+  - Partnered with Palo Alto Networks Cybersecurity Academy to strengthen the IT and cybersecurity curriculum.
+  - Signed an MOU with DTI Pangasinan for digital transformation and student upskilling, and formalized an academic/research partnership with PAGE Philippines.
+  - Participated in the 2026 China International Fair for Trade in Services (CIFTIS) to expand international academic and industry engagements.
+• Scholarships & Campus Orientations (AY 2025–2026 & AY 2026–2027):
+  - Presidential Scholarship Examination qualifiers for AY 2025–2026 and AY 2026–2027 receive Presidential Scholarships, 100% tuition waivers, or performance-based tuition discounts.
+  - Freshmen and transferee general orientations for AY 2026–2027 are held at the LCR Arzadon Gymnasium.
+`;
 
 const HARDCODED_UNIVERSITY_HYMN = `UNIVERSIDAD DE DAGUPAN HYMN
 
@@ -150,19 +177,29 @@ async function fetchCampusContext(): Promise<CampusContext> {
       return `• ${d.name}: ${d.description || ''} Rooms: ${(d.rooms || []).join(', ')}`;
     }).join('\n');
 
-    // Format faculty data
-    const faculty = facultySnap.docs.map(doc => {
+    // Format faculty data (combine live Faculty Locator directory + schedules with Firestore facultyOffices)
+    const locatorFaculty = getLiveFacultyData().map(f => {
+      const liveStatus = getFacultyStatusMeta(f.status).label;
+      const schedStr = f.schedule
+        ? Object.entries(f.schedule)
+            .map(([day, s]) => `${day}: [Classes: ${s.classSchedule || 'None'}, Consultation: ${s.consultation || 'N/A'}]`)
+            .join('; ')
+        : 'N/A';
+      return `• ${f.name} (${f.position}, ${f.school}) — Current Status: ${liveStatus}${f.statusNote ? ` (${f.statusNote})` : ''}, Office: ${f.office?.building || ''} ${f.office?.room || ''}, Email: ${f.email || 'N/A'}, Schedule: ${schedStr}`;
+    }).join('\n');
+    const firestoreFaculty = facultySnap.docs.map(doc => {
       const d = doc.data();
       return `• ${d.name} — ${d.department || 'N/A'}, Office: ${d.officeLocation || 'N/A'}, Email: ${d.email || 'N/A'}`;
     }).join('\n');
+    const faculty = [locatorFaculty, firestoreFaculty].filter(Boolean).join('\n');
 
     // Format FAQ data (exclude outdated enrollment steps from Firestore so HARDCODED_ENROLLMENT_STEPS is authoritative)
     const firestoreFaqs = faqsSnap.docs
       .map(doc => doc.data())
-      .filter(d => d.question && !/enrollment steps for new students/i.test(d.question))
+      .filter(d => d.question && !/enrollment steps for new students|transcript of records|\btor\b/i.test(d.question))
       .map(d => `Q: ${d.question}\nA: ${d.answer}`)
       .join('\n\n');
-    const faqs = [HARDCODED_ENROLLMENT_STEPS, firestoreFaqs].filter(Boolean).join('\n\n');
+    const faqs = [HARDCODED_TOR_INFO, HARDCODED_ENROLLMENT_STEPS, firestoreFaqs].filter(Boolean).join('\n\n');
 
     // Format announcements data
     const announcements = announcementsSnap.docs.map(doc => {
@@ -178,8 +215,16 @@ async function fetchCampusContext(): Promise<CampusContext> {
     // Return empty context so the AI can still respond with general knowledge
     return {
       buildings: '(Campus building data is currently unavailable)',
-      faculty: '(Faculty data is currently unavailable)',
-      faqs: HARDCODED_ENROLLMENT_STEPS,
+      faculty: getLiveFacultyData().map(f => {
+      const liveStatus = getFacultyStatusMeta(f.status).label;
+        const schedStr = f.schedule
+          ? Object.entries(f.schedule)
+              .map(([day, s]) => `${day}: [Classes: ${s.classSchedule || 'None'}, Consultation: ${s.consultation || 'N/A'}]`)
+              .join('; ')
+          : 'N/A';
+        return `• ${f.name} (${f.position}, ${f.school}) — Current Status: ${liveStatus}${f.statusNote ? ` (${f.statusNote})` : ''}, Office: ${f.office?.building || ''} ${f.office?.room || ''}, Email: ${f.email || 'N/A'}, Schedule: ${schedStr}`;
+      }).join('\n'),
+      faqs: [HARDCODED_TOR_INFO, HARDCODED_ENROLLMENT_STEPS].join('\n\n'),
       announcements: '(Announcements data is currently unavailable)',
     };
   }
@@ -195,7 +240,7 @@ async function fetchCampusContext(): Promise<CampusContext> {
  *   - Firestore live data (~8K)
  *   - Conversation history + user message (~14K)
  */
-const WEBSITE_CONTEXT_CHAR_BUDGET = 40_000;
+const WEBSITE_CONTEXT_CHAR_BUDGET = 80_000;
 
 /**
  * Trim the website context to fit within the token budget.
@@ -240,6 +285,7 @@ Authorized sources:
 • https://udd.edu.ph/allnews
 • https://udd.edu.ph/feature
 • https://site.udd.edu.ph/
+• https://www.facebook.com/udd1984 (Official Universidad de Dagupan Facebook Page)
 • Internal University Database (provided below)
 
 You may use information from any current or future page under these official domains and the provided database context.
@@ -249,12 +295,14 @@ STRICT RULES:
 - Read, summarize, and explain the official information in a clear and concise manner.
 - Do NOT use any markdown formatting like bold (**), italics (*), or headers (#). Use plain text ONLY.
 - Do NOT tell users to visit the website unless they specifically ask for the source or additional details.
-- Never use your own memory, assumptions, or external sources (Google, Wikipedia, Facebook, Reddit, YouTube, blogs, or other websites).
+- Never use your own memory, assumptions, or external sources outside of the official UdD websites, the official UdD Facebook page (https://www.facebook.com/udd1984), and the internal database provided below.
 - If the requested information is not available on the official UdD websites or the internal database, reply:
   "I couldn't find any official information about that on the Universidad de Dagupan website."
 - Never guess, speculate, or invent information.
 - If multiple official pages contain relevant information, combine them into one accurate response.
 - The official Universidad de Dagupan website and the provided database context are your single source of truth.
+- Whenever a user asks about requesting or getting a TOR (Transcript of Records), ALWAYS provide this exact guidance:
+  Visit the Registrar's Office at the Administration Building (A Building). Fill out the request form, pay the processing fee at the Finance Office, and allow 3–5 working days. Bring a valid school ID.
 - Whenever a user asks about the enrollment process or enrollment steps (including for new students), ALWAYS give these exact 6 steps:
   1. Get an Enlistment Form – Proceed to Room V204 to obtain your enlistment form.
   2. List Your Subjects – Identify all the subjects you need to enroll in and fill them out in the enlistment form.
@@ -283,6 +331,9 @@ ${ctx.faqs || 'No FAQ data available at the moment.'}
 
 ### 📢 Current Announcements
 ${ctx.announcements || 'No announcements at the moment.'}
+
+### 📰 Latest Official Updates (UdD Website & @udd1984 Facebook Page)
+${HARDCODED_LATEST_UDD_UPDATES}
 
 ## OFFICIAL WEBSITE CONTEXT
 The following is information extracted directly from the official Universidad de Dagupan website. Use this as your primary knowledge source:
