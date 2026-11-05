@@ -63,7 +63,14 @@ export default function CampusArchitectureShowcase({
   showcaseTitle: propTitle,
 }: Props) {
   const campusGroup: CampusGroupId =
-    propCampusGroup ?? (initialBuildingId === 'udd-fame' ? 'fame' : 'main');
+    propCampusGroup ??
+    (initialBuildingId === 'udd-fame'
+      ? 'fame'
+      : initialBuildingId === 'udd-shs'
+        ? 'shs'
+        : initialBuildingId === 'udd-eng'
+          ? 'eng'
+          : 'main');
   const buildings = getCampusBuildings(campusGroup);
   const defaultBuildingId: CampusBuildingId =
     initialBuildingId ?? (buildings[0]?.id || DEFAULT_BUILDING_ID);
@@ -302,14 +309,14 @@ export default function CampusArchitectureShowcase({
           <div>
             <div className="flex items-center gap-2">
               <p className="text-[11px] uppercase tracking-[0.25em] text-blue-300/80 font-semibold">
-                Campus Navigation · {campusGroup === 'fame' ? 'FAME Campus' : 'Main Campus'} Architecture
+                Campus Navigation · {campusGroup === 'fame' ? 'FAME Campus' : campusGroup === 'shs' ? 'Health Sciences • Universidad de Dagupan' : campusGroup === 'eng' ? 'Engineering • Universidad de Dagupan' : 'Main Campus'} Architecture
               </p>
               <span className="hidden sm:inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 font-medium">
                 <Sparkles className="w-2.5 h-2.5 text-blue-400" /> Option B 3D
               </span>
             </div>
             <h1 id="arch-showcase-title" className="text-xl sm:text-2xl font-black tracking-tight">
-              {propTitle ?? (campusGroup === 'fame' ? 'UDD FAME Campus Showcase' : 'UDD Main Campus Showcase')}
+              {propTitle ?? (campusGroup === 'fame' ? 'UDD FAME Campus Showcase' : campusGroup === 'shs' ? 'UdD School of Health Sciences Showcase' : campusGroup === 'eng' ? 'UdD Engineering Building (E-Building) Showcase' : 'UDD Main Campus Showcase')}
             </h1>
           </div>
         </div>

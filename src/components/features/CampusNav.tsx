@@ -8,6 +8,8 @@ import { Routes, Route } from 'react-router-dom';
 import DagupanMap from './campusNav/DagupanMap';
 import MainCampusInteractiveMap from './campusNav/MainCampusInteractiveMap';
 import FameCampusInteractiveMap from './campusNav/FameCampusInteractiveMap';
+import SHSCampusInteractiveMap from './campusNav/SHSCampusInteractiveMap';
+import EngCampusInteractiveMap from './campusNav/EngCampusInteractiveMap';
 
 // Leaflet CSS is required for the map to render correctly
 import 'leaflet/dist/leaflet.css';
@@ -20,6 +22,8 @@ export default function CampusNav() {
         <Route index element={<DagupanMap />} />
         <Route path="maincampus" element={<MainCampusInteractiveMap />} />
         <Route path="famecampus" element={<FameCampusInteractiveMap />} />
+        <Route path="shscampus" element={<SHSCampusInteractiveMap />} />
+        <Route path="engcampus" element={<EngCampusInteractiveMap />} />
       </Routes>
     </div>
   );

@@ -13,6 +13,8 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { CampusBuildingId } from './buildings';
 import { buildMainTower3D, buildFrontBuilding3D, type Building3DResult } from './proceduralModels';
 import { buildFameBuilding3D } from './fameModel';
+import { buildSHSBuilding3D } from './shsModel';
+import { buildEngineeringBuilding3D } from './engModel';
 import { buildUnifiedMainCampus3D } from './mainCampusModel';
 import type { ShapePoint, TrackerMode } from './ShapeTrackerOverlay';
 
@@ -24,6 +26,8 @@ const MODEL_FACTORIES: Record<CampusBuildingId, () => Building3DResult> = {
   'udd-main-v': buildUnifiedMainCampus3D,
   'udd-main-front': buildUnifiedMainCampus3D,
   'udd-fame': buildFameBuilding3D,
+  'udd-shs': buildSHSBuilding3D,
+  'udd-eng': buildEngineeringBuilding3D,
 };
 
 export interface Campus3DCanvasHandle {

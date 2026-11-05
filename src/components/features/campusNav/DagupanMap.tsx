@@ -155,6 +155,7 @@ export default function DagupanMap() {
             subtitle="Health Sciences • Universidad de Dagupan"
             description="The School of Health Sciences of Universidad de Dagupan is dedicated to developing competent, compassionate, and skilled healthcare professionals. It provides students with quality education, practical training, and hands-on learning experiences that prepare them for careers in the healthcare industry. The school emphasizes professional excellence, patient-centered care, ethics, and service to the community."
             isHighlighted={highlightedCampus === 'shs'}
+            onExplore={() => handleExplore(UDD_SHS_LOCATION, 'shscampus')}
           />
           <UniversityMarker 
             position={UDD_ENG_LOCATION}
@@ -162,6 +163,7 @@ export default function DagupanMap() {
             subtitle="Engineering • Universidad de Dagupan"
             description="The Engineering Building of Universidad de Dagupan serves as a dedicated academic facility for engineering students, providing classrooms, laboratories, and learning spaces that support technical education, hands-on activities, and engineering-related programs. It is an important part of the university's engineering and technology learning environment. Address: Arellano Street, Pantal, Dagupan City, Pangasinan 2400."
             isHighlighted={highlightedCampus === 'engineering'}
+            onExplore={() => handleExplore(UDD_ENG_LOCATION, 'engcampus')}
           />
         </MapContainer>
 

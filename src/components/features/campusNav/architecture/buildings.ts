@@ -14,7 +14,9 @@ export type CampusBuildingId =
   | 'udd-main-admin'
   | 'udd-main-v'
   | 'udd-main-front'
-  | 'udd-fame';
+  | 'udd-fame'
+  | 'udd-shs'
+  | 'udd-eng';
 
 /** Virtual "camera" pose applied to the photo panel (percent / degrees). */
 export interface CameraPose {
@@ -275,12 +277,79 @@ export const CAMPUS_BUILDINGS: readonly CampusBuilding[] = [
     orbitPose: { scale: 1.0, x: -5, y: 3, rotateX: 4, rotateY: 14 },
     theme: { skyTop: '#0b1f3f', skyBottom: '#3b6ea8', accent: '#60a5fa' },
   },
+  {
+    id: 'udd-shs',
+    name: 'UdD School of Health Sciences',
+    shortName: 'Health Sciences',
+    campus: 'Health Sciences • Universidad de Dagupan',
+    description:
+      'The 7-bay, 3-storey + covered roof-deck School of Health Sciences building of Universidad de Dagupan, featuring white/cream spandrels with diagonal slate-grey triangular wedges above bright sky-blue ledges, stepped sky-blue sun-canopy hoods between 2F and 3F, multi-pane brown-framed casement windows with window-type AC units on steel brackets, a recessed dark navy-blue 4-leaf entrance gate with the Universidad de Dagupan seal, a landscaped front planter box, a maroon corrugated roof deck over Bays 1–6, and a raised white concrete penthouse overhang on the far-right bay.',
+    visibleFeatures: [
+      '7 structural bays with vertical grey pilasters & PVC downspouts',
+      'Cream spandrel bands with diagonal slate-grey triangular wedges',
+      'Stepped / split sky-blue sun-canopy hoods with vertical drop fins',
+      'Multi-pane bronze/brown casement windows & window-type AC units on brackets',
+      'Recessed dark navy-blue 4-panel entrance gate with UDD seal & hanging SHS signboard',
+      'Twin round electric meters with orange PVC conduit & angled sky-blue portal fin',
+      'White-curbed concrete planter box with lush green shrubs & NO PARKING sign',
+      'Maroon corrugated metal covered roof deck (Bays 1–6) & raised white penthouse slab (Bay 7)',
+    ],
+    referenceImage: '/campus-buildings/shs-building.jpg',
+    referenceImageAlt:
+      'Photograph of the UdD School of Health Sciences building: a 7-bay 3-storey cream and sky-blue academic building with diagonal grey spandrel wedges, stepped blue window sun-canopies, multi-pane windows with AC units, a dark blue entrance gate with the UDD seal, front planter hedge, and red covered rooftop deck.',
+    modelPath: 'procedural-3d',
+    floors: [
+      { level: 0, label: 'Ground Floor, Landscaped Planter, Navy Entrance Gate & Campus Clinic' },
+      { level: 1, label: '2nd Floor Nursing & Health Sciences Lecture Rooms & Stepped Sun-Canopies' },
+      { level: 2, label: '3rd Floor Clinical Simulation & Anatomy Laboratories' },
+      { level: 3, label: '4th Level Sky-Blue Framed Parapet, Red Covered Roof Deck & Right Penthouse' },
+    ],
+    defaultPose: { scale: 1.06, x: 0, y: 3, rotateX: 0, rotateY: 0 },
+    establishingPose: { scale: 0.62, x: 0, y: 10, rotateX: 14, rotateY: 0 },
+    orbitPose: { scale: 1.0, x: -5, y: 3, rotateX: 4, rotateY: 14 },
+    theme: { skyTop: '#0b1f3f', skyBottom: '#1e5a9c', accent: '#38bdf8' },
+  },
+  {
+    id: 'udd-eng',
+    name: 'UdD Engineering Building (E-Building)',
+    shortName: 'Engineering Building',
+    campus: 'Engineering • Universidad de Dagupan',
+    description:
+      'The 4-storey corner Engineering Building (E-Building) of Universidad de Dagupan on Arellano Street, Pantal, Dagupan City, featuring a stepped front facade (3 projecting main bays + 2 recessed right bays), deep wrap-around warm cream/peach cantilevered balcony bands on the 2nd, 3rd, and 4th floors with exposed underside concrete cross-beams, a terracotta/salmon-orange top roof parapet band, two tall vertical galvanized steel laboratory exhaust stacks on the rear-left corner, a ground-floor white wall with sky-blue and grey dado stripes plus a stepped royal-blue concrete bench, a full-height silver aluminum-and-glass main entrance portal with Dress Code and Bronze Dedication plaques, and a perimeter black wrought-iron picket fence.',
+    visibleFeatures: [
+      'Stepped 4-storey corner facade (projecting Bays 1–3 & recessed stepped-down Bays 4–5)',
+      'Deep wrap-around warm cream/peach cantilevered balcony bands with exposed soffit cross-beams',
+      'Terracotta / salmon-orange 4th-floor crown parapet with recessed dark soffit bays',
+      'Two tall vertical galvanized steel laboratory exhaust stacks on the rear-left corner',
+      'Ground-floor white wall with sky-blue mid-stripe, grey dado & stepped royal-blue bench',
+      'Silver aluminum-and-glass main entrance storefront with ENTRANCE / EXIT headers',
+      'UDD Dress Code poster board, NO ID NO ENTRY sign, Bronze Plaque & handwashing station',
+      'Black wrought-iron picket fence & swing gates with NO SMOKING ZONE & yellow NO PARKING signs',
+      'Multi-pane casement windows with outward-angled open sashes & window-type AC units on brackets',
+    ],
+    referenceImage: '/campus-buildings/eng-building.jpg',
+    referenceImageAlt:
+      'Photograph of the UdD Engineering Building (E-Building): a 4-storey corner academic building with cream cantilevered balcony bands, terracotta top parapet, ground-floor blue and grey stripe, silver glass entrance portal, and black iron picket fence.',
+    modelPath: 'procedural-3d',
+    floors: [
+      { level: 0, label: 'Ground Floor, Glass Entrance Portal, Iron Picket Fence & Arellano St. Context' },
+      { level: 1, label: '2nd Floor Engineering Lecture Rooms & Cantilevered Cream Balcony Band' },
+      { level: 2, label: '3rd Floor Technical & Computer Engineering Laboratories & Balcony Band' },
+      { level: 3, label: '4th Floor Senior Studios, Terracotta Parapet Crown & Exhaust Stacks' },
+    ],
+    defaultPose: { scale: 1.06, x: 0, y: 3, rotateX: 0, rotateY: 0 },
+    establishingPose: { scale: 0.62, x: 0, y: 10, rotateX: 14, rotateY: 0 },
+    orbitPose: { scale: 1.0, x: -5, y: 3, rotateX: 4, rotateY: 14 },
+    theme: { skyTop: '#0b1f3f', skyBottom: '#2b5876', accent: '#f59e0b' },
+  },
 ] as const;
 
 /** Buildings grouped per campus showcase. */
 export const CAMPUS_GROUPS = {
   main: ['udd-main-tower', 'udd-main-admin', 'udd-main-v'],
   fame: ['udd-fame'],
+  shs: ['udd-shs'],
+  eng: ['udd-eng'],
 } as const satisfies Record<string, readonly CampusBuildingId[]>;
 
 export type CampusGroupId = keyof typeof CAMPUS_GROUPS;
