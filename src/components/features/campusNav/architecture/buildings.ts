@@ -34,6 +34,25 @@ export interface FloorMetadata {
   label: string;
 }
 
+export function formatFloorOrdinal(level: number): string {
+  switch (level) {
+    case 0:
+      return '1st Floor (Ground Floor)';
+    case 1:
+      return '2nd Floor';
+    case 2:
+      return '3rd Floor';
+    case 3:
+      return '4th Floor';
+    case 4:
+      return '5th Floor';
+    case 5:
+      return '6th Floor / Rooftop';
+    default:
+      return `Floor ${level + 1}`;
+  }
+}
+
 export interface CampusBuilding {
   id: CampusBuildingId;
   name: string;
