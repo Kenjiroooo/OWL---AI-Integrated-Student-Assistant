@@ -3526,19 +3526,24 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       const c = b3.getCenter(new THREE.Vector3());
 
       // 1. Administration Building (Student Services & 2-Storey Innovation Wing)
-      if (c.x >= -34.0 && c.x <= -17.5 && c.z >= -51.0 && c.z <= -18.5) {
+      if (c.x >= -34.0 && c.x <= -16.4 && c.z > -50.4 && c.z <= -18.5) {
         mesh.userData.buildingId = 'udd-main-admin';
         adminMeshes.push(mesh);
       }
-      // 2. L Building (Tower Building: Tower core, 6-storey academic block, front canopy)
-      else if (c.x >= -17.5 && c.x <= 9.5 && c.z >= -27.5 && c.z <= 6.0) {
+      // 2. L Building (Tower Building: Tower core, 6-storey academic block, front canopy & skybridge span)
+      else if (
+        (c.x >= -16.4 && c.x <= 8.5 && c.z >= -27.2 && c.z <= 4.5) ||
+        (c.x > 8.5 && c.x <= 19.5 && c.z >= -23.5 && c.z <= -21.8 && b3.min.y >= 3.4)
+      ) {
         mesh.userData.buildingId = 'udd-main-tower';
         towerMeshes.push(mesh);
       }
-      // 3. V Building (5-Storey Building: 9-point courtyard wings, atrium, roof lattice)
+      // 3. V Building (5-Storey Building: 9-point courtyard wings, atrium, roof lattice & turning ramp)
       else if (
-        (c.x > -17.5 && c.z < -26.0 && c.z > -72.0) ||
-        (c.x <= -17.5 && c.z <= -50.5 && c.z > -72.0)
+        (c.z <= -50.4 && c.z > -72.0) ||
+        (c.x >= 20.5 && c.z < -29.5 && c.z > -72.0) ||
+        (c.x >= 14.5 && c.z <= -50.0 && c.z > -72.0) ||
+        (c.x > 19.5 && c.x <= 25.5 && c.z >= -31.5 && c.z <= -21.8 && b3.min.y >= 3.4)
       ) {
         mesh.userData.buildingId = 'udd-main-v';
         vBuildingMeshes.push(mesh);
