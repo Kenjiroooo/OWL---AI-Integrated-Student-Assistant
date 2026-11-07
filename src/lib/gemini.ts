@@ -219,19 +219,15 @@ async function fetchCampusContext(): Promise<CampusContext> {
       return `• ${d.name}: ${d.description || ''} Rooms: ${(d.rooms || []).join(', ')}`;
     }).join('\n');
 
-    // Format faculty data (combine live Faculty Locator directory + schedules with Firestore facultyOffices)
+    // Format faculty data (combine live Faculty Locator directory with Firestore facultyOffices;
+    // omit email addresses and class schedules to enforce privacy restrictions)
     const locatorFaculty = getLiveFacultyData().map(f => {
       const liveStatus = getFacultyStatusMeta(f.status).label;
-      const schedStr = f.schedule
-        ? Object.entries(f.schedule)
-            .map(([day, s]) => `${day}: [Classes: ${s.classSchedule || 'None'}, Consultation: ${s.consultation || 'N/A'}]`)
-            .join('; ')
-        : 'N/A';
-      return `• ${f.name} (${f.position}, ${f.school}) — Current Status: ${liveStatus}${f.statusNote ? ` (${f.statusNote})` : ''}, Office: ${f.office?.building || ''} ${f.office?.room || ''}, Email: ${f.email || 'N/A'}, Schedule: ${schedStr}`;
+      return `• ${f.name} (${f.position}, ${f.school}) — Current Availability Status: ${liveStatus}, Office: ${f.office?.building || ''} ${f.office?.room || ''} (${f.office?.floor || ''}) [Email & Class Schedule: Restricted / Confidential]`;
     }).join('\n');
     const firestoreFaculty = facultySnap.docs.map(doc => {
       const d = doc.data();
-      return `• ${d.name} — ${d.department || 'N/A'}, Office: ${d.officeLocation || 'N/A'}, Email: ${d.email || 'N/A'}`;
+      return `• ${d.name} — ${d.department || 'N/A'}, Office: ${d.officeLocation || 'N/A'} [Email & Class Schedule: Restricted / Confidential]`;
     }).join('\n');
     const faculty = [locatorFaculty, firestoreFaculty].filter(Boolean).join('\n');
 
@@ -258,13 +254,8 @@ async function fetchCampusContext(): Promise<CampusContext> {
     return {
       buildings: '(Campus building data is currently unavailable)',
       faculty: getLiveFacultyData().map(f => {
-      const liveStatus = getFacultyStatusMeta(f.status).label;
-        const schedStr = f.schedule
-          ? Object.entries(f.schedule)
-              .map(([day, s]) => `${day}: [Classes: ${s.classSchedule || 'None'}, Consultation: ${s.consultation || 'N/A'}]`)
-              .join('; ')
-          : 'N/A';
-        return `• ${f.name} (${f.position}, ${f.school}) — Current Status: ${liveStatus}${f.statusNote ? ` (${f.statusNote})` : ''}, Office: ${f.office?.building || ''} ${f.office?.room || ''}, Email: ${f.email || 'N/A'}, Schedule: ${schedStr}`;
+        const liveStatus = getFacultyStatusMeta(f.status).label;
+        return `• ${f.name} (${f.position}, ${f.school}) — Current Availability Status: ${liveStatus}, Office: ${f.office?.building || ''} ${f.office?.room || ''} (${f.office?.floor || ''}) [Email & Class Schedule: Restricted / Confidential]`;
       }).join('\n'),
       faqs: [HARDCODED_TOR_INFO, HARDCODED_ENROLLMENT_STEPS].join('\n\n'),
       announcements: '(Announcements data is currently unavailable)',
@@ -338,8 +329,15 @@ STRICT RULES:
 - Do NOT use any markdown formatting like bold (**), italics (*), or headers (#). Use plain text ONLY.
 - Do NOT tell users to visit the website unless they specifically ask for the source or additional details.
 - Never use your own memory, assumptions, or external sources outside of the official UdD websites, the official UdD Facebook page (https://www.facebook.com/udd1984), and the internal database provided below.
-- If the requested information is not available on the official UdD websites or the internal database, reply:
-  "I couldn't find any official information about that on the Universidad de Dagupan website."
+- TROLL, JOKE, OR NON-SCHOOL-RELATED QUESTIONS:
+  1. First, evaluate whether the user's question is a troll, joke, prank, meme, nonsense, or not school-related (i.e., unrelated to Universidad de Dagupan, campus life, academics, enrollment, faculty offices, or university services).
+  2. If the question is a joke, troll, or not school-related, do NOT use the generic "I couldn't find any official information..." message. Instead, answer naturally in your own words as OWL: explicitly let the user know that their question seems to be a joke/troll or is not school-related, and politely remind them that you are OWL, the Universidad de Dagupan AI Student Assistant, here to help with school and campus-related questions (such as campus navigation, enrollment steps, faculty office locations, announcements, or campus services).
+  3. Only when the user asks a genuine school or Universidad de Dagupan-related question whose specific answer is not available in the official UdD websites or internal database, reply:
+     "I couldn't find any official information about that on the Universidad de Dagupan website."
+- PRIVACY & PERSONAL INFORMATION RESTRICTION (STRICT):
+  1. NEVER disclose anyone's personal or confidential information, specifically their email address or class schedules (such as faculty teaching schedules, specific class time slots, or student schedules).
+  2. If a user asks for someone's email address or class schedule (for a faculty member, staff member, or student), politely decline and explain that for privacy and security reasons, you are restricted from disclosing personal information such as email addresses or class schedules.
+  3. When asked about a faculty member, you may ONLY share their name, position/title, school/department, designated office location (building, floor, and room), and general current availability status (Available, In Class, Busy, On Leave, or Out of Office), and advise the student to visit their department office in person.
 - Never guess, speculate, or invent information.
 - If multiple official pages contain relevant information, combine them into one accurate response.
 - The official Universidad de Dagupan website and the provided database context are your single source of truth.
