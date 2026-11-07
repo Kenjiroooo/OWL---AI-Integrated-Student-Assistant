@@ -10,7 +10,8 @@
 import React, { useEffect, useImperativeHandle, useRef, useState, forwardRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import type { CampusBuildingId } from './buildings';
+import { formatFloorOrdinal, getBuilding, type CampusBuildingId } from './buildings';
+export { formatFloorOrdinal };
 import { buildMainTower3D, buildFrontBuilding3D, type Building3DResult } from './proceduralModels';
 import { buildFameBuilding3D } from './fameModel';
 import { buildSHSBuilding3D } from './shsModel';
@@ -58,6 +59,93 @@ interface Props {
   onPointsChange?: (points: ShapePoint[]) => void;
   onHoverCoord?: (coord: { x: number; z: number } | null) => void;
   onCloseShape?: () => void;
+  // Per-floor hover highlight & label sync
+  externalHoveredFloor?: number | null;
+  onHoverFloorChange?: (level: number | null) => void;
+}
+
+const grayTextureCache = new WeakMap<THREE.Texture, THREE.Texture>();
+const grayMaterialCache = new WeakMap<THREE.Material, THREE.Material>();
+
+function toGrayscaleTexture(tex: THREE.Texture): THREE.Texture {
+  const cached = grayTextureCache.get(tex);
+  if (cached) return cached;
+
+  const img = tex.image as HTMLCanvasElement | HTMLImageElement | ImageBitmap | undefined;
+  if (!img || typeof document === 'undefined' || !('width' in img) || !img.width || !img.height) {
+    return tex;
+  }
+
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return tex;
+
+    ctx.drawImage(img as CanvasImageSource, 0, 0);
+    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imgData.data;
+    for (let i = 0; i < data.length; i += 4) {
+      const lum = Math.round((0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]) * 0.76);
+      data[i] = lum;
+      data[i + 1] = lum;
+      data[i + 2] = lum;
+    }
+    ctx.putImageData(imgData, 0, 0);
+
+    const grayTex = new THREE.CanvasTexture(canvas);
+    grayTex.wrapS = tex.wrapS;
+    grayTex.wrapT = tex.wrapT;
+    grayTex.repeat.copy(tex.repeat);
+    grayTex.offset.copy(tex.offset);
+    grayTex.anisotropy = tex.anisotropy;
+    grayTex.colorSpace = tex.colorSpace;
+    grayTex.needsUpdate = true;
+
+    grayTextureCache.set(tex, grayTex);
+    return grayTex;
+  } catch {
+    return tex;
+  }
+}
+
+function toGrayscaleSingleMaterial(mat: THREE.Material): THREE.Material {
+  const cached = grayMaterialCache.get(mat);
+  if (cached) return cached;
+
+  const cloned = mat.clone() as THREE.MeshStandardMaterial;
+  if ('color' in cloned && cloned.color instanceof THREE.Color) {
+    const lum = 0.299 * cloned.color.r + 0.587 * cloned.color.g + 0.114 * cloned.color.b;
+    const g = lum * 0.66;
+    cloned.color.setRGB(g, g, g);
+  }
+  if ('emissive' in cloned && cloned.emissive instanceof THREE.Color) {
+    const eLum = (0.299 * cloned.emissive.r + 0.587 * cloned.emissive.g + 0.114 * cloned.emissive.b) * 0.35;
+    cloned.emissive.setRGB(eLum, eLum, eLum);
+  }
+  if ('map' in cloned && cloned.map) {
+    cloned.map = toGrayscaleTexture(cloned.map);
+  }
+  if ('roughness' in cloned && typeof cloned.roughness === 'number') {
+    cloned.roughness = Math.min(1, cloned.roughness + 0.15);
+  }
+  if ('metalness' in cloned && typeof cloned.metalness === 'number') {
+    cloned.metalness = cloned.metalness * 0.35;
+  }
+  cloned.needsUpdate = true;
+
+  grayMaterialCache.set(mat, cloned);
+  return cloned;
+}
+
+function getGrayscaleMaterial(
+  mat: THREE.Material | THREE.Material[]
+): THREE.Material | THREE.Material[] {
+  if (Array.isArray(mat)) {
+    return mat.map((m) => toGrayscaleSingleMaterial(m));
+  }
+  return toGrayscaleSingleMaterial(mat);
 }
 
 /** Visual Builder: Point corner marker sphere + glowing halo ring on ground */
@@ -361,12 +449,33 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
     onPointsChange,
     onHoverCoord,
     onCloseShape,
+    externalHoveredFloor = null,
+    onHoverFloorChange,
   },
   ref
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const isLassoDraggingRef = useRef(false);
+
+  // Per-floor hover highlight state & zero-allocation raycaster refs
+  const [hoveredFloorInfo, setHoveredFloorInfo] = useState<{
+    buildingId: CampusBuildingId;
+    level: number;
+    x: number;
+    y: number;
+    containerWidth: number;
+    containerHeight: number;
+  } | null>(null);
+  const currentHighlightRef = useRef<{ buildingId: CampusBuildingId | null; level: number | null }>({
+    buildingId: null,
+    level: null,
+  });
+  const hoverRaycasterRef = useRef(new THREE.Raycaster());
+  const hoverMouseVecRef = useRef(new THREE.Vector2());
+  const lastHoverRaycastTimeRef = useRef(0);
+  const onHoverFloorChangeRef = useRef(onHoverFloorChange);
+  onHoverFloorChangeRef.current = onHoverFloorChange;
 
   // Keep latest tracker props accessible to event listeners
   const propsRef = useRef({
@@ -444,6 +553,64 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
 
   const markInteraction = () => {
     stateRef.current.lastInteractionTime = performance.now();
+  };
+
+  /**
+   * Highlights only `hoveredLevel` of `targetBuildingId` in its true original color
+   * while converting all other floors/meshes in the scene to monochrome black & white.
+   * Passing `(null, null)` restores full color to all floors.
+   */
+  const applyFloorHoverHighlight = (targetBuildingId: CampusBuildingId | null, hoveredLevel: number | null) => {
+    if (
+      currentHighlightRef.current.buildingId === targetBuildingId &&
+      currentHighlightRef.current.level === hoveredLevel
+    ) {
+      return;
+    }
+    currentHighlightRef.current = { buildingId: targetBuildingId, level: hoveredLevel };
+
+    const { models, activeId } = stateRef.current;
+    const activeModel = models[targetBuildingId ?? activeId] ?? models[activeId] ?? Object.values(models)[0];
+    if (!activeModel) return;
+
+    const isHighlighting = targetBuildingId !== null && hoveredLevel !== null;
+
+    activeModel.root.traverse((obj) => {
+      if (!(obj as THREE.Mesh).isMesh) return;
+      const mesh = obj as THREE.Mesh;
+
+      if (!mesh.userData.originalMaterial) {
+        mesh.userData.originalMaterial = mesh.material;
+      }
+
+      if (!isHighlighting) {
+        if (mesh.material !== mesh.userData.originalMaterial) {
+          mesh.material = mesh.userData.originalMaterial;
+        }
+        return;
+      }
+
+      const meshBId = mesh.userData.buildingId as CampusBuildingId | undefined;
+      const meshFloor = mesh.userData.floorLevel as number | undefined;
+      const isTargetFloor =
+        meshFloor === hoveredLevel &&
+        (meshBId === targetBuildingId || targetBuildingId === 'udd-main');
+
+      if (isTargetFloor) {
+        if (mesh.material !== mesh.userData.originalMaterial) {
+          mesh.material = mesh.userData.originalMaterial;
+        }
+      } else {
+        if (!mesh.userData.grayMaterial) {
+          mesh.userData.grayMaterial = getGrayscaleMaterial(mesh.userData.originalMaterial);
+        }
+        if (mesh.material !== mesh.userData.grayMaterial) {
+          mesh.material = mesh.userData.grayMaterial;
+        }
+      }
+    });
+
+    markInteraction();
   };
 
   const updateGlowHighlight = (targetBuildingId: CampusBuildingId) => {
@@ -571,10 +738,22 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
       if (renderer) {
         renderer.shadowMap.needsUpdate = true;
       }
+      applyFloorHoverHighlight(null, null);
+      setHoveredFloorInfo(null);
+      onHoverFloorChangeRef.current?.(null);
       updateGlowHighlight(activeBuildingId);
       markInteraction();
     }
   }, [activeBuildingId]);
+
+  // Allow external floor hover (e.g. from the Exploded Elevation View floor list) to highlight the 3D floor
+  useEffect(() => {
+    if (externalHoveredFloor !== null && externalHoveredFloor !== undefined) {
+      applyFloorHoverHighlight(stateRef.current.activeId, externalHoveredFloor);
+    } else if (!hoveredFloorInfo) {
+      applyFloorHoverHighlight(null, null);
+    }
+  }, [externalHoveredFloor, hoveredFloorInfo]);
 
   useEffect(() => {
     stateRef.current.isExploded = exploded;
@@ -744,7 +923,13 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
             focusTargets: unifiedCampus.focusTargets,
           };
         } else {
-          const m = optimizeBuildingScene(MODEL_FACTORIES[id](), qualityProfile.isEmbeddedOrPi);
+          const rawModel = MODEL_FACTORIES[id]();
+          rawModel.root.traverse((obj) => {
+            if ((obj as THREE.Mesh).isMesh && !obj.userData.buildingId) {
+              obj.userData.buildingId = id;
+            }
+          });
+          const m = optimizeBuildingScene(rawModel, qualityProfile.isEmbeddedOrPi);
           m.root.scale.setScalar(id === activeBuildingId ? 1 : 0.001);
           m.root.visible = id === activeBuildingId;
           scene.add(m.root);
@@ -1098,7 +1283,98 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
   const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const { trackerActive, trackerMode, trackerSnap, trackerPoints, isShapeClosed, onPointsChange, onHoverCoord } =
       propsRef.current;
-    if (!trackerActive) return;
+
+    if (!trackerActive) {
+      // If user is holding mouse button down and dragging to orbit/pan the camera, clear floor hover
+      if (pointerDownPosRef.current) {
+        const dragDist = Math.hypot(e.clientX - pointerDownPosRef.current.x, e.clientY - pointerDownPosRef.current.y);
+        if (dragDist > 5) {
+          if (currentHighlightRef.current.level !== null) {
+            applyFloorHoverHighlight(null, null);
+            setHoveredFloorInfo(null);
+            onHoverFloorChangeRef.current?.(null);
+          }
+          return;
+        }
+      }
+
+      const canvas = canvasRef.current;
+      const camera = stateRef.current.camera;
+      const activeId = stateRef.current.activeId;
+      const activeModel = stateRef.current.models[activeId];
+      if (!canvas || !camera || !activeModel) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const relX = e.clientX - rect.left;
+      const relY = e.clientY - rect.top;
+
+      // Throttle raycasting to ~60Hz (16ms) for smooth Raspberry Pi 5 performance
+      const now = performance.now();
+      if (now - lastHoverRaycastTimeRef.current < 16) {
+        setHoveredFloorInfo((prev) =>
+          prev
+            ? { ...prev, x: relX, y: relY, containerWidth: rect.width, containerHeight: rect.height }
+            : null
+        );
+        return;
+      }
+      lastHoverRaycastTimeRef.current = now;
+
+      const mouse = hoverMouseVecRef.current;
+      mouse.set((relX / rect.width) * 2 - 1, -(relY / rect.height) * 2 + 1);
+
+      const raycaster = hoverRaycasterRef.current;
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(activeModel.floorGroups, true);
+
+      let matchedLevel: number | null = null;
+      for (const hit of intersects) {
+        let cur: THREE.Object3D | null = hit.object;
+        let hitBuildingId: CampusBuildingId | undefined;
+        let hitFloorLevel: number | undefined;
+
+        while (cur && cur !== activeModel.root) {
+          if (hitBuildingId === undefined && cur.userData?.buildingId) {
+            hitBuildingId = cur.userData.buildingId as CampusBuildingId;
+          }
+          if (hitFloorLevel === undefined && cur.userData?.floorLevel !== undefined) {
+            hitFloorLevel = cur.userData.floorLevel as number;
+          }
+          if (hitBuildingId !== undefined && hitFloorLevel !== undefined) break;
+          cur = cur.parent;
+        }
+
+        // Skip non-building context meshes (pavement markings, trees, street cars)
+        if (!hitBuildingId) continue;
+
+        // Highlight floor if hovering the currently chosen building
+        if ((hitBuildingId === activeId || activeId === 'udd-main') && hitFloorLevel !== undefined) {
+          matchedLevel = hitFloorLevel;
+        }
+        // Stop at the closest building hit along the ray
+        break;
+      }
+
+      if (matchedLevel !== null) {
+        applyFloorHoverHighlight(activeId, matchedLevel);
+        setHoveredFloorInfo({
+          buildingId: activeId,
+          level: matchedLevel,
+          x: relX,
+          y: relY,
+          containerWidth: rect.width,
+          containerHeight: rect.height,
+        });
+        onHoverFloorChangeRef.current?.(matchedLevel);
+      } else {
+        if (currentHighlightRef.current.level !== null) {
+          applyFloorHoverHighlight(null, null);
+          setHoveredFloorInfo(null);
+          onHoverFloorChangeRef.current?.(null);
+        }
+      }
+      return;
+    }
 
     const hit = getGroundIntersection(e.clientX, e.clientY, trackerSnap);
     if (!hit) {
@@ -1163,7 +1439,13 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
 
   const handlePointerLeave = () => {
     isLassoDraggingRef.current = false;
+    pointerDownPosRef.current = null;
     propsRef.current.onHoverCoord?.(null);
+    if (currentHighlightRef.current.level !== null) {
+      applyFloorHoverHighlight(null, null);
+      setHoveredFloorInfo(null);
+      onHoverFloorChangeRef.current?.(null);
+    }
   };
 
   const handleDoubleClick = () => {
@@ -1188,6 +1470,9 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
     );
   }
 
+  const hoveredBuildingMeta = hoveredFloorInfo ? getBuilding(hoveredFloorInfo.buildingId) : null;
+  const hoveredFloorMeta = hoveredBuildingMeta?.floors?.find((f) => f.level === hoveredFloorInfo?.level);
+
   return (
     <div ref={containerRef} className="absolute inset-0 w-full h-full overflow-hidden select-none">
       {debugStats && (
@@ -1195,6 +1480,40 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
           <div>Profile: {debugStats.profile}</div>
           <div>FPS: {debugStats.fps} | Draw Calls: {debugStats.drawCalls}</div>
           <div>Triangles: {debugStats.triangles.toLocaleString()}</div>
+        </div>
+      )}
+      {!trackerActive && hoveredFloorInfo && hoveredBuildingMeta && (
+        <div
+          className="absolute z-30 pointer-events-none transition-transform duration-75 ease-out"
+          style={{
+            left: Math.min(Math.max(hoveredFloorInfo.x + 18, 16), Math.max(16, hoveredFloorInfo.containerWidth - 310)),
+            top: Math.min(Math.max(hoveredFloorInfo.y - 28, 84), Math.max(84, hoveredFloorInfo.containerHeight - 130)),
+          }}
+        >
+          <div className="max-w-[290px] rounded-2xl bg-slate-950/90 backdrop-blur-xl border border-cyan-400/50 shadow-[0_12px_32px_rgba(0,0,0,0.65),0_0_20px_rgba(56,189,248,0.28)] px-3.5 py-2.5 text-white">
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-md bg-gradient-to-r from-blue-600 to-cyan-500 text-[11px] font-black font-mono tracking-wider text-white shadow-sm">
+                  L{hoveredFloorInfo.level + 1}
+                </span>
+                <span className="text-xs font-extrabold tracking-tight text-cyan-200">
+                  {formatFloorOrdinal(hoveredFloorInfo.level)}
+                </span>
+              </div>
+              <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Color Active
+              </span>
+            </div>
+            <div className="text-[11px] font-bold text-white/95 truncate">
+              {hoveredBuildingMeta.name}
+            </div>
+            {hoveredFloorMeta && (
+              <div className="mt-1 pt-1 border-t border-white/10 text-[11px] text-slate-300 leading-snug">
+                {hoveredFloorMeta.label}
+              </div>
+            )}
+          </div>
         </div>
       )}
       <canvas
