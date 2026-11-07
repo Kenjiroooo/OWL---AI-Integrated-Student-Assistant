@@ -27,22 +27,26 @@ export function optimizeBuildingScene(building: Building3DResult, isEmbeddedOrPi
 
   const floorGroupSet = new Set<THREE.Object3D>(floorGroups);
 
-  // Collect containers to optimize independently (each floorGroup + any non-floor top-level group)
-  const containers: THREE.Object3D[] = [...floorGroups];
-  for (const child of root.children) {
-    if (!floorGroupSet.has(child)) {
-      containers.push(child);
-    }
+  // Optimize each floorGroup independently and stamp floorLevel on all its meshes
+  for (let floorIndex = 0; floorIndex < floorGroups.length; floorIndex++) {
+    optimizeContainerMeshes(floorGroups[floorIndex], isEmbeddedOrPi, floorIndex);
   }
 
-  for (const container of containers) {
-    optimizeContainerMeshes(container, isEmbeddedOrPi);
+  // Also optimize any non-floor top-level groups
+  for (const child of root.children) {
+    if (!floorGroupSet.has(child)) {
+      optimizeContainerMeshes(child, isEmbeddedOrPi, undefined);
+    }
   }
 
   return building;
 }
 
-function optimizeContainerMeshes(container: THREE.Object3D, isEmbeddedOrPi: boolean): void {
+function optimizeContainerMeshes(
+  container: THREE.Object3D,
+  isEmbeddedOrPi: boolean,
+  floorLevel?: number
+): void {
   container.updateMatrixWorld(true);
   const containerInverse = container.matrixWorld.clone().invert();
 
@@ -51,6 +55,10 @@ function optimizeContainerMeshes(container: THREE.Object3D, isEmbeddedOrPi: bool
   container.traverse((obj) => {
     if (!(obj as THREE.Mesh).isMesh) return;
     const mesh = obj as THREE.Mesh;
+
+    if (floorLevel !== undefined) {
+      mesh.userData.floorLevel = floorLevel;
+    }
 
     if (!mesh.visible || !mesh.geometry) return;
 
@@ -151,6 +159,9 @@ function optimizeContainerMeshes(container: THREE.Object3D, isEmbeddedOrPi: bool
     mergedMesh.receiveShadow = bucket.receiveShadow;
     if (bucket.buildingId) {
       mergedMesh.userData.buildingId = bucket.buildingId;
+    }
+    if (floorLevel !== undefined) {
+      mergedMesh.userData.floorLevel = floorLevel;
     }
     mergedMesh.matrixAutoUpdate = false;
     mergedMesh.updateMatrix();
