@@ -18,7 +18,7 @@ export const FEATURE_AI_CONTEXT: Record<string, string> = {
   announcements:
     'The student is reading the Notice Board which contains campus announcements, events, and alerts from Universidad de Dagupan. Help them understand or find specific announcements, upcoming events, or important campus news.',
   faculty:
-    'The student is using the Faculty Locator to find professors and faculty members at Universidad de Dagupan. Help them find a specific professor, their office location, department, consultation hours, or contact email.',
+    'The student is using the Faculty Locator to find professors and faculty members at Universidad de Dagupan. Help them find a specific professor, their department, office location, or general availability status. Strictly do NOT disclose any faculty member\'s email address or class schedule due to privacy restrictions.',
   feedback:
     'The student is on the Feedback Center page, which is a suggestion box for campus improvements. Help them articulate their feedback clearly, identify which category it falls under (General, Facilities, Academic, Food Service / Kuwago Café), or direct them to the correct department for urgent concerns.',
   inquiry:
