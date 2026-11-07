@@ -35,7 +35,7 @@ import {
   type CampusGroupId,
 } from './buildings';
 import { useBuildingTransitionController, type TransitionPhase } from './BuildingTransitionController';
-import Campus3DCanvas, { type Campus3DCanvasHandle } from './Campus3DCanvas';
+import Campus3DCanvas, { formatFloorOrdinal, type Campus3DCanvasHandle } from './Campus3DCanvas';
 import CampusBuildingScene from './CampusBuildingScene';
 import CampusBuildingSelector from './CampusBuildingSelector';
 import ShapeTrackerOverlay, { type ShapePoint, type TrackerMode } from './ShapeTrackerOverlay';
@@ -103,6 +103,8 @@ export default function CampusArchitectureShowcase({
   const [trackerPoints, setTrackerPoints] = useState<ShapePoint[]>([]);
   const [hoverCoord, setHoverCoord] = useState<{ x: number; z: number } | null>(null);
   const [isShapeClosed, setIsShapeClosed] = useState<boolean>(false);
+  const [hoveredFloorLevel, setHoveredFloorLevel] = useState<number | null>(null);
+  const [sidebarHoveredFloor, setSidebarHoveredFloor] = useState<number | null>(null);
 
   const handleCloseShape = useCallback(() => {
     setIsShapeClosed(true);
@@ -278,6 +280,8 @@ export default function CampusArchitectureShowcase({
           onPointsChange={setTrackerPoints}
           onHoverCoord={setHoverCoord}
           onCloseShape={handleCloseShape}
+          externalHoveredFloor={sidebarHoveredFloor}
+          onHoverFloorChange={setHoveredFloorLevel}
         />
       ) : (
         <div
@@ -417,7 +421,7 @@ export default function CampusArchitectureShowcase({
                 className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/45 backdrop-blur-md border border-white/10 text-xs font-medium text-white/80 shadow-lg"
               >
                 <Box className="w-3.5 h-3.5 text-blue-400" />
-                <span>Drag to orbit 360° · Scroll / pinch to zoom · Exploded view ready</span>
+                <span>Hover building floors to inspect · Drag to orbit 360° · Scroll to zoom</span>
               </motion.div>
             ) : (
               busy && PHASE_LABEL[phase] && (
@@ -462,19 +466,40 @@ export default function CampusArchitectureShowcase({
               </button>
             </div>
             <div className="flex flex-col gap-1.5 max-h-60 overflow-y-auto pr-1">
-              {[...active.floors].reverse().map((f) => (
-                <div
-                  key={f.level}
-                  className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors"
-                >
-                  <span className="flex-shrink-0 w-6 h-6 rounded-lg bg-blue-600/60 text-white font-mono text-[11px] font-bold flex items-center justify-center">
-                    L{f.level}
-                  </span>
-                  <span className="text-xs text-white/85 font-medium leading-tight">
-                    {f.label}
-                  </span>
-                </div>
-              ))}
+              {[...active.floors].reverse().map((f) => {
+                const isFloorActive =
+                  hoveredFloorLevel === f.level || sidebarHoveredFloor === f.level;
+                return (
+                  <div
+                    key={f.level}
+                    onMouseEnter={() => setSidebarHoveredFloor(f.level)}
+                    onMouseLeave={() => setSidebarHoveredFloor(null)}
+                    className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl border transition-all cursor-pointer ${
+                      isFloorActive
+                        ? 'bg-cyan-500/20 border-cyan-400/60 shadow-[0_0_14px_rgba(34,211,238,0.28)]'
+                        : 'bg-white/5 hover:bg-white/10 border-white/5'
+                    }`}
+                  >
+                    <span
+                      className={`flex-shrink-0 w-6 h-6 rounded-lg font-mono text-[11px] font-bold flex items-center justify-center ${
+                        isFloorActive
+                          ? 'bg-cyan-500 text-slate-950'
+                          : 'bg-blue-600/60 text-white'
+                      }`}
+                    >
+                      L{f.level + 1}
+                    </span>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-[11px] font-extrabold text-cyan-300 leading-tight">
+                        {formatFloorOrdinal(f.level)}
+                      </span>
+                      <span className="text-xs text-white/85 font-medium leading-tight">
+                        {f.label}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </motion.div>
         )}
