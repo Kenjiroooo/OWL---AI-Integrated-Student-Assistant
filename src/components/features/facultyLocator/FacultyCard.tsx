@@ -90,7 +90,7 @@ export default function FacultyCard({
             <img
               src={faculty.photo}
               alt={faculty.name}
-              className="rounded-full object-cover border-solid"
+              className="rounded-full object-cover object-center border-solid"
               style={{
                 width: isTopLevel ? 84 : 74,
                 height: isTopLevel ? 84 : 74,
@@ -221,7 +221,7 @@ export default function FacultyCard({
             <img
               src={faculty.photo}
               alt={faculty.name}
-              className="w-12 h-12 rounded-full object-cover"
+              className="w-12 h-12 rounded-full object-cover object-center"
               style={{ borderWidth: 2, borderColor: '#003366', borderStyle: 'solid' }}
             />
           ) : (
@@ -325,7 +325,7 @@ export default function FacultyCard({
           <img
             src={faculty.photo}
             alt={faculty.name}
-            className="w-14 h-14 rounded-full object-cover"
+            className="w-14 h-14 rounded-full object-cover object-center"
             style={{ borderWidth: 2, borderColor: '#c3c6d1', borderStyle: 'solid' }}
           />
         ) : (
