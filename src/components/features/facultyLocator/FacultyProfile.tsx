@@ -78,7 +78,7 @@ export default function FacultyProfile({ facultyId, onBack }: Props) {
               <img
                 src={faculty.photo}
                 alt={faculty.name}
-                className="w-36 h-36 rounded-2xl object-cover"
+                className="w-36 h-36 rounded-2xl object-cover object-center"
                 style={{ border: '4px solid #d5e3ff', boxShadow: '0 4px 12px rgba(0,30,64,0.1)' }}
               />
             ) : (
