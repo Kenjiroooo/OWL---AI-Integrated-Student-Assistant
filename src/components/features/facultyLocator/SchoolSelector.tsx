@@ -238,17 +238,30 @@ export default function SchoolSelector({
                       )}
                     </div>
 
-                    <span
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold"
-                      style={{
-                        background: '#dcfce7',
-                        color: '#15803d',
-                        border: '1px solid #86efac',
-                      }}
-                    >
-                      <span className="w-2 h-2 rounded-full" style={{ background: '#16a34a' }} />
-                      {availableCount} Available
-                    </span>
+                    {count > 0 ? (
+                      <span
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold"
+                        style={{
+                          background: '#dcfce7',
+                          color: '#15803d',
+                          border: '1px solid #86efac',
+                        }}
+                      >
+                        <span className="w-2 h-2 rounded-full" style={{ background: '#16a34a' }} />
+                        {availableCount} Available
+                      </span>
+                    ) : (
+                      <span
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
+                        style={{
+                          background: '#f3f4f5',
+                          color: '#5d5f5f',
+                          border: '1px solid #c3c6d1',
+                        }}
+                      >
+                        No Authorized List Yet
+                      </span>
+                    )}
                   </div>
 
                   {/* Text */}

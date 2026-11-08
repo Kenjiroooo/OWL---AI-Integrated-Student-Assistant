@@ -187,8 +187,11 @@ export default function OrganizationChart({
           <span className="material-symbols-outlined" style={{ fontSize: 64, color: '#c3c6d1' }}>
             account_tree
           </span>
-          <p style={{ fontSize: 18, fontWeight: 500, color: '#43474f', marginTop: 16 }}>
-            Organization chart data is currently unavailable.
+          <p style={{ fontSize: 18, fontWeight: 600, color: '#191c1d', marginTop: 16 }}>
+            No authorized faculty members listed for this school yet.
+          </p>
+          <p style={{ fontSize: 15, fontWeight: 400, color: '#43474f', marginTop: 6 }}>
+            Only faculty members with signed consent and authorization are displayed in the Faculty Locator.
           </p>
         </div>
       </div>
