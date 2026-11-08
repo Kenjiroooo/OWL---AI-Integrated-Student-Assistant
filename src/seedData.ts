@@ -27,10 +27,10 @@ export async function seedDummyData() {
     batch.set(ref, b);
   });
 
-  // 3. Faculty
+  // 3. Faculty (Authorized School of Engineering Leadership)
   const faculty = [
-    { name: "Dr. Juan Dela Cruz", department: "College of Computer Studies", officeLocation: "Main Bldg - Room 204", email: "juan.delacruz@ud.edu.ph" },
-    { name: "Prof. Maria Santos", department: "College of Engineering", officeLocation: "Eng Room 102", email: "maria.santos@ud.edu.ph" }
+    { name: "Dr. Jose Jay De Vera", department: "School of Engineering", officeLocation: "Engineering Building - Dean's Office (Room E-101)" },
+    { name: "Engr. Roderick Cabaña", department: "School of Engineering", officeLocation: "Engineering Building - Faculty & Program Office (Room E-102)" }
   ];
 
   faculty.forEach(f => {
