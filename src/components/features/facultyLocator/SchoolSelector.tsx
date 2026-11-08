@@ -119,12 +119,21 @@ export default function SchoolSelector({
                     }}
                   >
                     <div className="relative flex-shrink-0">
-                      <div
-                        className="w-12 h-12 rounded-full flex items-center justify-center"
-                        style={{ background: '#d5e3ff', color: '#001e40', fontWeight: 700, fontSize: 16 }}
-                      >
-                        {getInitials(f.name)}
-                      </div>
+                      {f.photo ? (
+                        <img
+                          src={f.photo}
+                          alt={f.name}
+                          className="w-12 h-12 rounded-full object-cover object-center"
+                          style={{ border: '2px solid #003366' }}
+                        />
+                      ) : (
+                        <div
+                          className="w-12 h-12 rounded-full flex items-center justify-center"
+                          style={{ background: '#d5e3ff', color: '#001e40', fontWeight: 700, fontSize: 16 }}
+                        >
+                          {getInitials(f.name)}
+                        </div>
+                      )}
                       <span
                         title={statusMeta.label}
                         className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full"
