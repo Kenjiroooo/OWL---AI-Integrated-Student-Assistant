@@ -100,6 +100,10 @@ export default function OwlChatPage() {
         const text = presetPrompt || input;
         if (!text.trim() || isTyping) return;
 
+        if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+        }
+
         // If OWL asked whether to direct the user to Campus Navigation and the user replies "yes"
         if (pendingCampusHighlight && isAffirmativeReply(text)) {
             const targetCampus = detectCampusHighlight(text) || pendingCampusHighlight;
@@ -211,9 +215,9 @@ export default function OwlChatPage() {
     }, [currentPage, messageChunks.length, lastAiMessage?.content]);
 
     return (
-        <div className="flex flex-col h-screen w-full bg-[#F1F5F9] font-sans">
+        <div id="owl-chat-page" className="flex flex-col h-screen w-full bg-[#F1F5F9] font-sans transition-[height] duration-200 ease-out">
             {/* Header */}
-            <header className="bg-white/80 backdrop-blur-xl border-b border-slate-200/60 px-4 sm:px-8 py-4 flex items-center gap-4 sticky top-0 z-50 shadow-sm">
+            <header className="bg-white/80 backdrop-blur-xl border-b border-slate-200/60 px-4 sm:px-8 py-4 flex items-center gap-4 sticky top-0 z-50 shadow-sm flex-shrink-0">
                 <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -234,7 +238,7 @@ export default function OwlChatPage() {
             </header>
 
             {/* Scene Area — Owl + Speech Bubble */}
-            <div className="flex-1 w-full bg-gradient-to-b from-blue-50 via-sky-50 to-white relative overflow-auto flex flex-col items-center justify-end pb-6 px-4">
+            <div className="owl-chat-scene flex-1 min-h-0 w-full bg-gradient-to-b from-blue-50 via-sky-50 to-white relative overflow-y-auto flex flex-col items-center justify-end pb-6 px-4">
                 {/* Decorative Background Blobs */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
                     <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-400/5 rounded-full blur-[120px]"></div>
@@ -306,14 +310,14 @@ export default function OwlChatPage() {
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-                    className="z-0"
+                    className="owl-chat-mascot z-0 transition-transform duration-200"
                 >
                     <OwlCharacter isTyping={isTyping} isTalking={isTalking} />
                 </motion.div>
             </div>
 
             {/* Input Area */}
-            <div className="p-4 md:p-6 w-full bg-white border-t border-slate-200/60 z-20 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
+            <div className="owl-chat-input-bar p-4 md:p-6 w-full bg-white border-t border-slate-200/60 z-20 flex-shrink-0 shadow-[0_-4px_20px_rgba(0,0,0,0.03)]">
                 <div className="max-w-2xl mx-auto">
                     {pendingCampusHighlight && !isTyping && (
                         <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
@@ -337,12 +341,13 @@ export default function OwlChatPage() {
                         </div>
                     )}
                     {showSuggestions && (
-                        <div className="flex flex-wrap gap-2 mb-4 justify-center">
+                        <div className="owl-chat-suggestions flex flex-wrap gap-2 mb-4 justify-center">
                             {SUGGESTED_PROMPTS.map(prompt => (
                                 <motion.button
                                     key={prompt}
                                     whileHover={{ scale: 1.03 }}
                                     whileTap={{ scale: 0.97 }}
+                                    onMouseDown={(e) => e.preventDefault()}
                                     onClick={() => handleSend(undefined, prompt)}
                                     className="px-4 py-2 rounded-full border border-blue-200 bg-blue-50/50 text-blue-700 text-sm hover:bg-blue-100 hover:border-blue-300 transition-colors font-semibold"
                                 >
@@ -362,6 +367,7 @@ export default function OwlChatPage() {
                         {(isTyping || isTalking) ? (
                             <button
                                 type="button"
+                                onMouseDown={(e) => e.preventDefault()}
                                 onClick={handleStop}
                                 className="absolute right-2 top-1/2 -translate-y-1/2 p-3 bg-red-500 text-white rounded-full hover:shadow-lg hover:shadow-red-200 transition-all flex items-center justify-center"
                             >
@@ -371,13 +377,14 @@ export default function OwlChatPage() {
                             <button
                                 type="submit"
                                 disabled={!input.trim()}
+                                onMouseDown={(e) => e.preventDefault()}
                                 className="absolute right-2 top-1/2 -translate-y-1/2 p-3 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-full hover:shadow-lg hover:shadow-blue-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                             >
                                 <Send size={18} />
                             </button>
                         )}
                     </form>
-                    <p className="text-center text-xs text-slate-400 mt-3 font-medium">
+                    <p className="owl-chat-disclaimer text-center text-xs text-slate-400 mt-3 font-medium">
                         OWL AI is a campus guide for Universidad de Dagupan students. Verify important info with the registrar.
                     </p>
                 </div>

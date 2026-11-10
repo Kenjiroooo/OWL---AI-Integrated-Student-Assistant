@@ -1,18 +1,11 @@
 /**
- * rpiKeyboard.ts — Raspberry Pi 5 Built-in Virtual Keyboard Trigger Bridge
+ * rpiKeyboard.ts — Raspberry Pi 5 Built-in Virtual Keyboard Trigger & Viewport Manager
  *
  * Automatically invokes the Raspberry Pi 5 OS virtual keyboard (squeekboard,
  * wvkbd-mobintl, onboard, or matchbox-keyboard) whenever a user focuses or taps
- * any text <input> or <textarea> in the kiosk website.
- *
- * Works via two simultaneous mechanisms:
- *   1. Browser-native VirtualKeyboard API (`navigator.virtualKeyboard.show()`) +
- *      `virtualkeyboardpolicy="auto"` & `inputMode` attributes for Chromium Wayland/X11 IME.
- *   2. Local Raspberry Pi bridge call (`http://localhost:5050/keyboard?action=show|hide`)
- *      handled by `scripts/piper-tts-server.py`, which runs the OS D-Bus / signal command:
- *        - Squeekboard: `busctl call --user sm.puri.OSK0 /sm/puri/OSK0 sm.puri.OSK0 SetVisible b true`
- *        - wvkbd:       `pkill -SIGUSR2 -f wvkbd`
- *        - Onboard:     `dbus-send ... org.onboard.Onboard.Keyboard.Show`
+ * any text <input> or <textarea> in the kiosk website, AND automatically shifts
+ * bottom inputs / chat bars up above the keyboard so the user can always see
+ * what they are typing in Fullscreen (F11 / --kiosk) mode.
  */
 
 const LOCAL_KEYBOARD_ENDPOINTS = [
@@ -33,6 +26,68 @@ const NON_TEXT_INPUT_TYPES = new Set([
   'submit',
 ]);
 
+const STYLE_ELEMENT_ID = 'rpi-keyboard-viewport-styles';
+
+function ensureKeyboardViewportStyles() {
+  if (typeof document === 'undefined' || document.getElementById(STYLE_ELEMENT_ID)) return;
+
+  const style = document.createElement('style');
+  style.id = STYLE_ELEMENT_ID;
+  style.textContent = `
+    /* Expand bottom scrollable area on standard pages when virtual keyboard is open */
+    html.rpi-keyboard-open body {
+      padding-bottom: 45vh !important;
+    }
+
+    /* Lift OWL AI Chat Page above the Wayland OVERLAY virtual keyboard */
+    html.rpi-keyboard-open #owl-chat-page {
+      height: 56vh !important;
+      max-height: 56vh !important;
+    }
+
+    html.rpi-keyboard-open #owl-chat-page header {
+      padding-top: 0.5rem !important;
+      padding-bottom: 0.5rem !important;
+    }
+
+    html.rpi-keyboard-open #owl-chat-page .owl-chat-scene {
+      padding-bottom: 0.5rem !important;
+    }
+
+    html.rpi-keyboard-open #owl-chat-page .owl-chat-mascot {
+      transform: scale(0.55);
+      transform-origin: bottom center;
+      margin-top: -36px !important;
+      margin-bottom: -14px !important;
+    }
+
+    html.rpi-keyboard-open #owl-chat-page .owl-chat-suggestions,
+    html.rpi-keyboard-open #owl-chat-page .owl-chat-disclaimer {
+      display: none !important;
+    }
+
+    html.rpi-keyboard-open #owl-chat-page .owl-chat-input-bar {
+      padding-top: 0.6rem !important;
+      padding-bottom: 0.6rem !important;
+    }
+
+    /* Lift OWL Floating Chat Drawer above the virtual keyboard */
+    html.rpi-keyboard-open #owl-chat-drawer {
+      height: 56vh !important;
+      max-height: 56vh !important;
+    }
+
+    /* Allow fixed modals (e.g. Lost & Found Claim Modal) to scroll above the keyboard */
+    html.rpi-keyboard-open [data-rpi-modal-shift="true"] {
+      align-items: flex-start !important;
+      overflow-y: auto !important;
+      padding-top: 1.25rem !important;
+      padding-bottom: 45vh !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 export function isTextEntryElement(el: EventTarget | null): el is HTMLInputElement | HTMLTextAreaElement {
   if (!el || !(el instanceof HTMLElement)) return false;
   if (el instanceof HTMLTextAreaElement) {
@@ -46,12 +101,86 @@ export function isTextEntryElement(el: EventTarget | null): el is HTMLInputEleme
 }
 
 /**
+ * Scroll or shift the focused input into the top visible half of the screen
+ * so the Raspberry Pi OS virtual keyboard (~40vh at the bottom) never covers it.
+ */
+function ensureInputVisibleAboveKeyboard(target: HTMLElement) {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
+  ensureKeyboardViewportStyles();
+  document.documentElement.classList.add('rpi-keyboard-open');
+
+  // If the input is inside #owl-chat-page or #owl-chat-drawer, the CSS rules above
+  // already shrink those containers to 56vh so their bottom input bar sits right above the keyboard.
+  if (target.closest('#owl-chat-page') || target.closest('#owl-chat-drawer')) {
+    return;
+  }
+
+  // Check if the input lives inside a fixed modal overlay
+  let el: HTMLElement | null = target.parentElement;
+  while (el && el !== document.body) {
+    const style = window.getComputedStyle(el);
+    if (style.position === 'fixed') {
+      el.setAttribute('data-rpi-modal-shift', 'true');
+      break;
+    }
+    el = el.parentElement;
+  }
+
+  const scrollTargetIntoSafeZone = () => {
+    if (document.activeElement !== target) return;
+
+    const rect = target.getBoundingClientRect();
+    const safeTop = 85;
+    const safeBottom = window.innerHeight * 0.52;
+
+    if (rect.bottom > safeBottom || rect.top < safeTop) {
+      const desiredTop = Math.max(safeTop, window.innerHeight * 0.24);
+      const deltaY = rect.top - desiredTop;
+
+      // Find nearest scrollable ancestor if any
+      let scrollParent: HTMLElement | null = null;
+      let p = target.parentElement;
+      while (p && p !== document.body && p !== document.documentElement) {
+        const s = window.getComputedStyle(p);
+        if (
+          (s.overflowY === 'auto' || s.overflowY === 'scroll') &&
+          p.scrollHeight > p.clientHeight + 10
+        ) {
+          scrollParent = p;
+          break;
+        }
+        p = p.parentElement;
+      }
+
+      if (scrollParent) {
+        scrollParent.scrollBy({ top: deltaY, behavior: 'smooth' });
+      } else {
+        window.scrollBy({ top: deltaY, behavior: 'smooth' });
+      }
+    }
+  };
+
+  setTimeout(scrollTargetIntoSafeZone, 60);
+  setTimeout(scrollTargetIntoSafeZone, 200);
+}
+
+function resetKeyboardViewportShift() {
+  if (typeof document === 'undefined') return;
+  document.documentElement.classList.remove('rpi-keyboard-open');
+  document.querySelectorAll('[data-rpi-modal-shift="true"]').forEach((node) => {
+    node.removeAttribute('data-rpi-modal-shift');
+  });
+}
+
+/**
  * Send a show/hide command to the Raspberry Pi 5 local keyboard bridge
  * and invoke the browser's Web VirtualKeyboard API.
  */
 export function triggerRpiVirtualKeyboard(visible: boolean, target?: HTMLInputElement | HTMLTextAreaElement) {
   try {
     if (visible && target) {
+      ensureInputVisibleAboveKeyboard(target);
       target.setAttribute('virtualkeyboardpolicy', 'auto');
       if (!target.getAttribute('inputmode') || target.getAttribute('inputmode') === 'none') {
         const type = target instanceof HTMLInputElement ? (target.type || 'text').toLowerCase() : 'text';
@@ -69,6 +198,8 @@ export function triggerRpiVirtualKeyboard(visible: boolean, target?: HTMLInputEl
             : 'text';
         target.setAttribute('inputmode', mode);
       }
+    } else if (!visible) {
+      resetKeyboardViewportShift();
     }
 
     const vk = (navigator as any)?.virtualKeyboard;
@@ -84,8 +215,6 @@ export function triggerRpiVirtualKeyboard(visible: boolean, target?: HTMLInputEl
   }
 
   // Call the local Raspberry Pi 5 bridge server (non-blocking)
-  // Uses 127.0.0.1 first so HTTPS origins (e.g. Cloudflare Workers) are allowed
-  // by Chromium's Secure Context loopback rule even in fullscreen/kiosk mode.
   const action = visible ? 'show' : 'hide';
   const isFullscreen =
     Boolean(document.fullscreenElement) ||
@@ -111,9 +240,10 @@ export function triggerRpiVirtualKeyboard(visible: boolean, target?: HTMLInputEl
 /**
  * Registers global focusin / pointerup / focusout listeners on `document`
  * so focusing or tapping any input/textarea triggers the Raspberry Pi 5
- * built-in virtual keyboard.
+ * built-in virtual keyboard and shifts the input above the keyboard.
  */
 export function initRpiVirtualKeyboard(): () => void {
+  ensureKeyboardViewportStyles();
   let hideTimeout: ReturnType<typeof setTimeout> | null = null;
 
   const handleFocusIn = (e: FocusEvent) => {
@@ -149,9 +279,9 @@ export function initRpiVirtualKeyboard(): () => void {
 
   return () => {
     if (hideTimeout) clearTimeout(hideTimeout);
+    resetKeyboardViewportShift();
     document.removeEventListener('focusin', handleFocusIn, true);
     document.removeEventListener('pointerup', handlePointerUp, true);
     document.removeEventListener('focusout', handleFocusOut, true);
   };
 }
-

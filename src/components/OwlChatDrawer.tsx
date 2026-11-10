@@ -61,6 +61,8 @@ export default function OwlChatDrawer() {
     const text = inputValue.trim();
     if (!text || isTyping) return;
 
+    inputRef.current?.blur();
+
     if (pendingCampusHighlight && isAffirmativeReply(text)) {
       const targetCampus = detectCampusHighlight(text) || pendingCampusHighlight;
       setInputValue('');
@@ -236,6 +238,7 @@ export default function OwlChatDrawer() {
                 {isTyping ? (
                   <button
                     type="button"
+                    onMouseDown={(e) => e.preventDefault()}
                     onClick={stopGeneration}
                     className="w-11 h-11 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors flex-shrink-0 shadow-lg shadow-red-200"
                   >
@@ -245,6 +248,7 @@ export default function OwlChatDrawer() {
                   <button
                     type="submit"
                     disabled={!inputValue.trim()}
+                    onMouseDown={(e) => e.preventDefault()}
                     className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center disabled:opacity-40 transition-all hover:shadow-lg hover:shadow-blue-200 active:scale-95 flex-shrink-0"
                   >
                     <Send className="w-4 h-4" />
