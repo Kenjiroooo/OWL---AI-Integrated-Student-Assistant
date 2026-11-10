@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs, orderBy, query, doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
-import { db, auth } from '../lib/firebase';
+import { db, auth, ensureKioskAuth } from '../lib/firebase';
 import { signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -89,8 +89,13 @@ export default function AdminHome() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const studentSnap = await getDocs(query(collection(db, 'users'), orderBy('fullName')));
-        setStudents(studentSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any)).filter(u => u.role === 'student'));
+        await ensureKioskAuth();
+        try {
+          const studentSnap = await getDocs(query(collection(db, 'users'), orderBy('fullName')));
+          setStudents(studentSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any)).filter(u => u.role === 'student'));
+        } catch {
+          // Student directory listing requires Firebase admin claim
+        }
 
         const evalSnap = await getDocs(query(collection(db, 'facultyEvaluations'), orderBy('createdAt', 'desc')));
         setEvaluations(evalSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));

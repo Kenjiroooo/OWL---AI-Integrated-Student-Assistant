@@ -65,6 +65,32 @@ service cloud.firestore {
              data.createdAt == request.time;
     }
 
+    function isValidFacultyEvaluation(data) {
+      return data.keys().hasAll([
+               'studentNumber', 'subjectCode', 'evaluationSchool',
+               'facultyId', 'facultyName', 'periodId',
+               'ratings', 'overallAverage', 'createdAt'
+             ]) &&
+             data.keys().hasOnly([
+               'studentNumber', 'subjectCode', 'evaluationSchool',
+               'facultyId', 'facultyName', 'schoolId', 'schoolName',
+               'periodId', 'ratings', 'overallAverage', 'comment', 'createdAt'
+             ]) &&
+             data.studentNumber is string &&
+             data.studentNumber.matches('^\\d{2}-\\d{4}-\\d{3}$') &&
+             data.subjectCode is string &&
+             data.subjectCode.matches('^[A-Z]{2,5}\\d{2,4}$') &&
+             data.evaluationSchool is string && data.evaluationSchool.size() <= 120 &&
+             data.facultyId is string && data.facultyId.size() <= 100 &&
+             data.facultyName is string && data.facultyName.size() <= 150 &&
+             data.periodId is string && data.periodId.size() >= 1 && data.periodId.size() <= 64 &&
+             data.ratings is map &&
+             data.overallAverage is number &&
+             data.overallAverage >= 1 && data.overallAverage <= 5 &&
+             (!('comment' in data) || (data.comment is string && data.comment.size() <= 2000)) &&
+             data.createdAt is timestamp;
+    }
+
     // --- Collection Matches ---
 
     // Users
@@ -159,6 +185,19 @@ service cloud.firestore {
       allow get: if isSignedIn() && (isAdmin() || resource.data.studentId == request.auth.uid);
       allow create: if isSignedIn() && isValidDocRequest(incoming());
       allow update: if isAdmin();
+    }
+
+    // Faculty Evaluations (authenticated kiosk sessions read/submit validated evaluations)
+    match /facultyEvaluations/{id} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidFacultyEvaluation(incoming());
+      allow update, delete: if isAdmin();
+    }
+
+    // Settings (evaluationPeriod readable by kiosk; admin writes only)
+    match /settings/{settingId} {
+      allow read: if isSignedIn() || settingId == 'evaluationPeriod';
+      allow write: if isAdmin();
     }
 
     // Exam Schedules

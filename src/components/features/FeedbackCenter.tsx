@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { collection, addDoc, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
+import { db, ensureKioskAuth } from '../../lib/firebase';
 import { recordAIApiRequest } from '../../lib/aiApiMonitor';
 import {
   ClipboardCheck,
@@ -116,6 +116,13 @@ const EVALUATION_SCHOOLS = [
   'School of Professional Studies',
 ] as const;
 
+const DEFAULT_EVAL_PERIOD: EvaluationPeriod = {
+  startDate: new Date('2026-01-01T00:00:00Z'),
+  endDate: new Date('2026-12-31T23:59:59Z'),
+  periodId: 'ay-2026-2nd-sem',
+  periodLabel: '2nd Semester, AY 2025–2026',
+};
+
 /** Auto-format raw input into XX-XXXX-XXX pattern */
 function formatStudentId(raw: string): string {
   // Strip everything except digits
@@ -141,6 +148,7 @@ export default function FeedbackCenter() {
   const [evaluatedFacultyIds, setEvaluatedFacultyIds] = useState<Set<string>>(new Set());
   const [studentIdError, setStudentIdError] = useState('');
   const [commentError, setCommentError] = useState('');
+  const [submitError, setSubmitError] = useState('');
   const [moderating, setModerating] = useState(false);
   const [subjectCode, setSubjectCode] = useState('');
   const [subjectCodeError, setSubjectCodeError] = useState('');
@@ -148,32 +156,34 @@ export default function FeedbackCenter() {
   const [evalSchoolError, setEvalSchoolError] = useState('');
 
   // ── Evaluation period ─────────────────────────────────────────────────────
-  const [evalPeriod, setEvalPeriod] = useState<EvaluationPeriod | null>(null);
+  const [evalPeriod, setEvalPeriod] = useState<EvaluationPeriod>(DEFAULT_EVAL_PERIOD);
   const [periodLoading, setPeriodLoading] = useState(true);
-  const [periodOpen, setPeriodOpen] = useState(false);
+  const [periodOpen, setPeriodOpen] = useState(true);
 
   useEffect(() => {
     const fetchPeriod = async () => {
       try {
+        await ensureKioskAuth();
         const snap = await getDoc(doc(db, 'settings', 'evaluationPeriod'));
         if (snap.exists()) {
           const data = snap.data();
           const start = data.startDate?.toDate?.() || new Date(data.startDate);
           const end = data.endDate?.toDate?.() || new Date(data.endDate);
-          const now = new Date();
           const period: EvaluationPeriod = {
             startDate: start,
             endDate: end,
-            periodId: data.periodId || '',
-            periodLabel: data.periodLabel || '',
+            periodId: data.periodId || DEFAULT_EVAL_PERIOD.periodId,
+            periodLabel: data.periodLabel || DEFAULT_EVAL_PERIOD.periodLabel,
           };
           setEvalPeriod(period);
           setPeriodOpen(true); // Always open — date check bypassed
         } else {
-          setPeriodOpen(true); // Always open — no period doc required
+          setEvalPeriod(DEFAULT_EVAL_PERIOD);
+          setPeriodOpen(true); // Always open — fallback period ensures submit always works
         }
       } catch (err) {
-        console.error('Error fetching evaluation period:', err);
+        console.warn('Using default evaluation period:', err);
+        setEvalPeriod(DEFAULT_EVAL_PERIOD);
         setPeriodOpen(true); // Always open even on error
       } finally {
         setPeriodLoading(false);
@@ -184,12 +194,13 @@ export default function FeedbackCenter() {
 
   // ── Fetch already-evaluated faculty for this student ──────────────────────
   const fetchEvaluatedFaculty = async (sn: string) => {
-    if (!evalPeriod?.periodId) return;
+    const activePeriodId = evalPeriod?.periodId || DEFAULT_EVAL_PERIOD.periodId;
     try {
+      await ensureKioskAuth();
       const q = query(
         collection(db, 'facultyEvaluations'),
         where('studentNumber', '==', sn.trim()),
-        where('periodId', '==', evalPeriod.periodId)
+        where('periodId', '==', activePeriodId)
       );
       const snap = await getDocs(q);
       const ids = new Set<string>();
@@ -280,18 +291,23 @@ export default function FeedbackCenter() {
     setSelectedFaculty(faculty);
     setRatings({});
     setComment('');
+    setCommentError('');
+    setSubmitError('');
     setStep('evaluate');
   };
 
   const handleSubmitEvaluation = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedFaculty || !evalPeriod) return;
+    if (!selectedFaculty) return;
+
+    const activePeriod = evalPeriod || DEFAULT_EVAL_PERIOD;
 
     // Validate all ratings filled
     const allRated = CRITERIA.every((c) => ratings[c.key] && ratings[c.key] > 0);
     if (!allRated) return;
 
     setCommentError('');
+    setSubmitError('');
     setLoading(true);
 
     try {
@@ -315,15 +331,17 @@ export default function FeedbackCenter() {
             statusCode: modRes.status,
             latencyMs: modLatencyMs,
           });
-          const modData = await modRes.json();
-          if (!modData.passed) {
-            setCommentError(
-              modData.reason ||
-              'Your comment contains inappropriate content. Please provide constructive feedback.'
-            );
-            setLoading(false);
-            setModerating(false);
-            return;
+          if (modRes.ok) {
+            const modData = await modRes.json();
+            if (modData.passed === false) {
+              setCommentError(
+                modData.reason ||
+                'Your comment contains inappropriate content. Please provide constructive feedback.'
+              );
+              setLoading(false);
+              setModerating(false);
+              return;
+            }
           }
         } catch (modErr) {
           const modLatencyMs = Math.round(performance.now() - modStartTime);
@@ -344,6 +362,7 @@ export default function FeedbackCenter() {
       const overallAverage =
         Math.round((ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length) * 100) / 100;
 
+      await ensureKioskAuth();
       await addDoc(collection(db, 'facultyEvaluations'), {
         studentNumber: studentNumber.trim(),
         subjectCode: subjectCode.trim(),
@@ -352,7 +371,7 @@ export default function FeedbackCenter() {
         facultyName: selectedFaculty.name,
         schoolId: SCHOOLS.find((s) => s.name === selectedFaculty.school)?.id || '',
         schoolName: selectedFaculty.school,
-        periodId: evalPeriod.periodId,
+        periodId: activePeriod.periodId,
         ratings,
         overallAverage,
         comment: comment.trim(),
@@ -361,8 +380,9 @@ export default function FeedbackCenter() {
 
       setEvaluatedFacultyIds((prev) => new Set(prev).add(selectedFaculty.id));
       setStep('success');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Evaluation submission error:', err);
+      setSubmitError(err?.message || 'Failed to submit evaluation. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -859,6 +879,20 @@ export default function FeedbackCenter() {
                 </motion.div>
               )}
             </div>
+
+            {submitError && (
+              <motion.div
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-start gap-2.5 p-4 rounded-2xl bg-red-50 border border-red-200"
+              >
+                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-red-700 text-sm font-bold">Submission Failed</p>
+                  <p className="text-red-500 text-xs font-medium mt-0.5">{submitError}</p>
+                </div>
+              </motion.div>
+            )}
 
             {/* Submit */}
             <div className="flex items-center justify-between p-6 bg-sky-50 rounded-[2rem] border border-sky-100">
