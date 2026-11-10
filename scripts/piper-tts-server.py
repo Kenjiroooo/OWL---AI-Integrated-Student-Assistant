@@ -34,11 +34,13 @@ VOICE_MODEL = os.path.join(os.path.dirname(os.path.abspath(__file__)), "piper", 
 def trigger_rpi_keyboard(visible: bool) -> dict:
     """
     Trigger the built-in Raspberry Pi 5 OS virtual keyboard.
-    Supports:
-      1. Squeekboard (Raspberry Pi OS Bookworm Wayland default via D-Bus sm.puri.OSK0)
-      2. wvkbd-mobintl (Raspberry Pi OS Bookworm labwc/wayfire virtual keyboard)
-      3. Onboard (X11/Wayland D-Bus org.onboard.Onboard)
-      4. matchbox-keyboard / florence (X11 fallback)
+    IMPORTANT FOR FULLSCREEN (F11 / --kiosk):
+      On Raspberry Pi OS Bookworm (Wayland labwc / wayfire), `squeekboard` uses
+      the Wayland `TOP` layer, which is stacked BELOW `FULLSCREEN` windows.
+      `wvkbd-mobintl` uses the Wayland `OVERLAY` layer, which renders ABOVE
+      `FULLSCREEN` windows. Therefore, we trigger `wvkbd-mobintl` first AND
+      also signal `squeekboard` / `onboard` / `matchbox-keyboard` without
+      returning early so the keyboard is visible in both windowed and fullscreen modes.
     """
     env = os.environ.copy()
     uid = os.getuid() if hasattr(os, "getuid") else 1000
@@ -49,8 +51,22 @@ def trigger_rpi_keyboard(visible: bool) -> dict:
 
     bool_str = "true" if visible else "false"
     tried = []
+    activated = []
 
-    # 1. Squeekboard via busctl / gdbus (Raspberry Pi OS Bookworm default)
+    # 1. wvkbd-mobintl (Wayland OVERLAY layer — renders ABOVE Fullscreen F11 / --kiosk!)
+    wvkbd_bin = shutil.which("wvkbd-mobintl") or shutil.which("wvkbd")
+    if wvkbd_bin:
+        sig = "-SIGUSR2" if visible else "-SIGUSR1"
+        res = subprocess.run(["pkill", sig, "-f", "wvkbd"], env=env, capture_output=True, timeout=2)
+        if res.returncode != 0 and visible:
+            # Start wvkbd-mobintl in background if not yet running
+            subprocess.Popen([wvkbd_bin, "-L", "280"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            activated.append("wvkbd-launched")
+        elif res.returncode == 0:
+            activated.append("wvkbd")
+        tried.append(f"wvkbd:{res.returncode}")
+
+    # 2. Squeekboard via busctl / gdbus (Raspberry Pi OS Bookworm default TOP layer)
     if shutil.which("busctl"):
         res = subprocess.run(
             ["busctl", "call", "--user", "sm.puri.OSK0", "/sm/puri/OSK0", "sm.puri.OSK0", "SetVisible", "b", bool_str],
@@ -60,9 +76,8 @@ def trigger_rpi_keyboard(visible: bool) -> dict:
         )
         tried.append(f"squeekboard(busctl):{res.returncode}")
         if res.returncode == 0:
-            return {"ok": True, "keyboard": "squeekboard", "visible": visible}
-
-    if shutil.which("gdbus"):
+            activated.append("squeekboard")
+    elif shutil.which("gdbus"):
         res = subprocess.run(
             [
                 "gdbus", "call", "--session",
@@ -77,22 +92,9 @@ def trigger_rpi_keyboard(visible: bool) -> dict:
         )
         tried.append(f"squeekboard(gdbus):{res.returncode}")
         if res.returncode == 0:
-            return {"ok": True, "keyboard": "squeekboard", "visible": visible}
+            activated.append("squeekboard")
 
-    # 2. wvkbd-mobintl (Raspberry Pi OS labwc / Wayland)
-    wvkbd_bin = shutil.which("wvkbd-mobintl") or shutil.which("wvkbd")
-    if wvkbd_bin:
-        sig = "-SIGUSR2" if visible else "-SIGUSR1"
-        res = subprocess.run(["pkill", sig, "-f", "wvkbd"], env=env, capture_output=True, timeout=2)
-        if res.returncode != 0 and visible:
-            # Start wvkbd-mobintl in background if not yet running
-            subprocess.Popen([wvkbd_bin, "-L", "280"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            return {"ok": True, "keyboard": "wvkbd-launched", "visible": visible}
-        tried.append(f"wvkbd:{res.returncode}")
-        if res.returncode == 0:
-            return {"ok": True, "keyboard": "wvkbd", "visible": visible}
-
-    # 3. Onboard via D-Bus
+    # 3. Onboard via D-Bus (X11 / Wayland)
     if shutil.which("dbus-send"):
         method = "org.onboard.Onboard.Keyboard.Show" if visible else "org.onboard.Onboard.Keyboard.Hide"
         res = subprocess.run(
@@ -108,17 +110,17 @@ def trigger_rpi_keyboard(visible: bool) -> dict:
         )
         tried.append(f"onboard:{res.returncode}")
         if res.returncode == 0:
-            return {"ok": True, "keyboard": "onboard", "visible": visible}
+            activated.append("onboard")
 
-    # 4. matchbox-keyboard fallback
-    if shutil.which("matchbox-keyboard"):
+    # 4. matchbox-keyboard fallback (only if nothing else activated)
+    if not activated and shutil.which("matchbox-keyboard"):
         if visible:
             subprocess.Popen(["matchbox-keyboard"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         else:
             subprocess.run(["pkill", "-f", "matchbox-keyboard"], env=env, capture_output=True, timeout=2)
-        return {"ok": True, "keyboard": "matchbox-keyboard", "visible": visible}
+        activated.append("matchbox-keyboard")
 
-    return {"ok": False, "visible": visible, "tried": tried}
+    return {"ok": len(activated) > 0, "activated": activated, "visible": visible, "tried": tried}
 
 
 class TTSHandler(http.server.BaseHTTPRequestHandler):
@@ -174,11 +176,12 @@ class TTSHandler(http.server.BaseHTTPRequestHandler):
         self._send_json(404, {"error": "Not found. Use /tts?text=... or /health"})
 
     def do_OPTIONS(self):
-        """Handle CORS preflight."""
+        """Handle CORS preflight (including Private Network Access from HTTPS origins)."""
         self.send_response(200)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Allow-Private-Network", "true")
         self.end_headers()
 
     def _synthesize(self, text: str) -> bytes:
@@ -217,6 +220,7 @@ class TTSHandler(http.server.BaseHTTPRequestHandler):
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Private-Network", "true")
         self.end_headers()
         self.wfile.write(body)
 

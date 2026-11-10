@@ -15,7 +15,10 @@
  *        - Onboard:     `dbus-send ... org.onboard.Onboard.Keyboard.Show`
  */
 
-const LOCAL_KEYBOARD_ENDPOINT = 'http://localhost:5050/keyboard';
+const LOCAL_KEYBOARD_ENDPOINTS = [
+  'http://127.0.0.1:5050/keyboard',
+  'http://localhost:5050/keyboard',
+];
 
 const NON_TEXT_INPUT_TYPES = new Set([
   'button',
@@ -81,13 +84,27 @@ export function triggerRpiVirtualKeyboard(visible: boolean, target?: HTMLInputEl
   }
 
   // Call the local Raspberry Pi 5 bridge server (non-blocking)
+  // Uses 127.0.0.1 first so HTTPS origins (e.g. Cloudflare Workers) are allowed
+  // by Chromium's Secure Context loopback rule even in fullscreen/kiosk mode.
   const action = visible ? 'show' : 'hide';
-  fetch(`${LOCAL_KEYBOARD_ENDPOINT}?action=${action}`, {
+  const isFullscreen =
+    Boolean(document.fullscreenElement) ||
+    window.matchMedia?.('(display-mode: fullscreen)').matches ||
+    Math.abs(window.innerHeight - window.screen.height) <= 8;
+  const query = `?action=${action}&fullscreen=${isFullscreen ? '1' : '0'}`;
+
+  fetch(`${LOCAL_KEYBOARD_ENDPOINTS[0]}${query}`, {
     method: 'GET',
     mode: 'cors',
     keepalive: true,
   }).catch(() => {
-    // Silently ignore when not running on the Raspberry Pi kiosk
+    fetch(`${LOCAL_KEYBOARD_ENDPOINTS[1]}${query}`, {
+      method: 'GET',
+      mode: 'cors',
+      keepalive: true,
+    }).catch(() => {
+      // Silently ignore when not running on the Raspberry Pi kiosk
+    });
   });
 }
 

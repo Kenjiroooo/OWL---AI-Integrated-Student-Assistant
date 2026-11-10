@@ -34,15 +34,33 @@ fi
 gsettings set org.gnome.desktop.a11y.applications screen-keyboard-enabled true 2>/dev/null || true
 
 # 3. Ensure wvkbd-mobintl is running in hidden/ready state (shows on SIGUSR2, hides on SIGUSR1)
-echo "[3/4] Starting virtual keyboard daemon in ready state..."
+#    Note: wvkbd-mobintl uses the Wayland OVERLAY layer so it renders ABOVE Fullscreen (F11 / --kiosk) windows!
+echo "[3/5] Starting virtual keyboard daemon in ready state (Wayland OVERLAY layer)..."
 if command -v wvkbd-mobintl >/dev/null 2>&1; then
   pkill -f wvkbd-mobintl 2>/dev/null || true
   nohup wvkbd-mobintl --hidden -L 280 >/dev/null 2>&1 &
-  echo "  ✓ wvkbd-mobintl running in ready state"
+  echo "  ✓ wvkbd-mobintl running in ready state (renders above fullscreen)"
+fi
+
+# 3b. Configure labwc borderless maximized rule for Chromium so --app mode looks
+#     100% fullscreen while allowing squeekboard (Wayland TOP layer) to stay visible on top
+echo "[4/5] Configuring labwc window rules for borderless fullscreen kiosk..."
+mkdir -p "${HOME}/.config/labwc"
+if [ ! -f "${HOME}/.config/labwc/rc.xml" ]; then
+  cat > "${HOME}/.config/labwc/rc.xml" << 'EOF'
+<?xml version="1.0"?>
+<labwc_config>
+  <windowRules>
+    <windowRule identifier="*chromium*" serverDecoration="no" maximized="yes" />
+    <windowRule identifier="*chrome*" serverDecoration="no" maximized="yes" />
+  </windowRules>
+</labwc_config>
+EOF
+  labwc -r 2>/dev/null || true
 fi
 
 # 4. Ensure local bridge server (port 5050) is installed & running as systemd service
-echo "[4/4] Configuring local Kiosk Bridge Server (http://localhost:5050/keyboard)..."
+echo "[5/5] Configuring local Kiosk Bridge Server (http://127.0.0.1:5050/keyboard)..."
 sudo tee "${SERVICE_FILE}" > /dev/null <<EOF
 [Unit]
 Description=OWL Kiosk Local TTS & Raspberry Pi 5 Virtual Keyboard Bridge
