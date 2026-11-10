@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { signInAnonymously, onAuthStateChanged, User } from 'firebase/auth';
-import { auth } from '../lib/firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { auth, ensureKioskAuth } from '../lib/firebase';
 
 interface UserProfile {
   uid: string;
@@ -49,10 +49,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Sign in anonymously so Firestore rules (request.auth != null) pass
-    signInAnonymously(auth).catch(err => {
-      console.warn('Anonymous sign-in failed:', err);
-    });
+    // Authenticate kiosk session so Firestore rules (request.auth != null) pass
+    void ensureKioskAuth();
 
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);

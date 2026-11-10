@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { collection, query, orderBy, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
+import { db, ensureKioskAuth } from '../../lib/firebase';
 import {
   PackageSearch, Plus, MapPin, Tag, Clock,
   CheckCircle2, ImagePlus, Loader2, HandshakeIcon, X, User, Hash, Phone, ShieldCheck,
@@ -114,7 +114,7 @@ export default function LostFound() {
       setIsAiChecking(false);
       setUploading(true);
 
-      // 2. Image upload — non-blocking: if it fails we submit without the image
+      // 2. Image upload — non-blocking: if it fails we fall back to compressed data URL
       let imageUrl: string | null = null;
       if (imagePreview) {
         try {
@@ -129,15 +129,22 @@ export default function LostFound() {
             if (response.ok && data.url) {
               imageUrl = data.url;
             } else {
-              console.warn('Image upload failed, submitting without image:', data);
+              console.warn('Image upload failed, using compressed inline preview:', data);
+              if (imagePreview.length <= 750_000) {
+                imageUrl = imagePreview;
+              }
             }
           }
         } catch (imgErr) {
-          console.warn('Image upload error, submitting without image:', imgErr);
+          console.warn('Image upload error, using compressed inline preview:', imgErr);
+          if (imagePreview.length <= 750_000) {
+            imageUrl = imagePreview;
+          }
         }
       }
 
-      // 3. Save report with AI-Verified flag
+      // 3. Save report with AI-Verified flag (ensure kiosk auth session is active)
+      await ensureKioskAuth();
       await addDoc(collection(db, 'lostAndFound'), {
         itemName,
         location,
@@ -187,6 +194,8 @@ export default function LostFound() {
     if (!claimItemId) return;
     setClaiming(true);
     try {
+      await ensureKioskAuth();
+
       // Save claim record
       await addDoc(collection(db, 'lostAndFoundClaims'), {
         itemId: claimItemId,

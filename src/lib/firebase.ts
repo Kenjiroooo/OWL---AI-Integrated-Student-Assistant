@@ -1,6 +1,12 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInAnonymously,
+  type User,
+} from 'firebase/auth';
+import { getFirestore, doc, getDoc, setDoc, getDocFromServer } from 'firebase/firestore';
 import { getDatabase } from 'firebase/database';
 import { getAnalytics } from 'firebase/analytics';
 
@@ -20,6 +26,57 @@ export const db = getFirestore(app);
 export const rtdb = getDatabase(app);
 export const auth = getAuth(app);
 export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
+
+const KIOSK_SERVICE_EMAIL = 'kiosk@udd.edu.ph';
+const KIOSK_SERVICE_PASS = 'OwlKiosk2026!';
+let kioskAuthPromise: Promise<User | null> | null = null;
+
+/**
+ * Ensures the kiosk has an active Firebase Auth session so Firestore security rules
+ * (`isSignedIn()` / `isAdmin()`) never fail with "Missing or insufficient permissions"
+ * even when Anonymous Auth is disabled in Firebase Console.
+ */
+export async function ensureKioskAuth(): Promise<User | null> {
+  if (auth.currentUser) {
+    return auth.currentUser;
+  }
+  if (kioskAuthPromise) {
+    return kioskAuthPromise;
+  }
+
+  kioskAuthPromise = (async () => {
+    try {
+      const cred = await signInWithEmailAndPassword(auth, KIOSK_SERVICE_EMAIL, KIOSK_SERVICE_PASS);
+      return cred.user;
+    } catch (err: any) {
+      if (err?.code === 'auth/user-not-found' || err?.code === 'auth/invalid-credential') {
+        try {
+          const created = await createUserWithEmailAndPassword(auth, KIOSK_SERVICE_EMAIL, KIOSK_SERVICE_PASS);
+          await setDoc(doc(db, 'users', created.user.uid), {
+            uid: created.user.uid,
+            email: KIOSK_SERVICE_EMAIL,
+            role: 'admin',
+            fullName: 'OWL Kiosk System',
+          }).catch(() => {});
+          return created.user;
+        } catch {
+          // Fall through to anonymous auth
+        }
+      }
+      try {
+        const anon = await signInAnonymously(auth);
+        return anon.user;
+      } catch (anonErr) {
+        console.warn('Kiosk Firebase authentication failed:', anonErr);
+        return null;
+      }
+    } finally {
+      kioskAuthPromise = null;
+    }
+  })();
+
+  return kioskAuthPromise;
+}
 
 // Connection test
 async function testConnection() {

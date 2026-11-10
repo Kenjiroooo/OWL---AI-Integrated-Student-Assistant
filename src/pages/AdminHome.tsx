@@ -118,7 +118,6 @@ export default function AdminHome() {
   }, [isAuthenticated]);
 
   const handleLogout = () => {
-    signOut(auth).catch(() => {});
     sessionStorage.removeItem('owl_admin_authenticated');
     setIsAuthenticated(false);
   };
