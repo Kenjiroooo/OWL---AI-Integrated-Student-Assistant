@@ -1,0 +1,81 @@
+cat > /tmp/squeekboard_overlay.c << 'EOF'
+#define _GNU_SOURCE
+#include <dlfcn.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+
+struct wl_interface {
+    const char *name;
+    int version;
+    int method_count;
+    const void *methods;
+    int event_count;
+    const void *events;
+};
+
+struct wl_proxy {
+    const struct wl_interface *interface;
+};
+
+__attribute__((constructor))
+static void init_overlay_hook(void) {
+    unsetenv("LD_PRELOAD");
+}
+
+typedef struct wl_proxy *(*marshal_flags_fn)(
+    struct wl_proxy *, uint32_t, const struct wl_interface *, uint32_t, uint32_t,
+    void *, void *, void *, void *, void *, void *, void *, void *);
+
+struct wl_proxy *wl_proxy_marshal_flags(
+    struct wl_proxy *proxy, uint32_t opcode, const struct wl_interface *interface,
+    uint32_t version, uint32_t flags,
+    void *a0, void *a1, void *a2, void *a3, void *a4, void *a5, void *a6, void *a7)
+{
+    static marshal_flags_fn real_fn = NULL;
+    if (!real_fn) real_fn = (marshal_flags_fn)dlsym(RTLD_NEXT, "wl_proxy_marshal_flags");
+
+    if (opcode == 0 && interface && interface->name &&
+        strcmp(interface->name, "zwlr_layer_surface_v1") == 0) {
+        a3 = (void *)(uintptr_t)3; /* Force Wayland OVERLAY layer (3) */
+    }
+    if (opcode == 9 && proxy && proxy->interface && proxy->interface->name &&
+        strcmp(proxy->interface->name, "zwlr_layer_surface_v1") == 0) {
+        a0 = (void *)(uintptr_t)3;
+    }
+    return real_fn(proxy, opcode, interface, version, flags, a0, a1, a2, a3, a4, a5, a6, a7);
+}
+
+typedef struct wl_proxy *(*marshal_ctor_fn)(
+    struct wl_proxy *, uint32_t, const struct wl_interface *,
+    void *, void *, void *, void *, void *, void *, void *, void *);
+
+struct wl_proxy *wl_proxy_marshal_constructor(
+    struct wl_proxy *proxy, uint32_t opcode, const struct wl_interface *interface,
+    void *a0, void *a1, void *a2, void *a3, void *a4, void *a5, void *a6, void *a7)
+{
+    static marshal_ctor_fn real_fn = NULL;
+    if (!real_fn) real_fn = (marshal_ctor_fn)dlsym(RTLD_NEXT, "wl_proxy_marshal_constructor");
+
+    if (opcode == 0 && interface && interface->name &&
+        strcmp(interface->name, "zwlr_layer_surface_v1") == 0) {
+        a3 = (void *)(uintptr_t)3;
+    }
+    return real_fn(proxy, opcode, interface, a0, a1, a2, a3, a4, a5, a6, a7);
+}
+EOF
+
+sudo mkdir -p /usr/local/lib
+sudo gcc -shared -fPIC -O2 /tmp/squeekboard_overlay.c -o /usr/local/lib/libsqueekboard_overlay.so -ldl
+rm -f /tmp/squeekboard_overlay.c
+
+if [ ! -f /usr/bin/squeekboard.orig ]; then
+  sudo dpkg-divert --divert /usr/bin/squeekboard.orig --rename /usr/bin/squeekboard
+  sudo tee /usr/bin/squeekboard > /dev/null << 'EOF'
+#!/bin/sh
+exec env LD_PRELOAD=/usr/local/lib/libsqueekboard_overlay.so /usr/bin/squeekboard.orig "$@"
+EOF
+  sudo chmod +x /usr/bin/squeekboard
+fi
+
+pkill -9 -f squeekboard || true
