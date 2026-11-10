@@ -215,7 +215,7 @@ export default function OwlChatPage() {
     }, [currentPage, messageChunks.length, lastAiMessage?.content]);
 
     return (
-        <div id="owl-chat-page" className="flex flex-col h-screen w-full bg-[#F1F5F9] font-sans transition-[height] duration-200 ease-out">
+        <div id="owl-chat-page" className="flex flex-col min-h-screen w-full bg-[#F1F5F9] font-sans">
             {/* Header */}
             <header className="bg-white/80 backdrop-blur-xl border-b border-slate-200/60 px-4 sm:px-8 py-4 flex items-center gap-4 sticky top-0 z-50 shadow-sm flex-shrink-0">
                 <motion.button
@@ -238,7 +238,7 @@ export default function OwlChatPage() {
             </header>
 
             {/* Scene Area — Owl + Speech Bubble */}
-            <div className="owl-chat-scene flex-1 min-h-0 w-full bg-gradient-to-b from-blue-50 via-sky-50 to-white relative overflow-y-auto flex flex-col items-center justify-end pb-6 px-4">
+            <div className="owl-chat-scene flex-1 w-full bg-gradient-to-b from-blue-50 via-sky-50 to-white relative flex flex-col items-center justify-end pb-6 px-4">
                 {/* Decorative Background Blobs */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
                     <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-400/5 rounded-full blur-[120px]"></div>

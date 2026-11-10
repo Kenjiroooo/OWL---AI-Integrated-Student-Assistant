@@ -42,13 +42,6 @@ export default function OwlChatDrawer() {
     }
   }, [messages, isOpen]);
 
-  // Focus input when drawer opens
-  useEffect(() => {
-    if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 300);
-    }
-  }, [isOpen]);
-
   const navigateToCampusMap = (campusId: CampusHighlightId) => {
     stopGeneration();
     clearPendingCampusHighlight();
