@@ -67,7 +67,16 @@ export default function LostFound() {
   const fetchItems = async () => {
     const q = query(collection(db, 'lostAndFound'), orderBy('createdAt', 'desc'));
     const snap = await getDocs(q);
-    setItems(snap.docs.map(d => ({ id: d.id, ...d.data() } as LostFoundItem)));
+    let claimedIds: string[] = [];
+    try {
+      claimedIds = JSON.parse(localStorage.getItem('owl_claimed_item_ids') || '[]');
+    } catch {}
+    const claimedSet = new Set(claimedIds);
+    setItems(
+      snap.docs
+        .map(d => ({ id: d.id, ...d.data() } as LostFoundItem))
+        .filter(item => !claimedSet.has(item.id) && item.status !== 'claimed')
+    );
     setLoading(false);
   };
 
@@ -207,10 +216,21 @@ export default function LostFound() {
         claimedAt: new Date(),
       });
 
-      // Remove item from active list
-      await deleteDoc(doc(db, 'lostAndFound', claimItemId));
+      // Remove item from active list (best-effort if rules restrict delete to admins)
+      try {
+        await deleteDoc(doc(db, 'lostAndFound', claimItemId));
+      } catch {
+        // Fallback: persist claimed item ID locally so it is hidden from the board
+      }
+      try {
+        const prev: string[] = JSON.parse(localStorage.getItem('owl_claimed_item_ids') || '[]');
+        if (!prev.includes(claimItemId)) {
+          localStorage.setItem('owl_claimed_item_ids', JSON.stringify([...prev, claimItemId]));
+        }
+      } catch {}
 
       setClaimSuccess(true);
+      setItems(prev => prev.filter(i => i.id !== claimItemId));
       fetchItems();
 
       // Auto-close after 2.5 seconds

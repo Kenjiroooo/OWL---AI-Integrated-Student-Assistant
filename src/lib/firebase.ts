@@ -10,15 +10,32 @@ import { getFirestore, doc, getDoc, setDoc, getDocFromServer } from 'firebase/fi
 import { getDatabase } from 'firebase/database';
 import { getAnalytics } from 'firebase/analytics';
 
+/**
+ * Sanitizes build-time env vars so corrupted/masked values in Vercel (such as
+ * "••••••••••••••••••••••••••••••••••••••••" in FIREBASE_APP_ID, which causes
+ * window.fetch to throw "String contains non ISO-8859-1 code point" on
+ * X-Firebase-GMPID headers) fall back cleanly to valid ASCII identifiers.
+ */
+function cleanFirebaseEnv(raw: string | undefined, fallback: string): string {
+  const trimmed = (raw || '').trim().replace(/^["']|["']$/g, '');
+  if (!trimmed || /[^\x20-\x7E]/.test(trimmed) || trimmed.includes('•')) {
+    return fallback;
+  }
+  return trimmed;
+}
+
 const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API_KEY || '',
-  authDomain: process.env.FIREBASE_AUTH_DOMAIN || '',
-  databaseURL: process.env.FIREBASE_DATABASE_URL || '',
-  projectId: process.env.FIREBASE_PROJECT_ID || '',
-  storageBucket: process.env.FIREBASE_STORAGE_BUCKET || '',
-  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || '',
-  appId: process.env.FIREBASE_APP_ID || '',
-  measurementId: process.env.FIREBASE_MEASUREMENT_ID || '',
+  apiKey: cleanFirebaseEnv(process.env.FIREBASE_API_KEY, 'AIzaSyD9cLXCdRtWhsuvgn2nVvtWgnDlDqvzA0E'),
+  authDomain: cleanFirebaseEnv(process.env.FIREBASE_AUTH_DOMAIN, 'owl-udd.firebaseapp.com'),
+  databaseURL: cleanFirebaseEnv(
+    process.env.FIREBASE_DATABASE_URL,
+    'https://owl-udd-default-rtdb.asia-southeast1.firebasedatabase.app'
+  ),
+  projectId: cleanFirebaseEnv(process.env.FIREBASE_PROJECT_ID, 'owl-udd'),
+  storageBucket: cleanFirebaseEnv(process.env.FIREBASE_STORAGE_BUCKET, 'owl-udd.firebasestorage.app'),
+  messagingSenderId: cleanFirebaseEnv(process.env.FIREBASE_MESSAGING_SENDER_ID, '74861051193'),
+  appId: cleanFirebaseEnv(process.env.FIREBASE_APP_ID, '1:74861051193:web:c6004d0ba9cfa7651a3ce8'),
+  measurementId: cleanFirebaseEnv(process.env.FIREBASE_MEASUREMENT_ID, 'G-KDMCZBB8Q9'),
 };
 
 const app = initializeApp(firebaseConfig);
@@ -27,14 +44,13 @@ export const rtdb = getDatabase(app);
 export const auth = getAuth(app);
 export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
 
-const KIOSK_SERVICE_EMAIL = 'kiosk@udd.edu.ph';
-const KIOSK_SERVICE_PASS = 'OwlKiosk2026!';
+const KIOSK_STUDENT_EMAIL = 'kiosk-student@udd.edu.ph';
+const KIOSK_STUDENT_PASS = 'OwlStudentKiosk2026!';
 let kioskAuthPromise: Promise<User | null> | null = null;
 
 /**
- * Ensures the kiosk has an active Firebase Auth session so Firestore security rules
- * (`isSignedIn()` / `isAdmin()`) never fail with "Missing or insufficient permissions"
- * even when Anonymous Auth is disabled in Firebase Console.
+ * Ensures the kiosk has an active student-scoped Firebase Auth session so Firestore
+ * security rules (`isSignedIn()`) pass even if Anonymous Auth is disabled in Firebase Console.
  */
 export async function ensureKioskAuth(): Promise<User | null> {
   if (auth.currentUser) {
@@ -45,31 +61,36 @@ export async function ensureKioskAuth(): Promise<User | null> {
   }
 
   kioskAuthPromise = (async () => {
+    // 1. Try standard Firebase Anonymous Auth first
     try {
-      const cred = await signInWithEmailAndPassword(auth, KIOSK_SERVICE_EMAIL, KIOSK_SERVICE_PASS);
+      const anon = await signInAnonymously(auth);
+      return anon.user;
+    } catch {
+      // Anonymous Auth is disabled in Firebase Console; fall back to student kiosk session
+    }
+
+    // 2. Fall back to non-admin student session (role: 'student')
+    try {
+      const cred = await signInWithEmailAndPassword(auth, KIOSK_STUDENT_EMAIL, KIOSK_STUDENT_PASS);
       return cred.user;
     } catch (err: any) {
       if (err?.code === 'auth/user-not-found' || err?.code === 'auth/invalid-credential') {
         try {
-          const created = await createUserWithEmailAndPassword(auth, KIOSK_SERVICE_EMAIL, KIOSK_SERVICE_PASS);
+          const created = await createUserWithEmailAndPassword(auth, KIOSK_STUDENT_EMAIL, KIOSK_STUDENT_PASS);
           await setDoc(doc(db, 'users', created.user.uid), {
             uid: created.user.uid,
-            email: KIOSK_SERVICE_EMAIL,
-            role: 'admin',
-            fullName: 'OWL Kiosk System',
+            email: KIOSK_STUDENT_EMAIL,
+            role: 'student',
+            fullName: 'OWL Kiosk Student',
           }).catch(() => {});
           return created.user;
-        } catch {
-          // Fall through to anonymous auth
+        } catch (createErr) {
+          console.warn('Kiosk student session creation failed:', createErr);
         }
+      } else {
+        console.warn('Kiosk Firebase authentication failed:', err);
       }
-      try {
-        const anon = await signInAnonymously(auth);
-        return anon.user;
-      } catch (anonErr) {
-        console.warn('Kiosk Firebase authentication failed:', anonErr);
-        return null;
-      }
+      return null;
     } finally {
       kioskAuthPromise = null;
     }
