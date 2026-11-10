@@ -88,12 +88,12 @@ export async function moderateLostFoundReport(
   // If proxy is down, it will fall back naturally
   const textStartTime = performance.now();
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout
+    const textController = new AbortController();
+    const textTimeoutId = setTimeout(() => textController.abort(), 8000); // 8s timeout
 
     const response = await fetch('/api/moderateContent', {
       method: 'POST',
-      signal: controller.signal,
+      signal: textController.signal,
       headers: {
         'Content-Type': 'application/json',
       },
@@ -105,7 +105,7 @@ export async function moderateLostFoundReport(
       }),
     });
 
-    clearTimeout(timeoutId);
+    clearTimeout(textTimeoutId);
     const textLatencyMs = Math.round(performance.now() - textStartTime);
 
     void recordAIApiRequest({
@@ -115,32 +115,28 @@ export async function moderateLostFoundReport(
       latencyMs: textLatencyMs,
     });
 
-    if (!response.ok) {
-      console.error('AI text moderation request failed with status:', response.status);
-      return { 
-        passed: false, 
-        category: 'troll', 
-        reason: 'Error: Cannot connect to AI Moderation Server. If running locally, make sure to use `vercel dev` instead of `npm run dev`.' 
-      };
-    }
+    if (response.ok) {
+      const data = await response.json();
+      const textPassed = Boolean(data.passed);
+      const textCategory = data.category || (textPassed ? 'clean' : 'troll');
+      const textReason = data.reason || (textPassed ? undefined : 'This submission does not meet university guidelines.');
 
-    const data = await response.json();
-    
-    const textPassed = Boolean(data.passed);
-    const textCategory = data.category || (textPassed ? 'clean' : 'troll');
-    const textReason = data.reason || (textPassed ? undefined : 'This submission does not meet university guidelines.');
-
-    if (!textPassed) {
-      return { passed: textPassed, category: textCategory, reason: textReason };
+      if (!textPassed) {
+        return { passed: textPassed, category: textCategory, reason: textReason };
+      }
+    } else {
+      console.warn('AI text moderation request returned status:', response.status, '— continuing with heuristic + image check');
     }
 
     // Second pass: Image Moderation via Gemini (if an image is provided)
     if (report.imageBase64) {
       const imgStartTime = performance.now();
+      const imgController = new AbortController();
+      const imgTimeoutId = setTimeout(() => imgController.abort(), 20000); // 20s timeout for vision
       try {
         const imgRes = await fetch('/api/moderateImage', {
           method: 'POST',
-          signal: controller.signal, // Reuse timeout
+          signal: imgController.signal,
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             imageBase64: report.imageBase64,
@@ -149,6 +145,7 @@ export async function moderateLostFoundReport(
             description: report.description,
           }),
         });
+        clearTimeout(imgTimeoutId);
 
         const imgLatencyMs = Math.round(performance.now() - imgStartTime);
         void recordAIApiRequest({
@@ -168,14 +165,10 @@ export async function moderateLostFoundReport(
             };
           }
         } else {
-          console.error('Image moderation request failed with status:', imgRes.status);
-          return {
-            passed: false,
-            category: 'troll',
-            reason: 'Error: Cannot connect to AI Image Server. If running locally, make sure to use `vercel dev`.'
-          };
+          console.warn('Image moderation request returned status:', imgRes.status, '— using heuristic fallback');
         }
       } catch (imgError: any) {
+        clearTimeout(imgTimeoutId);
         const imgLatencyMs = Math.round(performance.now() - imgStartTime);
         void recordAIApiRequest({
           endpoint: 'moderateImage',
@@ -183,12 +176,7 @@ export async function moderateLostFoundReport(
           statusCode: 500,
           latencyMs: imgLatencyMs,
         });
-        console.error('Image moderation encountered an error:', imgError);
-        return {
-          passed: false,
-          category: 'troll',
-          reason: 'Error: Cannot connect to AI Image Server. ' + (imgError.message || imgError)
-        };
+        console.warn('Image moderation encountered an error, using heuristic fallback:', imgError);
       }
     }
 

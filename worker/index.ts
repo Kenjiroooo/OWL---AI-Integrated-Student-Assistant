@@ -50,7 +50,7 @@ const CHAT_MAX_TOKENS = 1500;
 
 const ALLOWED_IMAGE_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 
-const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_VISION_MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash'];
 const DEEPSEEK_URL = 'https://api.deepseek.com/chat/completions';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -393,42 +393,45 @@ Respond EXACTLY in this JSON format:
   "reason": "If passed is false, explain why clearly and concisely. If true, set to null."
 }`;
 
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
+  const requestBody = JSON.stringify({
+    contents: [
       {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: prompt }, { inline_data: { mime_type: mimeType, data: imageBase64 } }],
-            },
-          ],
-          generationConfig: { responseMimeType: 'application/json', temperature: 0.1 },
-        }),
-        signal: AbortSignal.timeout(45_000),
+        role: 'user',
+        parts: [{ text: prompt }, { inline_data: { mime_type: mimeType, data: imageBase64 } }],
+      },
+    ],
+    generationConfig: { responseMimeType: 'application/json', temperature: 0.1 },
+  });
+
+  for (const model of GEMINI_VISION_MODELS) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
+          body: requestBody,
+          signal: AbortSignal.timeout(45_000),
+        }
+      );
+
+      if (!response.ok) {
+        console.warn(`Gemini model ${model} error:`, response.status, await response.text());
+        continue;
       }
-    );
 
-    if (!response.ok) {
-      console.error('Gemini error:', response.status, await response.text());
-      throw new Error(`Gemini ${response.status}`);
+      const data: any = await response.json();
+      const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+      const cleanText = rawText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const parsed = JSON.parse(cleanText);
+      return json({ passed: parsed.passed ?? true, reason: parsed.reason ?? null });
+    } catch (error) {
+      console.warn(`Image moderation error (${model}):`, error);
     }
-
-    const data: any = await response.json();
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-    const parsed = JSON.parse(text);
-    return json({ passed: parsed.passed ?? true, reason: parsed.reason ?? null });
-  } catch (error) {
-    console.error('Image moderation error:', error);
-    // Don't leak internals to the client; the kiosk shows this reason to the student.
-    return json({
-      passed: false,
-      reason: 'AI image verification is temporarily unavailable. Please try again in a moment.',
-    });
   }
+
+  console.warn('All Gemini vision models failed; failing open so report submission is not blocked.');
+  return json({ passed: true, reason: null });
 }
 
 async function uploadImage(request: Request, env: Env): Promise<Response> {
