@@ -29,8 +29,9 @@ export async function seedDummyData() {
 
   // 3. Faculty (Authorized School of Engineering Leadership)
   const faculty = [
-    { name: "Dr. Jose Jay De Vera", department: "School of Engineering", officeLocation: "Engineering Building - Dean's Office (Room E-101)" },
-    { name: "Engr. Roderick Cabaña", department: "School of Engineering", officeLocation: "Engineering Building - Faculty & Program Office (Room E-102)" }
+    { name: "Dr. Jose Jay De Vera", department: "School of Engineering", officeLocation: "Faculty Room, Ground Floor of Administration Building (beside M.I.S. Office, Main Campus)" },
+    { name: "Engr. Roderick Cabaña", department: "School of Engineering", officeLocation: "Faculty Room, Second Floor of Administration Building (Main Campus)" },
+    { name: "Engr. Sean Gabriel Macapagal", department: "School of Engineering", officeLocation: "DOST Innovation Hub, Ground Floor of V Building (Main Campus)" }
   ];
 
   faculty.forEach(f => {

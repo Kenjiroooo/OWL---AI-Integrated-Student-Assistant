@@ -155,9 +155,9 @@ export const FACULTY_DATA: Faculty[] = [
     roleCategory: 'School Leadership',
     hierarchyLevel: 1,
     status: 'available',
-    statusNote: 'Available at Dean\'s Office · Consultation Open',
+    statusNote: 'Available at Faculty Room, Ground Floor of Administration Building (beside M.I.S. Office)',
     program: 'Civil & Computer Engineering',
-    office: { building: 'Engineering Building', room: 'Dean\'s Office (Room E-101)' },
+    office: { building: 'Administration Building (Main Campus)', room: 'Faculty Room, Ground Floor (beside M.I.S. Office)' },
     schedule: {
       'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 9:00 AM · In Class', consultation: '9:30 AM – 11:30 AM' },
       'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class', consultation: '2:00 PM – 4:00 PM' },
@@ -181,9 +181,9 @@ export const FACULTY_DATA: Faculty[] = [
     roleCategory: 'Program Leadership',
     hierarchyLevel: 2,
     status: 'available',
-    statusNote: 'Available at Program Head\'s Office · Advising Open',
+    statusNote: 'Available at Faculty Room, Second Floor of Administration Building (Main Campus)',
     program: 'Electronics & Electrical Engineering',
-    office: { building: 'Engineering Building', room: 'Faculty & Program Office (Room E-102)' },
+    office: { building: 'Administration Building (Main Campus)', room: 'Faculty Room, Second Floor' },
     schedule: {
       'Monday':    { office: '8:00 AM – 5:00 PM', consultation: '9:00 AM – 12:00 PM · Program Advising' },
       'Tuesday':   { office: '8:00 AM – 5:00 PM', consultation: '9:00 AM – 12:00 PM · Program Advising' },
@@ -226,7 +226,7 @@ export const FACULTY_DATA: Faculty[] = [
     status: 'available',
     statusNote: 'Available at Engineering Faculty Room',
     program: 'Electronics & Civil Engineering',
-    office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-201)' },
+    office: { building: 'FAME Building', room: 'Faculty Room, Second Floor' },
     schedule: {
       'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class', consultation: '1:00 PM – 3:00 PM' },
       'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '11:00 AM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class', consultation: '8:30 AM – 10:30 AM' },
@@ -248,7 +248,7 @@ export const FACULTY_DATA: Faculty[] = [
     status: 'in-class',
     statusNote: 'In Class',
     program: 'Civil, Electrical, Electronics & Computer Engineering',
-    office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-201)' },
+    office: { building: 'FAME Building', room: 'Faculty Room, Second Floor' },
     schedule: {
       'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '10:00 AM – 11:00 AM · In Class', consultation: '1:00 PM – 3:00 PM' },
       'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '2:00 PM – 5:00 PM · In Class', consultation: '9:00 AM – 11:30 AM' },
@@ -270,7 +270,7 @@ export const FACULTY_DATA: Faculty[] = [
     status: 'available',
     statusNote: 'Available for Student Consultation',
     program: 'Electronics & Computer Engineering',
-    office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-201)' },
+    office: { building: 'FAME Building', room: 'Faculty Room, Second Floor' },
     schedule: {
       'Monday':    { office: '8:00 AM – 5:00 PM', consultation: '9:00 AM – 12:00 PM' },
       'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class' },
@@ -292,7 +292,7 @@ export const FACULTY_DATA: Faculty[] = [
     status: 'in-class',
     statusNote: 'In Class',
     program: 'Electrical & Electronics Engineering',
-    office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-202)' },
+    office: { building: 'FAME Building', room: 'Faculty Room, Second Floor' },
     schedule: {
       'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
       'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class' },
@@ -314,7 +314,7 @@ export const FACULTY_DATA: Faculty[] = [
     status: 'available',
     statusNote: 'Available at Faculty Office',
     program: 'Civil Engineering',
-    office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-202)' },
+    office: { building: 'FAME Building', room: 'Faculty Room, Second Floor' },
     schedule: {
       'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 3:00 PM – 5:00 PM · In Class', consultation: '2:00 PM – 3:00 PM' },
       'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class' },
@@ -336,7 +336,7 @@ export const FACULTY_DATA: Faculty[] = [
     status: 'in-class',
     statusNote: 'In Class',
     program: 'Civil Engineering',
-    office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-202)' },
+    office: { building: 'FAME Building', room: 'Faculty Room, Second Floor' },
     schedule: {
       'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class' },
       'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 2:00 PM – 4:00 PM · In Class', consultation: '4:00 PM – 5:00 PM' },
@@ -358,7 +358,7 @@ export const FACULTY_DATA: Faculty[] = [
     status: 'available',
     statusNote: 'Available for Consultation',
     program: 'Civil & Electrical Engineering',
-    office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-202)' },
+    office: { building: 'FAME Building', room: 'Faculty Room, Second Floor' },
     schedule: {
       'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
       'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 10:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 3:00 PM – 5:00 PM · In Class', consultation: '2:00 PM – 3:00 PM' },
@@ -380,7 +380,7 @@ export const FACULTY_DATA: Faculty[] = [
     status: 'in-class',
     statusNote: 'In Class',
     program: 'Electrical & Civil Engineering',
-    office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-203)' },
+    office: { building: 'FAME Building', room: 'Faculty Room, Second Floor' },
     schedule: {
       'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 10:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 3:00 PM – 5:00 PM · In Class', consultation: '2:00 PM – 3:00 PM' },
       'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 10:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
@@ -402,7 +402,7 @@ export const FACULTY_DATA: Faculty[] = [
     status: 'available',
     statusNote: 'Available at Engineering Faculty Room',
     program: 'Computer Engineering',
-    office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-203)' },
+    office: { building: 'FAME Building', room: 'Faculty Room, Second Floor' },
     schedule: {
       'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class' },
       'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
@@ -424,7 +424,7 @@ export const FACULTY_DATA: Faculty[] = [
     status: 'in-class',
     statusNote: 'In Class',
     program: 'Electronics & Communications Engineering',
-    office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-203)' },
+    office: { building: 'FAME Building', room: 'Faculty Room, Second Floor' },
     schedule: {
       'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '11:00 AM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class', consultation: '8:30 AM – 10:30 AM' },
       'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class' },
@@ -446,7 +446,7 @@ export const FACULTY_DATA: Faculty[] = [
     status: 'available',
     statusNote: 'Available for Advising & Chemistry Lab Consultation',
     program: 'General Engineering & Chemical Sciences',
-    office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-203)' },
+    office: { building: 'FAME Building', room: 'Faculty Room, Second Floor' },
     schedule: {
       'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 2:00 PM – 5:00 PM · In Class', consultation: '11:00 AM – 1:30 PM' },
       'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
@@ -466,9 +466,9 @@ export const FACULTY_DATA: Faculty[] = [
     roleCategory: 'Faculty Members',
     hierarchyLevel: 3,
     status: 'available',
-    statusNote: 'Available · Thesis & Project Consultation Open',
+    statusNote: 'Available · DOST Innovation Hub, Ground Floor of V Building (Main Campus)',
     program: 'Computer Engineering',
-    office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-204)' },
+    office: { building: 'V Building (Main Campus)', room: 'DOST Innovation Hub, Ground Floor' },
     schedule: {
       'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
       'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 2:00 PM – 5:00 PM · In Class', consultation: '11:00 AM – 1:30 PM' },
@@ -490,7 +490,7 @@ export const FACULTY_DATA: Faculty[] = [
     status: 'in-class',
     statusNote: 'In Class',
     program: 'Electrical Engineering',
-    office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-204)' },
+    office: { building: 'FAME Building', room: 'Faculty Room, Second Floor' },
     schedule: {
       'Monday':    { office: '8:00 AM – 5:00 PM', consultation: '9:00 AM – 12:00 PM' },
       'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
@@ -512,7 +512,7 @@ export const FACULTY_DATA: Faculty[] = [
     status: 'available',
     statusNote: 'Available · Steel Design & Structural Consultation',
     program: 'Civil Engineering',
-    office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-204)' },
+    office: { building: 'FAME Building', room: 'Faculty Room, Second Floor' },
     schedule: {
       'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 1:00 PM · In Class | 2:00 PM – 5:00 PM · In Class', consultation: '1:00 PM – 2:00 PM' },
       'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 12:00 PM · In Class | 12:00 PM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class' },
@@ -534,7 +534,7 @@ export const FACULTY_DATA: Faculty[] = [
     status: 'available',
     statusNote: 'Available at Design Studio / Faculty Office',
     program: 'Civil & Architectural Engineering',
-    office: { building: 'Engineering Building', room: 'Architecture & Design Studio (E-205)' },
+    office: { building: 'FAME Building', room: 'Faculty Room, Second Floor' },
     schedule: {
       'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },
       'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class | 2:00 PM – 5:00 PM · In Class' },
@@ -556,7 +556,7 @@ export const FACULTY_DATA: Faculty[] = [
     status: 'available',
     statusNote: 'Available at Engineering Faculty Room',
     program: 'Electronics & Electrical Engineering',
-    office: { building: 'Engineering Building', room: 'Engineering Faculty Room (E-204)' },
+    office: { building: 'FAME Building', room: 'Faculty Room, Second Floor' },
     schedule: {
       'Monday':    { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 10:00 AM · In Class | 2:00 PM – 5:00 PM · In Class', consultation: '10:00 AM – 12:00 PM' },
       'Tuesday':   { office: '8:00 AM – 5:00 PM', classSchedule: '8:00 AM – 11:00 AM · In Class | 11:00 AM – 2:00 PM · In Class', consultation: '2:30 PM – 4:30 PM' },

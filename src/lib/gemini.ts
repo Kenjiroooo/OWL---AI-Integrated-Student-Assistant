@@ -29,6 +29,12 @@ export function detectCampusHighlight(text: string): CampusHighlightId | null {
   if (/\bfame\b|fame building|fame campus/.test(q)) {
     return 'fame';
   }
+  if (/sean gabriel|macapagal|roderick|caba[nñ]a|de\s?vera|devera|m\.?i\.?s\.?\s*office|dost innovation hub|innovation hub/.test(q)) {
+    return 'main';
+  }
+  if (/engineering\s*(prof|professor|faculty)/.test(q)) {
+    return 'fame';
+  }
   if (/\be[\s-]?building\b|engineering building|engineering complex|building e\b/.test(q)) {
     return 'engineering';
   }
@@ -196,6 +202,15 @@ let cachedContext: CampusContext | null = null;
 let contextTimestamp = 0;
 const CONTEXT_TTL_MS = 5 * 60 * 1000; // Refresh Firestore data every 5 minutes
 
+function formatLocatorFaculty(): string {
+  return getLiveFacultyData()
+    .map(f => {
+      const liveStatus = getFacultyStatusMeta(f.status).label;
+      return `• ${f.name} (${f.position}, ${f.school}) — Current Availability Status: ${liveStatus}, Office: ${f.office?.building || ''} — ${f.office?.room || ''} [Email & Class Schedule: Restricted / Confidential]`;
+    })
+    .join('\n');
+}
+
 async function fetchCampusContext(): Promise<CampusContext> {
   const now = Date.now();
 
@@ -221,14 +236,12 @@ async function fetchCampusContext(): Promise<CampusContext> {
 
     // Format faculty data (combine live Faculty Locator directory with Firestore facultyOffices;
     // omit email addresses and class schedules to enforce privacy restrictions)
-    const locatorFaculty = getLiveFacultyData().map(f => {
-      const liveStatus = getFacultyStatusMeta(f.status).label;
-      return `• ${f.name} (${f.position}, ${f.school}) — Current Availability Status: ${liveStatus}, Office: ${f.office?.building || ''} ${f.office?.room || ''} (${f.office?.floor || ''}) [Email & Class Schedule: Restricted / Confidential]`;
-    }).join('\n');
-    const firestoreFaculty = facultySnap.docs.map(doc => {
-      const d = doc.data();
-      return `• ${d.name} — ${d.department || 'N/A'}, Office: ${d.officeLocation || 'N/A'} [Email & Class Schedule: Restricted / Confidential]`;
-    }).join('\n');
+    const locatorFaculty = formatLocatorFaculty();
+    const firestoreFaculty = facultySnap.docs
+      .map(doc => doc.data())
+      .filter(d => !(d.department === 'School of Engineering' && /engineering building|e-10/i.test(d.officeLocation || '')))
+      .map(d => `• ${d.name} — ${d.department || 'N/A'}, Office: ${d.officeLocation || 'N/A'} [Email & Class Schedule: Restricted / Confidential]`)
+      .join('\n');
     const faculty = [locatorFaculty, firestoreFaculty].filter(Boolean).join('\n');
 
     // Format FAQ data (exclude outdated enrollment steps from Firestore so HARDCODED_ENROLLMENT_STEPS is authoritative)
@@ -253,10 +266,7 @@ async function fetchCampusContext(): Promise<CampusContext> {
     // Return empty context so the AI can still respond with general knowledge
     return {
       buildings: '(Campus building data is currently unavailable)',
-      faculty: getLiveFacultyData().map(f => {
-        const liveStatus = getFacultyStatusMeta(f.status).label;
-        return `• ${f.name} (${f.position}, ${f.school}) — Current Availability Status: ${liveStatus}, Office: ${f.office?.building || ''} ${f.office?.room || ''} (${f.office?.floor || ''}) [Email & Class Schedule: Restricted / Confidential]`;
-      }).join('\n'),
+      faculty: formatLocatorFaculty(),
       faqs: [HARDCODED_TOR_INFO, HARDCODED_ENROLLMENT_STEPS].join('\n\n'),
       announcements: '(Announcements data is currently unavailable)',
     };
@@ -358,6 +368,13 @@ STRICT RULES:
   5. Note available services: food and beverage ordering, dine-in, takeaway, advance ordering for pickup, and order customization (subject to menu availability).
   6. Confirm current availability before promising that a particular product can be ordered. Refer customers to café staff for special requests or unavailable products.
   7. If information is unavailable, politely explain that confirmation from café staff is needed.
+- SCHOOL OF ENGINEERING FACULTY OFFICE LOCATIONS (STRICT RULE):
+  When anyone asks where any Professor or Faculty Member of the School of Engineering is located (either by name or in general):
+  • Default Location for all School of Engineering professors: Point them to the Faculty Room on the Second Floor of the FAME Building.
+  • Exceptions (ALWAYS use these exact locations for these individuals):
+    1. Engr. Sean Gabriel Macapagal (Sean Gabriel): Located at the DOST Innovation Hub at the Main Campus, Ground Floor of V Building.
+    2. Engr. Roderick Cabaña (Roderick Cabana): Located at the Faculty Room of Main Campus, Second Floor of the Administration Building.
+    3. Dr. Jose Jay De Vera (Dean Jose De Vera / Jose Devera): Located at the Faculty Room on the Ground Floor of the Administration Building, beside the M.I.S. Office (Main Campus).
 - Whenever a user asks about a campus, building, room, or location (such as Main Campus, FAME Building, E Building / Engineering Building, Administration Building, V Building, School of Health Sciences, or LCR Arzadon Gymnasium), after giving the details, ALWAYS ask them at the end: "Would you like me to direct you to Campus Navigation for detailed information on the campus?"
 
 ## INTERNAL UNIVERSITY DATABASE
