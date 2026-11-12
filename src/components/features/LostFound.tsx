@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { collection, query, orderBy, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, addDoc, updateDoc, doc } from 'firebase/firestore';
 import { db, ensureKioskAuth } from '../../lib/firebase';
 import {
   PackageSearch, Plus, MapPin, Tag, Clock,
@@ -62,20 +62,17 @@ export default function LostFound() {
   });
   const [claiming, setClaiming] = useState(false);
   const [claimSuccess, setClaimSuccess] = useState(false);
+  const [claimError, setClaimError] = useState<string | null>(null);
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
   const fetchItems = async () => {
     const q = query(collection(db, 'lostAndFound'), orderBy('createdAt', 'desc'));
     const snap = await getDocs(q);
-    let claimedIds: string[] = [];
-    try {
-      claimedIds = JSON.parse(localStorage.getItem('owl_claimed_item_ids') || '[]');
-    } catch {}
-    const claimedSet = new Set(claimedIds);
     setItems(
       snap.docs
         .map(d => ({ id: d.id, ...d.data() } as LostFoundItem))
-        .filter(item => !claimedSet.has(item.id) && item.status !== 'claimed')
+        // Released items have been handed over at the Innovation Hub — hide them
+        .filter(item => item.status !== 'released' && item.status !== 'claimed')
     );
     setLoading(false);
   };
@@ -185,9 +182,11 @@ export default function LostFound() {
 
   // ── Open Claim Modal ───────────────────────────────────────────────────────
   const openClaimModal = (item: LostFoundItem) => {
+    if (item.status === 'claim_pending') return;
     setClaimItemId(item.id);
     setClaimItemName(item.itemName);
     setClaimSuccess(false);
+    setClaimError(null);
     setClaimForm({ fullName: '', studentId: '', contactNumber: '', proofDescription: '' });
   };
 
@@ -195,48 +194,49 @@ export default function LostFound() {
     setClaimItemId(null);
     setClaimItemName('');
     setClaimSuccess(false);
+    setClaimError(null);
   };
 
   // ── Claim Submit ───────────────────────────────────────────────────────────
+  // The claim is saved as "pending". The item stays on the board as
+  // "Claim Pending" until an admin confirms and releases it from the Admin Panel.
   const handleClaim = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!claimItemId) return;
     setClaiming(true);
+    setClaimError(null);
     try {
       await ensureKioskAuth();
 
-      // Save claim record
-      await addDoc(collection(db, 'lostAndFoundClaims'), {
+      const item = items.find(i => i.id === claimItemId);
+      const claimRef = await addDoc(collection(db, 'lostAndFoundClaims'), {
         itemId: claimItemId,
         itemName: claimItemName,
-        claimantName: claimForm.fullName,
-        studentId: claimForm.studentId,
-        contactNumber: claimForm.contactNumber,
-        proofDescription: claimForm.proofDescription,
+        itemType: item?.type || 'found',
+        itemLocation: item?.location || '',
+        // Only copy hosted image URLs (inline data URLs are too large to duplicate)
+        itemImageUrl: item?.imageUrl && item.imageUrl.startsWith('http') ? item.imageUrl : null,
+        claimantName: claimForm.fullName.trim(),
+        studentId: claimForm.studentId.trim(),
+        contactNumber: claimForm.contactNumber.trim(),
+        proofDescription: claimForm.proofDescription.trim(),
+        status: 'pending',
         claimedAt: new Date(),
       });
 
-      // Remove item from active list (best-effort if rules restrict delete to admins)
-      try {
-        await deleteDoc(doc(db, 'lostAndFound', claimItemId));
-      } catch {
-        // Fallback: persist claimed item ID locally so it is hidden from the board
-      }
-      try {
-        const prev: string[] = JSON.parse(localStorage.getItem('owl_claimed_item_ids') || '[]');
-        if (!prev.includes(claimItemId)) {
-          localStorage.setItem('owl_claimed_item_ids', JSON.stringify([...prev, claimItemId]));
-        }
-      } catch {}
+      // Mark the item as awaiting admin release so nobody else can claim it
+      await updateDoc(doc(db, 'lostAndFound', claimItemId), {
+        status: 'claim_pending',
+        claimId: claimRef.id,
+      });
 
       setClaimSuccess(true);
-      setItems(prev => prev.filter(i => i.id !== claimItemId));
-      fetchItems();
-
-      // Auto-close after 2.5 seconds
-      setTimeout(() => closeClaimModal(), 2500);
-    } catch (err) {
+      setItems(prev =>
+        prev.map(i => (i.id === claimItemId ? { ...i, status: 'claim_pending' } : i))
+      );
+    } catch (err: any) {
       console.error('Claim error:', err);
+      setClaimError(err?.message || 'Failed to submit your claim. Please try again.');
     } finally {
       setClaiming(false);
     }
@@ -311,10 +311,26 @@ export default function LostFound() {
                     <h3 className="text-3xl font-black text-slate-800 tracking-tight">Claim Submitted!</h3>
                     <p className="text-slate-500 font-medium mt-3 leading-relaxed">
                       Your claim for <span className="font-black text-slate-700">"{claimItemName}"</span> has been recorded.
-                      The item has been removed from the listing.
                     </p>
                   </div>
-                  <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Closing automatically…</p>
+                  <div className="flex items-start gap-3 text-left p-5 rounded-3xl bg-amber-50 border-2 border-amber-200">
+                    <MapPin className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-black text-amber-900 text-base leading-snug">
+                        Please proceed to the Innovation Hub to claim the item in the Admin Office.
+                      </p>
+                      <p className="text-amber-700 text-xs font-bold mt-1.5 leading-relaxed">
+                        Bring your school ID. The admin will confirm your claim and release the item to you.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={closeClaimModal}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-2xl transition-all uppercase tracking-widest active:scale-95"
+                  >
+                    Done
+                  </button>
                 </motion.div>
               ) : (
                 /* ── Claim Form ────────────────────────────────────────── */
@@ -387,6 +403,13 @@ export default function LostFound() {
                         className="w-full px-5 py-3.5 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-amber-500 font-bold text-slate-800 text-sm h-24 resize-none"
                       />
                     </div>
+
+                    {claimError && (
+                      <div className="flex items-start gap-2 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm font-bold">
+                        <X className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                        {claimError}
+                      </div>
+                    )}
 
                     <button
                       type="submit"
@@ -670,12 +693,18 @@ export default function LostFound() {
                   ? new Date(item.createdAt.seconds * 1000).toLocaleDateString()
                   : new Date().toLocaleDateString()}
               </div>
-              <button
-                onClick={() => openClaimModal(item)}
-                className="flex items-center gap-2 text-[11px] font-black text-amber-600 hover:text-white hover:bg-amber-500 uppercase tracking-widest transition-all px-5 py-3 bg-amber-50 rounded-2xl active:scale-95"
-              >
-                <HandshakeIcon className="w-4 h-4" /> Claim Item
-              </button>
+              {item.status === 'claim_pending' ? (
+                <span className="flex items-center gap-2 text-[11px] font-black text-slate-500 uppercase tracking-widest px-5 py-3 bg-slate-100 rounded-2xl">
+                  <Clock className="w-4 h-4" /> Claim Pending
+                </span>
+              ) : (
+                <button
+                  onClick={() => openClaimModal(item)}
+                  className="flex items-center gap-2 text-[11px] font-black text-amber-600 hover:text-white hover:bg-amber-500 uppercase tracking-widest transition-all px-5 py-3 bg-amber-50 rounded-2xl active:scale-95"
+                >
+                  <HandshakeIcon className="w-4 h-4" /> Claim Item
+                </button>
+              )}
             </div>
           </motion.div>
         ))}

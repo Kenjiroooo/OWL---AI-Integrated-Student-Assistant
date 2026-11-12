@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, orderBy, query, doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, orderBy, query, doc, getDoc, setDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { db, auth, ensureKioskAuth } from '../lib/firebase';
 import { signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
@@ -26,6 +26,14 @@ import {
   KeyRound,
   ArrowLeft,
   Cpu,
+  PackageSearch,
+  CheckCircle2,
+  XCircle,
+  MapPin,
+  Phone,
+  Hash,
+  User,
+  Clock,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { FACULTY_DATA, SCHOOLS } from '../components/features/facultyLocator/facultyData';
@@ -34,7 +42,7 @@ import ChangeAdminCredentialsModal from '../components/admin/ChangeAdminCredenti
 import AIApiMonitorPanel from '../components/admin/AIApiMonitorPanel';
 import { getAIApiUsageHistory, getLocalDateKey } from '../lib/aiApiMonitor';
 
-type Tab = 'students' | 'evaluations' | 'ai-monitor' | 'queue';
+type Tab = 'students' | 'evaluations' | 'claims' | 'ai-monitor' | 'queue';
 
 export default function AdminHome() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -61,6 +69,12 @@ export default function AdminHome() {
   const [expandedFaculty, setExpandedFaculty] = useState<string | null>(null);
   const [schoolFilter, setSchoolFilter] = useState<string | null>(null);
   const [todayAiRequests, setTodayAiRequests] = useState<number>(0);
+
+  // ── Lost & Found Claims State ───────────────────────────────────────────
+  const [claims, setClaims] = useState<any[]>([]);
+  const [claimsFilter, setClaimsFilter] = useState<'pending' | 'history'>('pending');
+  const [processingClaimId, setProcessingClaimId] = useState<string | null>(null);
+  const [claimActionMessage, setClaimActionMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -99,6 +113,32 @@ export default function AdminHome() {
 
         const evalSnap = await getDocs(query(collection(db, 'facultyEvaluations'), orderBy('createdAt', 'desc')));
         setEvaluations(evalSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+        // Fetch Lost & Found claims & items
+        try {
+          const [claimsSnap, lfSnap] = await Promise.all([
+            getDocs(query(collection(db, 'lostAndFoundClaims'), orderBy('claimedAt', 'desc'))),
+            getDocs(collection(db, 'lostAndFound')),
+          ]);
+          const itemsById = new Map<string, any>();
+          lfSnap.docs.forEach(d => itemsById.set(d.id, d.data()));
+          setClaims(
+            claimsSnap.docs.map(d => {
+              const data = d.data();
+              const item = itemsById.get(data.itemId);
+              return {
+                id: d.id,
+                ...data,
+                status: data.status || 'pending',
+                itemLocation: data.itemLocation || item?.location || '',
+                itemType: data.itemType || item?.type || 'found',
+                itemImageUrl: data.itemImageUrl || item?.imageUrl || null,
+              };
+            })
+          );
+        } catch (claimErr) {
+          console.error('Error fetching Lost & Found claims:', claimErr);
+        }
 
         // Fetch evaluation period settings
         const periodSnap = await getDoc(doc(db, 'settings', 'evaluationPeriod'));
@@ -149,6 +189,70 @@ export default function AdminHome() {
       console.error('Error saving evaluation period:', err);
     } finally {
       setPeriodSaving(false);
+    }
+  };
+
+  const handleConfirmReleaseClaim = async (claim: any) => {
+    setProcessingClaimId(claim.id);
+    setClaimActionMessage(null);
+    try {
+      await ensureKioskAuth();
+      const now = new Date();
+      await updateDoc(doc(db, 'lostAndFoundClaims', claim.id), {
+        status: 'released',
+        releasedAt: now,
+      });
+      if (claim.itemId) {
+        try {
+          await updateDoc(doc(db, 'lostAndFound', claim.itemId), {
+            status: 'released',
+            releasedAt: now,
+          });
+        } catch {
+          // Item may have already been removed
+        }
+      }
+      setClaims(prev =>
+        prev.map(c => (c.id === claim.id ? { ...c, status: 'released', releasedAt: now } : c))
+      );
+      setClaimActionMessage(`Confirmed & released "${claim.itemName}" to ${claim.claimantName}.`);
+      setTimeout(() => setClaimActionMessage(null), 4000);
+    } catch (err) {
+      console.error('Error releasing claimed item:', err);
+    } finally {
+      setProcessingClaimId(null);
+    }
+  };
+
+  const handleDeclineClaim = async (claim: any) => {
+    setProcessingClaimId(claim.id);
+    setClaimActionMessage(null);
+    try {
+      await ensureKioskAuth();
+      const now = new Date();
+      await updateDoc(doc(db, 'lostAndFoundClaims', claim.id), {
+        status: 'rejected',
+        rejectedAt: now,
+      });
+      if (claim.itemId) {
+        try {
+          await updateDoc(doc(db, 'lostAndFound', claim.itemId), {
+            status: 'active',
+            claimId: null,
+          });
+        } catch {
+          // Item may have already been removed
+        }
+      }
+      setClaims(prev =>
+        prev.map(c => (c.id === claim.id ? { ...c, status: 'rejected', rejectedAt: now } : c))
+      );
+      setClaimActionMessage(`Declined claim for "${claim.itemName}" — item restored to Lost & Found board.`);
+      setTimeout(() => setClaimActionMessage(null), 4000);
+    } catch (err) {
+      console.error('Error declining claim:', err);
+    } finally {
+      setProcessingClaimId(null);
     }
   };
 
@@ -208,9 +312,14 @@ export default function AdminHome() {
     fairnessInGrading: 'Fairness in Grading',
   };
 
+  const pendingClaims = claims.filter((c) => c.status === 'pending');
+  const historyClaims = claims.filter((c) => c.status !== 'pending');
+  const displayedClaims = claimsFilter === 'pending' ? pendingClaims : historyClaims;
+
   const navItems = [
     { id: 'students', label: 'Student Directory', icon: Users, count: students.length },
     { id: 'evaluations', label: 'Faculty Evaluations', icon: ClipboardCheck, count: evaluations.length },
+    { id: 'claims', label: 'Lost & Found Claims', icon: PackageSearch, count: pendingClaims.length },
     { id: 'ai-monitor', label: 'AI API Monitor', icon: Cpu, count: todayAiRequests },
     { id: 'queue', label: 'Queue Overview', icon: ListOrdered, count: null },
   ];
@@ -346,6 +455,7 @@ export default function AdminHome() {
             <h2 className="text-2xl font-black text-slate-900 tracking-tight">
               {activeTab === 'students' && 'Student Directory'}
               {activeTab === 'evaluations' && 'Faculty Evaluations'}
+              {activeTab === 'claims' && 'Lost & Found Claims'}
               {activeTab === 'ai-monitor' && 'AI API Request Monitor'}
               {activeTab === 'queue' && 'Queue Monitor'}
             </h2>
@@ -700,6 +810,180 @@ export default function AdminHome() {
                     ))
                   )}
                 </div>
+              </motion.div>
+            )}
+
+            {/* ── Lost & Found Claims Tab ── */}
+            {activeTab === 'claims' && (
+              <motion.div
+                key="claims"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                className="space-y-6"
+              >
+                {/* Stats */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {[
+                    { label: 'Pending Pickups', value: pendingClaims.length, icon: Clock, color: 'from-amber-400 to-orange-500', glow: 'rgba(245,158,11,0.15)' },
+                    { label: 'Released Items', value: claims.filter(c => c.status === 'released').length, icon: CheckCircle2, color: 'from-emerald-400 to-teal-500', glow: 'rgba(16,185,129,0.15)' },
+                    { label: 'Total Claims', value: claims.length, icon: PackageSearch, color: 'from-blue-500 to-indigo-600', glow: 'rgba(59,130,246,0.15)' },
+                  ].map(stat => (
+                    <div key={stat.label} className="rounded-3xl p-5 flex items-center gap-4" style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.8)', boxShadow: `0 8px 30px ${stat.glow}` }}>
+                      <div className={`w-11 h-11 bg-gradient-to-br ${stat.color} text-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0`}>
+                        <stat.icon className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-black text-slate-900 leading-none">{stat.value}</p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{stat.label}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Filter + Feedback Banner */}
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setClaimsFilter('pending')}
+                      className="px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer"
+                      style={claimsFilter === 'pending'
+                        ? { background: 'linear-gradient(135deg, #f59e0b, #ea580c)', color: '#fff', boxShadow: '0 4px 12px rgba(245,158,11,0.25)' }
+                        : { background: 'rgba(255,255,255,0.8)', color: '#64748b' }}
+                    >
+                      Pending Confirmation ({pendingClaims.length})
+                    </button>
+                    <button
+                      onClick={() => setClaimsFilter('history')}
+                      className="px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer"
+                      style={claimsFilter === 'history'
+                        ? { background: 'linear-gradient(135deg, #00317e, #2559bf)', color: '#fff', boxShadow: '0 4px 12px rgba(37,89,191,0.25)' }
+                        : { background: 'rgba(255,255,255,0.8)', color: '#64748b' }}
+                    >
+                      Released &amp; History ({historyClaims.length})
+                    </button>
+                  </div>
+
+                  {claimActionMessage && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold flex items-center gap-2"
+                    >
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      {claimActionMessage}
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* Claims List */}
+                {displayedClaims.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-24 text-slate-300" style={{ background: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.7)', borderRadius: '2rem' }}>
+                    <PackageSearch className="w-20 h-20 mb-6 opacity-30" />
+                    <p className="text-xl font-black text-slate-400">
+                      {claimsFilter === 'pending' ? 'No pending claims' : 'No released or declined claims yet'}
+                    </p>
+                    <p className="text-slate-400 font-medium text-sm mt-1">
+                      {claimsFilter === 'pending'
+                        ? 'Submitted Lost & Found claims awaiting pickup at the Innovation Hub will appear here.'
+                        : 'Confirmed item releases and declined claims will be recorded here.'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {displayedClaims.map((claim) => {
+                      const claimedDate = claim.claimedAt?.toDate?.() || (claim.claimedAt?.seconds ? new Date(claim.claimedAt.seconds * 1000) : null);
+                      const isProcessing = processingClaimId === claim.id;
+                      return (
+                        <div
+                          key={claim.id}
+                          className="rounded-3xl p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6"
+                          style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.9)', boxShadow: '0 4px 20px rgba(0,49,126,0.06)' }}
+                        >
+                          <div className="flex items-start gap-5 flex-1 min-w-0">
+                            {claim.itemImageUrl ? (
+                              <img
+                                src={claim.itemImageUrl.startsWith('data:') ? claim.itemImageUrl : `https://images.weserv.nl/?url=${encodeURIComponent(claim.itemImageUrl)}`}
+                                alt={claim.itemName}
+                                className="w-20 h-20 rounded-2xl object-cover border border-slate-200 flex-shrink-0 bg-slate-100"
+                              />
+                            ) : (
+                              <div className="w-20 h-20 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center flex-shrink-0">
+                                <PackageSearch className="w-8 h-8 text-amber-500" />
+                              </div>
+                            )}
+
+                            <div className="space-y-2 min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                                  claim.status === 'released'
+                                    ? 'bg-emerald-100 text-emerald-700'
+                                    : claim.status === 'rejected'
+                                    ? 'bg-rose-100 text-rose-700'
+                                    : 'bg-amber-100 text-amber-700'
+                                }`}>
+                                  {claim.status === 'released' ? 'Confirmed & Released' : claim.status === 'rejected' ? 'Declined' : 'Awaiting Pickup — Innovation Hub'}
+                                </span>
+                                {claimedDate && (
+                                  <span className="text-[11px] font-bold text-slate-400">
+                                    Submitted {claimedDate.toLocaleString()}
+                                  </span>
+                                )}
+                              </div>
+
+                              <h4 className="text-lg font-black text-slate-800 truncate">{claim.itemName}</h4>
+
+                              <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs font-bold text-slate-600">
+                                <span className="flex items-center gap-1.5">
+                                  <User className="w-3.5 h-3.5 text-sky-500" /> {claim.claimantName}
+                                </span>
+                                <span className="flex items-center gap-1.5">
+                                  <Hash className="w-3.5 h-3.5 text-sky-500" /> ID: {claim.studentId}
+                                </span>
+                                <span className="flex items-center gap-1.5">
+                                  <Phone className="w-3.5 h-3.5 text-sky-500" /> {claim.contactNumber}
+                                </span>
+                                {claim.itemLocation && (
+                                  <span className="flex items-center gap-1.5">
+                                    <MapPin className="w-3.5 h-3.5 text-amber-500" /> {claim.itemLocation}
+                                  </span>
+                                )}
+                              </div>
+
+                              {claim.proofDescription && (
+                                <p className="text-xs text-slate-500 bg-slate-50 rounded-xl px-3.5 py-2 border border-slate-100 font-medium">
+                                  <span className="font-black text-slate-600">Proof:</span> {claim.proofDescription}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          {claim.status === 'pending' && (
+                            <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 flex-shrink-0">
+                              <button
+                                onClick={() => handleConfirmReleaseClaim(claim)}
+                                disabled={isProcessing}
+                                className="px-5 py-3 rounded-2xl text-white font-black text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                                style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 6px 18px rgba(16,185,129,0.28)' }}
+                              >
+                                <CheckCircle2 className="w-4 h-4" />
+                                {isProcessing ? 'Processing…' : 'Confirm & Release Item'}
+                              </button>
+                              <button
+                                onClick={() => handleDeclineClaim(claim)}
+                                disabled={isProcessing}
+                                className="px-4 py-3 rounded-2xl bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                              >
+                                <XCircle className="w-4 h-4" />
+                                Decline
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </motion.div>
             )}
 

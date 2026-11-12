@@ -121,13 +121,29 @@ service cloud.firestore {
     match /lostAndFound/{id} {
       allow read: if true;
       allow create: if isSignedIn();
-      allow update, delete: if isAdmin();
+      allow update: if isAdmin() || (
+                      isSignedIn() &&
+                      incoming().diff(existing()).affectedKeys().hasOnly(['status', 'claimId', 'releasedAt']) &&
+                      incoming().status in ['active', 'claim_pending', 'released', 'claimed']
+                    );
+      allow delete: if isAdmin();
     }
 
     // Lost and Found Claims
     match /lostAndFoundClaims/{id} {
-      allow create: if isSignedIn();
-      allow read, update, delete: if isAdmin();
+      allow create: if isSignedIn() &&
+                       incoming().keys().hasAll(['itemId', 'itemName', 'claimantName', 'studentId', 'contactNumber', 'status', 'claimedAt']) &&
+                       incoming().status == 'pending' &&
+                       incoming().claimantName is string && incoming().claimantName.size() <= 150 &&
+                       incoming().studentId is string && incoming().studentId.size() <= 50 &&
+                       incoming().contactNumber is string && incoming().contactNumber.size() <= 50;
+      allow read: if isSignedIn();
+      allow update: if isAdmin() || (
+                      isSignedIn() &&
+                      incoming().diff(existing()).affectedKeys().hasOnly(['status', 'releasedAt', 'rejectedAt']) &&
+                      incoming().status in ['released', 'rejected']
+                    );
+      allow delete: if isAdmin();
     }
 
     // Kiosk <-> Phone photo hand-off for Lost & Found (short-lived sessions).
