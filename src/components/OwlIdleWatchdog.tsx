@@ -6,8 +6,10 @@ import { OwlCharacter } from './OwlCharacter';
 import { speak, cancelSpeech } from '../lib/owlSpeech';
 import { useOwlAssistant } from '../context/OwlAssistantContext';
 
-const IDLE_TIMEOUT_MS = 40_000; // 40 seconds of inactivity before OWL shows up
-const COUNTDOWN_SECONDS = 10;   // 10 seconds countdown before returning to StartPage (/)
+const IDLE_TIMEOUT_MS = 40_000;           // 40 seconds of inactivity before OWL shows up
+const TRANSPORT_IDLE_TIMEOUT_MS = 120_000; // 2 minutes on Campus Transport live map tracker
+const COUNTDOWN_SECONDS = 10;              // 10 seconds countdown before returning to StartPage (/)
+const IFRAME_REARM_MS = 2_000;             // Re-arm iframe blur detection so repeated taps reset timer
 
 /**
  * OwlIdleWatchdog — Global Kiosk Idle Timer & Sleep Prompt
@@ -29,6 +31,7 @@ export default function OwlIdleWatchdog() {
 
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const iframeRearmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showPromptRef = useRef(false);
 
   // Pages where the idle timer should NOT run (already on StartPage, mobile QR upload, or admin)
@@ -36,6 +39,9 @@ export default function OwlIdleWatchdog() {
     location.pathname === '/' ||
     location.pathname.startsWith('/mobile-upload') ||
     location.pathname.startsWith('/admin');
+
+  const activeIdleTimeoutMs =
+    location.pathname === '/feature/transport' ? TRANSPORT_IDLE_TIMEOUT_MS : IDLE_TIMEOUT_MS;
 
   const clearTimers = useCallback(() => {
     if (idleTimerRef.current) {
@@ -45,6 +51,10 @@ export default function OwlIdleWatchdog() {
     if (countdownIntervalRef.current) {
       clearInterval(countdownIntervalRef.current);
       countdownIntervalRef.current = null;
+    }
+    if (iframeRearmTimerRef.current) {
+      clearTimeout(iframeRearmTimerRef.current);
+      iframeRearmTimerRef.current = null;
     }
   }, []);
 
@@ -59,7 +69,14 @@ export default function OwlIdleWatchdog() {
   }, [clearTimers, closeDrawer, navigate]);
 
   const startIdleTimer = useCallback(() => {
-    clearTimers();
+    if (idleTimerRef.current) {
+      clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = null;
+    }
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
     if (isExcludedPath) return;
 
     idleTimerRef.current = setTimeout(() => {
@@ -73,8 +90,8 @@ export default function OwlIdleWatchdog() {
         onEnd: () => setIsTalking(false),
         onError: () => setIsTalking(false),
       });
-    }, IDLE_TIMEOUT_MS);
-  }, [clearTimers, isExcludedPath]);
+    }, activeIdleTimeoutMs);
+  }, [isExcludedPath, activeIdleTimeoutMs]);
 
   const handleStayAwake = useCallback(() => {
     cancelSpeech();
@@ -111,7 +128,7 @@ export default function OwlIdleWatchdog() {
     };
   }, [showPrompt, goToSleep]);
 
-  // Listen for user activity to reset the 40-second idle timer
+  // Listen for user activity (including cross-origin iframe interactions) to reset the idle timer
   useEffect(() => {
     if (isExcludedPath) {
       clearTimers();
@@ -125,12 +142,50 @@ export default function OwlIdleWatchdog() {
     let lastReset = Date.now();
     const onUserActivity = () => {
       // If the prompt is already showing, require explicit tap on the modal/button
-      // or tap anywhere if desired — here we only throttle resets while browsing
       if (showPromptRef.current) return;
       const now = Date.now();
       if (now - lastReset < 250) return;
       lastReset = now;
       startIdleTimer();
+    };
+
+    // Detect taps/clicks inside cross-origin iframes (e.g. SakayUDD live tracker):
+    // When focus moves into an iframe, window fires 'blur'. Reset the idle timer,
+    // then gently re-arm focus back on window so subsequent taps in the iframe
+    // fire 'blur' again instead of being swallowed silently by the iframe.
+    const scheduleIframeRearm = () => {
+      if (iframeRearmTimerRef.current) {
+        clearTimeout(iframeRearmTimerRef.current);
+      }
+      iframeRearmTimerRef.current = setTimeout(() => {
+        if (!showPromptRef.current && document.activeElement instanceof HTMLIFrameElement) {
+          document.activeElement.blur();
+          try {
+            window.focus({ preventScroll: true } as FocusOptions);
+          } catch {
+            window.focus();
+          }
+        }
+      }, IFRAME_REARM_MS);
+    };
+
+    const onWindowBlur = () => {
+      if (showPromptRef.current) return;
+      // Delay one microtask so document.activeElement updates to the focused iframe
+      setTimeout(() => {
+        if (document.activeElement instanceof HTMLIFrameElement) {
+          onUserActivity();
+          scheduleIframeRearm();
+        }
+      }, 0);
+    };
+
+    const onIframeBoundary = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      const related = e.relatedTarget as HTMLElement | null;
+      if (target?.tagName === 'IFRAME' || related?.tagName === 'IFRAME') {
+        onUserActivity();
+      }
     };
 
     const events: Array<keyof WindowEventMap> = [
@@ -145,9 +200,17 @@ export default function OwlIdleWatchdog() {
     ];
 
     events.forEach((evt) => window.addEventListener(evt, onUserActivity, { passive: true }));
+    window.addEventListener('owl-user-activity', onUserActivity);
+    window.addEventListener('blur', onWindowBlur);
+    document.addEventListener('mouseover', onIframeBoundary, { passive: true });
+    document.addEventListener('mouseout', onIframeBoundary, { passive: true });
 
     return () => {
       events.forEach((evt) => window.removeEventListener(evt, onUserActivity));
+      window.removeEventListener('owl-user-activity', onUserActivity);
+      window.removeEventListener('blur', onWindowBlur);
+      document.removeEventListener('mouseover', onIframeBoundary);
+      document.removeEventListener('mouseout', onIframeBoundary);
       clearTimers();
     };
   }, [isExcludedPath, location.pathname, startIdleTimer, clearTimers]);

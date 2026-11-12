@@ -43,7 +43,12 @@ export default function TransportLiveTracker() {
   const [loaded, setLoaded] = useState(false);
   const [key, setKey] = useState(0);
 
+  const notifyActivity = () => {
+    window.dispatchEvent(new Event('owl-user-activity'));
+  };
+
   const handleRefresh = () => {
+    notifyActivity();
     setLoaded(false);
     setKey(k => k + 1);
   };
@@ -83,7 +88,14 @@ export default function TransportLiveTracker() {
       </div>
 
       {/* iframe container */}
-      <div className="relative w-full h-[600px] bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
+      <div
+        onPointerEnter={notifyActivity}
+        onPointerMove={notifyActivity}
+        onPointerDownCapture={notifyActivity}
+        onTouchStartCapture={notifyActivity}
+        onWheelCapture={notifyActivity}
+        className="relative w-full h-[600px] bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden"
+      >
         <AnimatePresence>
           {!loaded && (
             <motion.div
@@ -102,7 +114,10 @@ export default function TransportLiveTracker() {
           src={SAKAYUDD_URL}
           className="w-full h-full border-0"
           title="SakayUDD E-Jeepney Live Tracker"
-          onLoad={() => setLoaded(true)}
+          onLoad={() => {
+            setLoaded(true);
+            notifyActivity();
+          }}
           allow="geolocation"
         />
       </div>
