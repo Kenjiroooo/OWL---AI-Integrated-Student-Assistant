@@ -234,3 +234,168 @@ export function addPicketRailing(
   parent.add(railGrp);
 }
 
+/**
+ * Adds V Building's exterior courtyard staircase along Seg 1 (North Wing):
+ * - Ground floor (1F): 14 stepped treads, twin concrete stringers, sloped picket
+ *   guardrail, support column, landscape planter & sculptural "UDD" block emblem.
+ * - 2F tier: upper cantilevered landing platform, perimeter picket guardrails,
+ *   directional notice plaque, and supported flat landing canopy roof.
+ */
+export function addVBuildingExteriorStairs(
+  ground: THREE.Group,
+  floor2F: THREE.Group,
+  seg1: VBuildingSegment,
+  mats: VBuildingCirculationMaterials
+): void {
+  const { floorHeight: FH, stair } = V_CIRC_LAYOUT;
+  const {
+    flightStartLx,
+    flightEndLx,
+    landingStartLx,
+    landingEndLx,
+    flightCenterLz,
+    flightWidth,
+    landingDepth,
+    stepCount,
+  } = stair;
+
+  // ── 1. Ground-Floor Ascending Stair Flight & Plaza Signage ────────────────
+  const groundGrp = new THREE.Group();
+  groundGrp.position.set(seg1.cx, 0, seg1.cz);
+  groundGrp.rotation.y = seg1.rotY;
+
+  const run = flightEndLx - flightStartLx;
+  const rise = FH;
+  const treadW = run / stepCount;
+  const stepRise = rise / stepCount;
+
+  // Concrete entry pad at foot of stairs
+  groundGrp.add(circBox(1.2, 0.12, flightWidth + 0.35, mats.concreteStep, flightStartLx - 0.5, 0.06, flightCenterLz, false));
+
+  // Twin sloped reinforced concrete stringer beams
+  const innerStringerZ = flightCenterLz - flightWidth / 2 + 0.08;
+  const outerStringerZ = flightCenterLz + flightWidth / 2 - 0.08;
+  [innerStringerZ, outerStringerZ].forEach((sz) => {
+    groundGrp.add(
+      circBeam(
+        new THREE.Vector3(flightStartLx, 0.14, sz),
+        new THREE.Vector3(flightEndLx, rise - 0.12, sz),
+        0.16,
+        0.26,
+        mats.steelWhite
+      )
+    );
+  });
+
+  // Discrete stepped treads & dark anti-slip nosings
+  for (let i = 0; i < stepCount; i++) {
+    const sx = flightStartLx + (i + 0.5) * treadW;
+    const stepTopY = (i + 1) * stepRise;
+    const riserH = Math.min(stepRise + 0.14, stepTopY);
+    groundGrp.add(
+      circBox(treadW + 0.04, riserH, flightWidth - 0.18, mats.concreteStep, sx, stepTopY - riserH / 2, flightCenterLz)
+    );
+    groundGrp.add(
+      circBox(0.06, 0.025, flightWidth - 0.2, mats.treadDark, sx - treadW * 0.35, stepTopY + 0.012, flightCenterLz, false)
+    );
+  }
+
+  // Structural support piers beneath top of flight and intermediate span
+  groundGrp.add(circBox(0.28, rise * 0.5, 0.28, mats.steelWhite, (flightStartLx + flightEndLx) / 2, rise * 0.25, outerStringerZ));
+  groundGrp.add(circBox(0.28, rise * 0.5, 0.28, mats.steelWhite, (flightStartLx + flightEndLx) / 2, rise * 0.25, innerStringerZ));
+  groundGrp.add(circBox(0.32, rise - 0.14, 0.32, mats.steelWhite, flightEndLx, (rise - 0.14) / 2, outerStringerZ));
+
+  // Sloped white steel picket guardrail along outer stair edge
+  const railZ = outerStringerZ + 0.02;
+  const railHeight = 0.96;
+  groundGrp.add(
+    circBeam(
+      new THREE.Vector3(flightStartLx, 0.25 + railHeight, railZ),
+      new THREE.Vector3(flightEndLx, rise + railHeight, railZ),
+      0.05,
+      0.06,
+      mats.steelWhite,
+      false
+    )
+  );
+  groundGrp.add(
+    circBeam(
+      new THREE.Vector3(flightStartLx, 0.38, railZ),
+      new THREE.Vector3(flightEndLx, rise + 0.12, railZ),
+      0.035,
+      0.04,
+      mats.steelWhite,
+      false
+    )
+  );
+  const stairPickets = 16;
+  for (let p = 0; p <= stairPickets; p++) {
+    const t = p / stairPickets;
+    const px = flightStartLx + t * run;
+    const py = 0.22 + t * (rise - 0.12);
+    groundGrp.add(circBox(0.028, railHeight - 0.06, 0.028, mats.steelWhite, px, py + railHeight / 2, railZ, false));
+  }
+
+  // Ground plaza planter & 3D royal blue "UDD" sculptural sign beside stairs (from courtyard photo)
+  const uddBaseLx = landingEndLx + 1.85;
+  groundGrp.add(circBox(3.1, 0.42, 0.95, mats.planterStone, uddBaseLx, 0.21, 1.05));
+  groundGrp.add(circBox(2.9, 0.24, 0.78, mats.foliageGreen, uddBaseLx, 0.52, 1.05));
+  // Compact 3D "U D D" monumental letters atop planter plinth
+  // 'U'
+  const uLx = uddBaseLx - 0.88;
+  groundGrp.add(circBox(0.18, 0.9, 0.2, mats.uddBlue, uLx - 0.22, 1.05, 1.05));
+  groundGrp.add(circBox(0.18, 0.9, 0.2, mats.uddBlue, uLx + 0.22, 1.05, 1.05));
+  groundGrp.add(circBox(0.62, 0.18, 0.2, mats.uddBlue, uLx, 0.68, 1.05));
+  // First 'D'
+  const d1Lx = uddBaseLx;
+  groundGrp.add(circBox(0.18, 0.9, 0.2, mats.uddBlue, d1Lx - 0.2, 1.05, 1.05));
+  groundGrp.add(circBox(0.45, 0.16, 0.2, mats.uddBlue, d1Lx, 1.42, 1.05));
+  groundGrp.add(circBox(0.45, 0.16, 0.2, mats.uddBlue, d1Lx, 0.68, 1.05));
+  groundGrp.add(circBox(0.16, 0.76, 0.2, mats.uddBlue, d1Lx + 0.2, 1.05, 1.05));
+  // Second 'D'
+  const d2Lx = uddBaseLx + 0.85;
+  groundGrp.add(circBox(0.18, 0.9, 0.2, mats.uddBlue, d2Lx - 0.2, 1.05, 1.05));
+  groundGrp.add(circBox(0.45, 0.16, 0.2, mats.uddBlue, d2Lx, 1.42, 1.05));
+  groundGrp.add(circBox(0.45, 0.16, 0.2, mats.uddBlue, d2Lx, 0.68, 1.05));
+  groundGrp.add(circBox(0.16, 0.76, 0.2, mats.uddBlue, d2Lx + 0.2, 1.05, 1.05));
+
+  ground.add(groundGrp);
+
+  // ── 2. 2F Covered Stair Landing Platform & Canopy Roof ────────────────────
+  const landingGrp = new THREE.Group();
+  landingGrp.position.set(seg1.cx, 0, seg1.cz);
+  landingGrp.rotation.y = seg1.rotY;
+
+  const landingW = landingEndLx - landingStartLx;
+  const landingCx = (landingStartLx + landingEndLx) / 2;
+  const landingFrontLz = landingDepth;
+  const landingCz = landingDepth / 2 + 0.05;
+
+  // Landing deck slab & blue soffit band matching 2F balcony
+  landingGrp.add(circBox(landingW, 0.24, landingDepth, mats.steelWhite, landingCx, FH - 0.12, landingCz));
+  landingGrp.add(circBox(landingW + 0.08, 0.1, landingDepth + 0.06, mats.roofNavyTrim, landingCx, FH - 0.24, landingCz, false));
+
+  // Perimeter white picket railings on outer courtyard edge and right return
+  addPicketRailing(landingGrp, landingStartLx, landingFrontLz, landingEndLx, landingFrontLz, FH, 1.0, mats);
+  addPicketRailing(landingGrp, landingEndLx, 0.08, landingEndLx, landingFrontLz, FH, 1.0, mats);
+  // Inner gap guard where stair narrows vs full landing
+  addPicketRailing(landingGrp, landingStartLx, 0.08, landingStartLx, landingCenterZStart(flightCenterLz, flightWidth), FH, 1.0, mats);
+
+  // Small rectangular white notice signboard mounted on the landing guardrail
+  landingGrp.add(circBox(0.55, 0.72, 0.05, mats.steelWhite, landingStartLx + 0.55, FH + 0.85, landingFrontLz + 0.05, false));
+  landingGrp.add(circBox(0.42, 0.14, 0.06, mats.uddBlue, landingStartLx + 0.55, FH + 1.08, landingFrontLz + 0.06, false));
+
+  // Support posts and cantilevered flat canopy roof over 2F landing
+  const canopyUndersideY = FH + 2.85;
+  landingGrp.add(circBox(0.14, 2.85, 0.14, mats.steelWhite, landingStartLx + 0.12, FH + 1.425, landingFrontLz - 0.08));
+  landingGrp.add(circBox(0.14, 2.85, 0.14, mats.steelWhite, landingEndLx - 0.12, FH + 1.425, landingFrontLz - 0.08));
+  landingGrp.add(circBox(landingW + 0.45, 0.16, landingDepth + 0.35, mats.steelWhite, landingCx, canopyUndersideY + 0.08, landingCz + 0.08));
+  landingGrp.add(circBox(landingW + 0.52, 0.08, landingDepth + 0.42, mats.roofNavyTrim, landingCx, canopyUndersideY + 0.18, landingCz + 0.08));
+
+  floor2F.add(landingGrp);
+}
+
+function landingCenterZStart(flightCenterLz: number, flightWidth: number): number {
+  return flightCenterLz - flightWidth / 2;
+}
+
