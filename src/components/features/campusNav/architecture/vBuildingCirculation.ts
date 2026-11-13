@@ -387,10 +387,10 @@ export function addVBuildingExteriorStairs(
 
   // Support posts and cantilevered flat canopy roof over 2F landing
   const canopyUndersideY = FH + 2.85;
-  landingGrp.add(circBox(0.14, 2.85, 0.14, mats.steelWhite, landingStartLx + 0.12, FH + 1.425, landingFrontLz - 0.08));
-  landingGrp.add(circBox(0.14, 2.85, 0.14, mats.steelWhite, landingEndLx - 0.12, FH + 1.425, landingFrontLz - 0.08));
-  landingGrp.add(circBox(landingW + 0.45, 0.16, landingDepth + 0.35, mats.steelWhite, landingCx, canopyUndersideY + 0.08, landingCz + 0.08));
-  landingGrp.add(circBox(landingW + 0.52, 0.08, landingDepth + 0.42, mats.roofNavyTrim, landingCx, canopyUndersideY + 0.18, landingCz + 0.08));
+  landingGrp.add(circBox(0.13, 2.85, 0.13, mats.steelWhite, landingStartLx + 0.12, FH + 1.425, landingFrontLz - 0.08));
+  landingGrp.add(circBox(0.13, 2.85, 0.13, mats.steelWhite, landingEndLx - 0.12, FH + 1.425, landingFrontLz - 0.08));
+  landingGrp.add(circBox(landingW + 0.45, 0.14, landingDepth + 0.35, mats.steelWhite, landingCx, canopyUndersideY + 0.07, landingCz + 0.08));
+  landingGrp.add(circBox(landingW + 0.5, 0.05, landingDepth + 0.4, mats.steelSilver, landingCx, canopyUndersideY + 0.16, landingCz + 0.08));
 
   floor2F.add(landingGrp);
 }
@@ -769,24 +769,40 @@ export function addVBuildingEscalatorAtriumFloor(
       addPicketRailing(grp, endLx, zBack + 0.12, endLx, zFront - 0.12, baseY + 0.16, 1.0, mats);
       addPicketRailing(grp, innerEdgeLx, zBack + 0.12, innerEdgeLx, zBack + 0.65, baseY + 0.16, 1.0, mats);
       addPicketRailing(grp, innerEdgeLx, zFront - 0.65, innerEdgeLx, zFront - 0.12, baseY + 0.16, 1.0, mats);
+    });
+  }
 
-      // Diagonal white steel structural knee braces visible under landing slabs
+  // Diagonal white steel structural knee braces placed within the supporting storey
+  // beneath 2F, 3F, and 4F landings so exploded floor tiers separate cleanly
+  if (floorIndex < 3) {
+    const landingLen = 1.82;
+    const southEndLx = x1 - 0.06;
+    const southInnerEdgeLx = x1 - landingLen - 0.04;
+    const northEndLx = x0 + 0.06;
+    const northInnerEdgeLx = x0 + landingLen + 0.04;
+    const braceTopY = baseY + FH - 0.08;
+    const braceLowY = baseY + FH - 1.45;
+
+    [
+      { endLx: southEndLx, innerEdgeLx: southInnerEdgeLx },
+      { endLx: northEndLx, innerEdgeLx: northInnerEdgeLx },
+    ].forEach(({ endLx, innerEdgeLx }) => {
       grp.add(
         circBeam(
-          new THREE.Vector3(endLx, baseY - 1.55, zBack + 0.15),
-          new THREE.Vector3(endLx, baseY - 0.04, zFront - 0.15),
-          0.1,
-          0.1,
+          new THREE.Vector3(endLx, braceLowY, zBack + 0.18),
+          new THREE.Vector3(endLx, braceTopY, zFront - 0.18),
+          0.09,
+          0.09,
           mats.steelWhite,
           false
         )
       );
       grp.add(
         circBeam(
-          new THREE.Vector3(innerEdgeLx, baseY - 1.45, zFront - 0.08),
-          new THREE.Vector3(endLx, baseY - 0.04, zFront - 0.08),
-          0.09,
-          0.09,
+          new THREE.Vector3(innerEdgeLx, braceLowY + 0.1, zFront - 0.12),
+          new THREE.Vector3(endLx, braceTopY, zFront - 0.12),
+          0.085,
+          0.085,
           mats.steelWhite,
           false
         )

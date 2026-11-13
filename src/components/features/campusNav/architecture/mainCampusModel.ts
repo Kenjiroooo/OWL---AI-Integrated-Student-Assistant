@@ -3588,8 +3588,8 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
         [-8.5, -59.5],
         [-31.0, -59.0],
       ],
-      cameraPos: new THREE.Vector3(0, 16, -28),
-      lookAt: new THREE.Vector3(14, 10, -52),
+      cameraPos: new THREE.Vector3(-4.0, 12.5, -22.5),
+      lookAt: new THREE.Vector3(10.5, 9.0, -51.0),
     },
   ];
 
