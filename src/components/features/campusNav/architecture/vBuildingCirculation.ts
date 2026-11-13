@@ -556,10 +556,115 @@ export function getVBuildingEscalatorAtriumSeg2Bounds(seg2Len: number) {
 }
 
 /**
+ * Adds a single inclined commercial escalator flight between two local X/Y points,
+ * complete with inclined white steel box-truss undercarriage, horizontal comb-plate
+ * aprons, stepped dark slate treads with brushed silver nosings, tempered glass
+ * balustrades, and continuous dark elastomer handrails with newel heads.
+ */
+function addEscalatorFlight(
+  parent: THREE.Object3D,
+  xStart: number,
+  yStart: number,
+  xEnd: number,
+  yEnd: number,
+  centerZ: number,
+  width: number,
+  mats: VBuildingCirculationMaterials
+): void {
+  const dx = xEnd - xStart;
+  const dy = yEnd - yStart;
+  const dirSign = dx >= 0 ? 1 : -1;
+  const stepCount = 14;
+  const runW = Math.abs(dx) / stepCount;
+  const stepRise = dy / stepCount;
+  const sideOffset = width / 2 - 0.04;
+
+  // Horizontal metallic comb-plate entry & exit aprons connecting seamlessly to landings
+  parent.add(circBox(0.46, 0.08, width + 0.06, mats.steelSilver, xStart - dirSign * 0.14, yStart - 0.02, centerZ, false));
+  parent.add(circBox(0.46, 0.08, width + 0.06, mats.steelSilver, xEnd + dirSign * 0.14, yEnd - 0.02, centerZ, false));
+
+  // White structural inclined box-truss undercarriage beneath steps
+  parent.add(
+    circBeam(
+      new THREE.Vector3(xStart, yStart - 0.34, centerZ),
+      new THREE.Vector3(xEnd, yEnd - 0.34, centerZ),
+      0.46,
+      width + 0.04,
+      mats.steelWhite,
+      true
+    )
+  );
+  // Subtle dark soffit strip underneath truss belly
+  parent.add(
+    circBeam(
+      new THREE.Vector3(xStart + dirSign * 0.1, yStart - 0.54, centerZ),
+      new THREE.Vector3(xEnd - dirSign * 0.1, yEnd - 0.54, centerZ),
+      0.06,
+      width - 0.08,
+      mats.steelDark,
+      false
+    )
+  );
+
+  // Discrete level steps ascending smoothly along flight
+  for (let i = 0; i < stepCount; i++) {
+    const t = (i + 0.5) / stepCount;
+    const sx = xStart + t * dx;
+    const stepTopY = yStart + (i + 1) * stepRise;
+    parent.add(
+      circBox(runW + 0.04, stepRise + 0.04, width - 0.16, mats.treadDark, sx, stepTopY - stepRise * 0.45, centerZ, false)
+    );
+    parent.add(
+      circBox(0.045, 0.024, width - 0.18, mats.steelSilver, sx - dirSign * runW * 0.34, stepTopY + 0.01, centerZ, false)
+    );
+  }
+
+  // Twin side skirt guards, clear-sky glass balustrades & black elastomer moving handrails
+  [-sideOffset, sideOffset].forEach((zo) => {
+    const gz = centerZ + zo;
+    parent.add(
+      circBeam(
+        new THREE.Vector3(xStart, yStart + 0.05, gz),
+        new THREE.Vector3(xEnd, yEnd + 0.05, gz),
+        0.18,
+        0.06,
+        mats.steelSilver,
+        false
+      )
+    );
+    parent.add(
+      circBeam(
+        new THREE.Vector3(xStart, yStart + 0.54, gz),
+        new THREE.Vector3(xEnd, yEnd + 0.54, gz),
+        0.82,
+        0.03,
+        mats.skyTintGlass,
+        false
+      )
+    );
+    parent.add(
+      circBeam(
+        new THREE.Vector3(xStart, yStart + 0.98, gz),
+        new THREE.Vector3(xEnd, yEnd + 0.98, gz),
+        0.075,
+        0.08,
+        mats.handrailBlack,
+        false
+      )
+    );
+    parent.add(circBox(0.42, 0.075, 0.085, mats.handrailBlack, xStart - dirSign * 0.18, yStart + 0.98, gz, false));
+    parent.add(circBox(0.42, 0.075, 0.085, mats.handrailBlack, xEnd + dirSign * 0.18, yEnd + 0.98, gz, false));
+    parent.add(circBox(0.12, 0.92, 0.05, mats.steelSilver, xStart - dirSign * 0.34, yStart + 0.5, gz, false));
+    parent.add(circBox(0.12, 0.92, 0.05, mats.steelSilver, xEnd + dirSign * 0.34, yEnd + 0.5, gz, false));
+  });
+}
+
+/**
  * Adds one tier (floorIndex 0..3 = 1F..4F) of V Building's projecting 4-storey
  * white-framed glass Escalator Atrium enclosure along Seg 2 (East Wing), including
  * ground entrance door/gate, 2F-4F bridge landing decks, picket guardrails,
- * diagonal structural knee braces, and the 4F dark-blue overhanging roof canopy.
+ * diagonal structural knee braces, interior crisscross escalator flights, and the
+ * 4F dark-blue overhanging roof canopy.
  */
 export function addVBuildingEscalatorAtriumFloor(
   floorGroup: THREE.Group,
@@ -687,6 +792,21 @@ export function addVBuildingEscalatorAtriumFloor(
         )
       );
     });
+  }
+
+  // ── 2b. Interior Crisscross Escalator Flights (1F->2F, 2F->3F, 3F->4F) ─────
+  if (floorIndex < 3) {
+    const northInnerLx = x0 + 1.88;
+    const southInnerLx = x1 - 1.88;
+    const startElevY = floorIndex === 0 ? 0.22 : baseY + 0.17;
+    const endElevY = (floorIndex + 1) * FH + 0.15;
+    const innerLaneZ = zBack + 1.15;
+    const outerLaneZ = zBack + 2.45;
+    const laneWidth = 0.94;
+
+    // Outer courtyard lane rises South -> North; inner corridor lane rises North -> South
+    addEscalatorFlight(grp, southInnerLx, startElevY, northInnerLx, endElevY, outerLaneZ, laneWidth, mats);
+    addEscalatorFlight(grp, northInnerLx, startElevY, southInnerLx, endElevY, innerLaneZ, laneWidth, mats);
   }
 
   // ── 3. Overhanging Dark-Blue Roof Canopy atop 4F (floorIndex === 3) ───────
