@@ -1367,61 +1367,6 @@ function createSolarPanelTexture(): THREE.CanvasTexture {
   return tex;
 }
 
-/** Corner Glass Atrium Curtain Wall texture: clear glazing on a silver/white aluminium grid (from photos) */
-function createGlassAtriumTexture(): THREE.CanvasTexture {
-  const W = 512;
-  const H = 512;
-  const { canvas, ctx } = makeCanvas(W, H);
-
-  // Clear glass showing a pale interior
-  ctx.fillStyle = '#8fa6bb';
-  ctx.fillRect(0, 0, W, H);
-
-  const grad = ctx.createLinearGradient(0, 0, W, H);
-  grad.addColorStop(0, 'rgba(235, 245, 255, 0.55)');
-  grad.addColorStop(0.5, 'rgba(150, 175, 200, 0.25)');
-  grad.addColorStop(1, 'rgba(60, 80, 100, 0.45)');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, W, H);
-
-  // Silver perimeter frame
-  ctx.strokeStyle = '#e2e8f0';
-  ctx.lineWidth = 10;
-  ctx.strokeRect(5, 5, W - 10, H - 10);
-
-  // Grid mullions (4 bays wide, 8 stories high)
-  const cols = 4;
-  const rows = 8;
-  const bayW = W / cols;
-  const bayH = H / rows;
-
-  ctx.strokeStyle = '#d7dde5';
-  ctx.lineWidth = 6;
-  for (let c = 1; c < cols; c++) {
-    ctx.beginPath();
-    ctx.moveTo(c * bayW, 0);
-    ctx.lineTo(c * bayW, H);
-    ctx.stroke();
-  }
-  for (let r = 1; r < rows; r++) {
-    ctx.beginPath();
-    ctx.moveTo(0, r * bayH);
-    ctx.lineTo(W, r * bayH);
-    ctx.stroke();
-  }
-
-  // Highlights
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-  ctx.lineWidth = 2;
-  for (let c = 0; c < cols; c++) {
-    for (let r = 0; r < rows; r++) {
-      ctx.strokeRect(c * bayW + 4, r * bayH + 4, bayW - 8, bayH - 8);
-    }
-  }
-
-  return toTexture(canvas);
-}
-
 // ── Geometry helpers ────────────────────────────────────────────────────────
 function box(
   w: number,
@@ -1710,13 +1655,6 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     map: createSolarPanelTexture(),
     roughness: 0.18,
     metalness: 0.7,
-  });
-  const glassAtriumMat = new THREE.MeshStandardMaterial({
-    map: createGlassAtriumTexture(),
-    roughness: 0.15,
-    metalness: 0.6,
-    transparent: true,
-    opacity: 0.92,
   });
   const latticeSteel = new THREE.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.35, metalness: 0.8 });
   const latticeRed = new THREE.MeshStandardMaterial({ color: 0xd9381e, roughness: 0.45, metalness: 0.4 });
@@ -2277,9 +2215,9 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   const hoopOrange = new THREE.MeshStandardMaterial({ color: 0xff5500, roughness: 0.3, metalness: 0.4 });
   const netMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.8 });
 
-  const courtX = 2.0;
+  const courtX = 1.0;
   const courtZ = -38.0;
-  const courtW = 32.0; // length along X (east-west)
+  const courtW = 28.0; // length along X (east-west, leaves perimeter clearance for west parking & east escalator atrium)
   const courtD = 18.0; // width along Z
 
   // Concrete court apron base & tournament acrylic playing floor
@@ -2315,8 +2253,8 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     net.position.set(rimX, 2.8, courtZ);
     ground.add(net);
   };
-  addHoop(courtX - 14.5, 1);  // Left basket facing right
-  addHoop(courtX + 14.5, -1); // Right basket facing left
+  addHoop(courtX - 12.5, 1);  // Left basket facing right
+  addHoop(courtX + 12.5, -1); // Right basket facing left
 
   // Official Basketball ball on court
   const ballMat = new THREE.MeshStandardMaterial({ color: 0xee5d1a, roughness: 0.55, metalness: 0.05 });
@@ -2410,11 +2348,10 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     ground.add(wall);
   });
 
-  // C. Corner Glass Atrium Foyer at P3 [17.0, -57.5]
+  // C. Structural Corner Junction Infill at P3 [17.0, -54.0] (tucked behind inner corner)
   const p3 = C5_POINTS[2];
-  ground.add(box(4.8, FH, 4.8, glassAtriumMat, p3[0], FH / 2, p3[1]));
-  ground.add(box(0.35, FH, 0.35, blueWall, p3[0] - 2.2, FH / 2, p3[1] + 2.2));
-  ground.add(box(0.35, FH, 0.35, blueWall, p3[0] + 2.2, FH / 2, p3[1] - 2.2));
+  ground.add(box(2.4, FH, 2.4, creamWall, p3[0] + 1.0, FH / 2, p3[1] - 1.0));
+  ground.add(box(0.55, FH, 0.55, creamWall, p3[0], FH / 2, p3[1]));
 
 
 
@@ -2910,11 +2847,10 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
         g.add(wallGrp);
       });
 
-      // Corner Glass Atrium Tower (Levels 1 to 3) at P3 [17.0, -57.5]
+      // Structural Corner Junction Column & Infill (Levels 1 to 3) at P3 [17.0, -54.0]
       const p3 = C5_POINTS[2];
-      g.add(box(4.8, FH, 4.8, glassAtriumMat, p3[0], cy, p3[1]));
-      g.add(box(0.35, FH, 0.35, blueWall, p3[0] - 2.2, cy, p3[1] + 2.2));
-      g.add(box(0.35, FH, 0.35, blueWall, p3[0] + 2.2, cy, p3[1] - 2.2));
+      g.add(box(2.4, FH, 2.4, creamWall, p3[0] + 1.0, cy, p3[1] - 1.0));
+      g.add(box(0.55, FH, 0.55, creamWall, p3[0], cy, p3[1]));
     } else if (f === 4) {
       // Level 4: 5th Floor Enclosed Academic Hall with Continuous Louvered Window Bays
       C5_INNER_SEGS.forEach((seg) => {
@@ -2957,15 +2893,14 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
         g.add(wallGrp);
       });
 
-      // Corner Glass Atrium Tower & Universidad de Dagupan Crest Seal at P3 [17.0, -57.5]
+      // Structural Corner Junction & Universidad de Dagupan Crest Seal at P3 [17.0, -54.0]
       const p3 = C5_POINTS[2];
-      g.add(box(4.8, FH, 4.8, glassAtriumMat, p3[0], cy, p3[1]));
-      g.add(box(0.35, FH, 0.35, blueWall, p3[0] - 2.2, cy, p3[1] + 2.2));
-      g.add(box(0.35, FH, 0.35, blueWall, p3[0] + 2.2, cy, p3[1] - 2.2));
+      g.add(box(2.4, FH, 2.4, creamWall, p3[0] + 1.0, cy, p3[1] - 1.0));
+      g.add(box(0.55, FH, 0.55, ochreWall, p3[0], cy, p3[1]));
 
       // Circular Universidad de Dagupan Seal Medallion at 45° Inner Corner
-      const cornerSealX = p3[0] - 1.2;
-      const cornerSealZ = p3[1] + 1.2;
+      const cornerSealX = p3[0] - 0.32;
+      const cornerSealZ = p3[1] + 0.32;
       const sealY = baseY + FH - 0.4;
       const cornerSeal = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.3, 0.22, 48), emblemMat);
       cornerSeal.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(-1, 0, 1).normalize());
@@ -3370,9 +3305,9 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
     roof.add(parapetGrp);
   });
 
-  // Corner Glass Atrium Flat Silver Aluminium Roof Cap at P3 [17.0, -57.5]
+  // Corner Junction Parapet Cap at P3 [17.0, -54.0]
   const p3Roof = C5_POINTS[2];
-  roof.add(box(5.2, 0.35, 5.2, mats.metalSilver, p3Roof[0], bldgTopY + 0.5, p3Roof[1]));
+  roof.add(box(2.6, 0.35, 2.6, mats.metalSilver, p3Roof[0] + 0.9, bldgTopY + 0.2, p3Roof[1] - 0.9));
 
   // Rooftop Stair & Service Penthouses
   // Penthouse 1: West North Wing deck (centered on roof deck between front and back parapets)
@@ -3518,6 +3453,10 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   root.traverse((obj) => {
     if ((obj as THREE.Mesh).isMesh) {
       const mesh = obj as THREE.Mesh;
+      if (mesh.userData.buildingId === 'udd-main-v') {
+        vBuildingMeshes.push(mesh);
+        return;
+      }
       const b3 = new THREE.Box3().setFromObject(mesh);
       if (b3.max.y <= 0.35 && b3.min.y <= 0.05) {
         // Skip ground pavement / baseline markings
