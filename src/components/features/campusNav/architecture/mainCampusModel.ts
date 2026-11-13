@@ -22,6 +22,15 @@
 import * as THREE from 'three';
 import { getCachedBoxGeometry, getCachedCylinderGeometry } from './geometryCache';
 import { getMaterials, createEmblemTexture, type Building3DResult, type BuildingFocusTarget } from './proceduralModels';
+import {
+  V_CIRC_LAYOUT,
+  createVBuildingCirculationMaterials,
+  addVBuildingExteriorStairs,
+  addVBuildingGlassElevatorFloor,
+  addVBuildingGlassElevatorRoof,
+  addVBuildingEscalatorAtriumFloor,
+  getVBuildingEscalatorAtriumSeg2Bounds,
+} from './vBuildingCirculation';
 
 // ── Palette (sampled from the architectural renders) ────────────────────────
 const C = {
@@ -1658,6 +1667,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   });
   const latticeSteel = new THREE.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.35, metalness: 0.8 });
   const latticeRed = new THREE.MeshStandardMaterial({ color: 0xd9381e, roughness: 0.45, metalness: 0.4 });
+  const vCircMats = createVBuildingCirculationMaterials();
 
 
   // ── LEVEL 0: GROUND CONCOURSE, CHAPEL, PORTAL GATE & STREET ────────────────
@@ -2353,6 +2363,10 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   ground.add(box(2.4, FH, 2.4, creamWall, p3[0] + 1.0, FH / 2, p3[1] - 1.0));
   ground.add(box(0.55, FH, 0.55, creamWall, p3[0], FH / 2, p3[1]));
 
+  // D0. V Building Glass Elevator Tower & Projecting 4-Storey Escalator Atrium (1F level)
+  addVBuildingGlassElevatorFloor(ground, 0, C5_INNER_SEGS[1], vCircMats);
+  addVBuildingEscalatorAtriumFloor(ground, 0, C5_INNER_SEGS[2], vCircMats);
+
 
 
   // Courtyard corner garden planter (from reference photo)
@@ -2761,13 +2775,39 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
         grp.position.set(seg.cx, baseY, seg.cz);
         grp.rotation.y = seg.rotY;
 
-        // Front Balustrade along corridor front edge (local Z = 0) - fully intact with signature blue zigzag spandrels
-        grp.add(box(seg.len, 1.05, 0.25, creamWall, 0, 0.525, 0));
-        grp.add(box(seg.len + 0.1, 0.08, 0.32, creamWall, 0, 1.09, 0)); // coping
-        grp.add(box(seg.len, 0.5, 0.3, creamWall, 0, FH - 0.25, 0)); // lintel beam
+        // Front Balustrade & zigzag spandrel along corridor front edge (split around circulation portals)
+        const halfSeg = seg.len / 2;
+        const openings: Array<readonly [number, number]> = [];
+        if (seg.idx === 1) {
+          if (f === 1) {
+            const { landingStartLx, landingEndLx } = V_CIRC_LAYOUT.stair;
+            openings.push([landingStartLx + 0.15, landingEndLx - 0.15]);
+          }
+          const elevHalf = V_CIRC_LAYOUT.elevator.width / 2 - 0.35;
+          openings.push([V_CIRC_LAYOUT.elevator.centerLx - elevHalf, V_CIRC_LAYOUT.elevator.centerLx + elevHalf]);
+        } else if (seg.idx === 2) {
+          const atrBounds = getVBuildingEscalatorAtriumSeg2Bounds(seg.len);
+          openings.push(atrBounds.northOpening, atrBounds.southOpening);
+        }
 
-        // Signature Blue Zigzag Spandrel Panel facing courtyard (+Z)
-        grp.add(box(seg.len, 1.15, 0.05, [creamWall, creamWall, creamWall, creamWall, getSpandrelMat(seg.len), creamWall], 0, 0.6, 0.16));
+        openings.sort((a, b) => a[0] - b[0]);
+        const parapetSpans: Array<[number, number]> = [];
+        let cursor = -halfSeg;
+        for (const [oStart, oEnd] of openings) {
+          if (oStart > cursor + 0.1) parapetSpans.push([cursor, oStart]);
+          cursor = Math.max(cursor, oEnd);
+        }
+        if (halfSeg > cursor + 0.1) parapetSpans.push([cursor, halfSeg]);
+
+        parapetSpans.forEach(([sA, sB]) => {
+          const runLen = sB - sA;
+          const runCx = (sA + sB) / 2;
+          grp.add(box(runLen, 1.05, 0.25, creamWall, runCx, 0.525, 0));
+          grp.add(box(runLen + 0.08, 0.08, 0.32, creamWall, runCx, 1.09, 0));
+          grp.add(box(runLen, 1.15, 0.05, [creamWall, creamWall, creamWall, creamWall, getSpandrelMat(runLen), creamWall], runCx, 0.6, 0.16));
+        });
+
+        grp.add(box(seg.len, 0.5, 0.3, creamWall, 0, FH - 0.25, 0)); // lintel beam
 
         // Dark Blue Corridor Soffit & Fascia Strip
         grp.add(box(seg.len, 0.03, 2.1, soffitBlue, 0, FH - 0.17, -1.1, false));
@@ -2789,8 +2829,14 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
         // Recessed classroom wall (offset 2.2m inward) with doors, windows & warm illumination
         grp.add(box(seg.len - 0.6, FH, 0.2, [creamWall, creamWall, creamWall, creamWall, corridorWallMat, creamWall], 0, FH / 2, -2.2));
 
-        // Air Conditioner Outdoor Compressor Units mounted on balustrades
-        [-seg.len / 4, seg.len / 4].forEach((acX) => {
+        // Air Conditioner Outdoor Compressor Units mounted clear of stairs/elevator/escalator bays
+        const acSlots =
+          seg.idx === 1
+            ? [-9.6, 3.6]
+            : seg.idx === 2
+              ? [6.2, 10.2]
+              : [-seg.len / 4, seg.len / 4];
+        acSlots.forEach((acX) => {
           grp.add(box(0.85, 0.62, 0.38, [mats.metalSilver, mats.metalSilver, mats.metalSilver, mats.metalSilver, acUnitMat, mats.metalSilver], acX, 1.35, 0.22));
           grp.add(box(0.04, 0.45, 0.42, mats.metalDark, acX - 0.28, 1.0, 0.22));
           grp.add(box(0.04, 0.45, 0.42, mats.metalDark, acX + 0.28, 1.0, 0.22));
@@ -2851,6 +2897,13 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       const p3 = C5_POINTS[2];
       g.add(box(2.4, FH, 2.4, creamWall, p3[0] + 1.0, cy, p3[1] - 1.0));
       g.add(box(0.55, FH, 0.55, creamWall, p3[0], cy, p3[1]));
+
+      // Exterior Stairs (2F landing + ground flight), Glass Elevator & Escalator Atrium
+      if (f === 1) {
+        addVBuildingExteriorStairs(ground, g, C5_INNER_SEGS[1], vCircMats);
+      }
+      addVBuildingGlassElevatorFloor(g, f, C5_INNER_SEGS[1], vCircMats);
+      addVBuildingEscalatorAtriumFloor(g, f, C5_INNER_SEGS[2], vCircMats);
     } else if (f === 4) {
       // Level 4: 5th Floor Enclosed Academic Hall with Continuous Louvered Window Bays
       C5_INNER_SEGS.forEach((seg) => {
@@ -2912,6 +2965,9 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       cornerRing.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), new THREE.Vector3(-1, 0, 1).normalize());
       cornerRing.position.set(cornerSealX, sealY, cornerSealZ);
       g.add(cornerRing);
+
+      // 5F tier of Glass Elevator Tower
+      addVBuildingGlassElevatorFloor(g, f, C5_INNER_SEGS[1], vCircMats);
     }
 
     if (f === 1 || f === 2) {
@@ -3308,6 +3364,9 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
   // Corner Junction Parapet Cap at P3 [17.0, -54.0]
   const p3Roof = C5_POINTS[2];
   roof.add(box(2.6, 0.35, 2.6, mats.metalSilver, p3Roof[0] + 0.9, bldgTopY + 0.2, p3Roof[1] - 0.9));
+
+  // Glass Elevator Tower machine-room cap
+  addVBuildingGlassElevatorRoof(roof, bldgTopY, C5_INNER_SEGS[1], vCircMats);
 
   // Rooftop Stair & Service Penthouses
   // Penthouse 1: West North Wing deck (centered on roof deck between front and back parapets)
