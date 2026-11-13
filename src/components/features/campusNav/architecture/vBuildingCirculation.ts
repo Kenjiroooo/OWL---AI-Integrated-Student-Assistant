@@ -539,3 +539,168 @@ export function addVBuildingGlassElevatorRoof(
   roofGroup.add(roofGrp);
 }
 
+/**
+ * Returns local-X bounds of the Escalator Atrium along Seg 2 (East Wing)
+ * plus its North/South landing opening intervals for walk-through corridor integration.
+ */
+export function getVBuildingEscalatorAtriumSeg2Bounds(seg2Len: number) {
+  const { startS, endS } = V_CIRC_LAYOUT.atrium;
+  const xStart = -seg2Len / 2 + startS;
+  const xEnd = -seg2Len / 2 + endS;
+  return {
+    xStart,
+    xEnd,
+    northOpening: [xStart + 0.15, xStart + 1.85] as const,
+    southOpening: [xEnd - 1.85, xEnd - 0.15] as const,
+  };
+}
+
+/**
+ * Adds one tier (floorIndex 0..3 = 1F..4F) of V Building's projecting 4-storey
+ * white-framed glass Escalator Atrium enclosure along Seg 2 (East Wing), including
+ * ground entrance door/gate, 2F-4F bridge landing decks, picket guardrails,
+ * diagonal structural knee braces, and the 4F dark-blue overhanging roof canopy.
+ */
+export function addVBuildingEscalatorAtriumFloor(
+  floorGroup: THREE.Group,
+  floorIndex: number,
+  seg2: VBuildingSegment,
+  mats: VBuildingCirculationMaterials
+): void {
+  if (floorIndex < 0 || floorIndex > 3) return;
+
+  const { floorHeight: FH, atrium } = V_CIRC_LAYOUT;
+  const { startS, endS, baysLong, baysDeep, depth, backOffsetLz } = atrium;
+
+  const atrLen = endS - startS;
+  const centerLx = -seg2.len / 2 + (startS + endS) / 2;
+  const x0 = centerLx - atrLen / 2;
+  const x1 = centerLx + atrLen / 2;
+  const zBack = backOffsetLz;
+  const zFront = backOffsetLz + depth;
+  const centerLz = (zBack + zFront) / 2;
+
+  const baseY = floorIndex * FH;
+  const midY = baseY + FH / 2;
+
+  const grp = new THREE.Group();
+  grp.position.set(seg2.cx, 0, seg2.cz);
+  grp.rotation.y = seg2.rotY;
+
+  // ── 1. Outer Steel Curtain Wall Grid (6 long bays x 2 end bays, 2 rows/floor) ─
+  // Vertical mullions along courtyard-facing long wall (z = zFront)
+  for (let b = 0; b <= baysLong; b++) {
+    const mx = x0 + (b * atrLen) / baysLong;
+    const isCorner = b === 0 || b === baysLong;
+    grp.add(circBox(isCorner ? 0.14 : 0.085, FH, isCorner ? 0.14 : 0.085, mats.steelWhite, mx, midY, zFront));
+  }
+  // Vertical mullions along North (x0) & South (x1) end walls
+  for (let d = 0; d < baysDeep; d++) {
+    const mz = zBack + (d * depth) / baysDeep;
+    const size = d === 0 ? 0.14 : 0.085;
+    grp.add(circBox(size, FH, size, mats.steelWhite, x0, midY, mz));
+    grp.add(circBox(size, FH, size, mats.steelWhite, x1, midY, mz));
+  }
+
+  // Horizontal white steel transoms (floor + mid-floor) on long wall and North end wall
+  [baseY + 0.05, midY].forEach((ty) => {
+    grp.add(circBox(atrLen + 0.08, 0.095, 0.1, mats.steelWhite, centerLx, ty, zFront, false));
+    grp.add(circBox(0.1, 0.095, depth + 0.06, mats.steelWhite, x0, ty, centerLz, false));
+    // South end transom: skip ground-floor base bar where the entrance doorway stands
+    if (!(floorIndex === 0 && ty < 0.5)) {
+      grp.add(circBox(0.1, 0.095, depth + 0.06, mats.steelWhite, x1, ty, centerLz, false));
+    }
+  });
+
+  // Transparent low-iron curtain glazing on courtyard face and North end
+  grp.add(circBox(atrLen - 0.12, FH - 0.12, 0.03, mats.clearGlass, centerLx, midY, zFront - 0.015, false));
+  grp.add(circBox(0.03, FH - 0.12, depth - 0.12, mats.clearGlass, x0 + 0.015, midY, centerLz, false));
+
+  // South End Face (closest to basketball court): ground-floor entrance door + upper glazing
+  if (floorIndex === 0) {
+    const midEndLz = zBack + depth / 2;
+    const halfBay = depth / 2;
+    // Outer bay: framed clear-glass swing entrance door + top transom
+    const outerBayCz = (midEndLz + zFront) / 2;
+    grp.add(circBox(0.08, 2.35, 0.08, mats.steelWhite, x1, 1.175, zFront - 0.08, false));
+    grp.add(circBox(0.08, 2.35, 0.08, mats.steelWhite, x1, 1.175, midEndLz + 0.06, false));
+    grp.add(circBox(0.1, 0.09, halfBay, mats.steelWhite, x1, 2.36, outerBayCz, false));
+    grp.add(circBox(0.04, 2.18, halfBay - 0.22, mats.clearGlass, x1 - 0.01, 1.24, outerBayCz, false));
+    // Stainless push bar & handle on door
+    grp.add(circBox(0.11, 0.05, halfBay * 0.65, mats.steelSilver, x1 + 0.01, 1.05, outerBayCz, false));
+    // Upper transom glazing above door
+    grp.add(circBox(0.03, FH - 2.42, halfBay - 0.1, mats.clearGlass, x1 - 0.01, 2.38 + (FH - 2.42) / 2, outerBayCz, false));
+
+    // Inner bay: open walkway pass-through with crisp white picket gate/railing & upper glazing
+    const innerBayCz = (zBack + midEndLz) / 2;
+    addPicketRailing(grp, x1, zBack + 0.12, x1, midEndLz - 0.08, 0.08, 1.05, mats, 0.2);
+    grp.add(circBox(0.03, FH - 1.95, halfBay - 0.1, mats.clearGlass, x1 - 0.01, midY + 0.9, innerBayCz, false));
+  } else {
+    grp.add(circBox(0.03, FH - 0.12, depth - 0.12, mats.clearGlass, x1 - 0.015, midY, centerLz, false));
+  }
+
+  // ── 2. Floor Slab, Bridge Landings, Railings & Knee Braces ────────────────
+  if (floorIndex === 0) {
+    // Ground concrete plinth & dark charcoal tiled interior lobby floor
+    grp.add(circBox(atrLen + 0.25, 0.18, depth + 0.25, mats.concreteStep, centerLx, 0.09, centerLz, false));
+    grp.add(circBox(atrLen - 0.18, 0.06, depth - 0.18, mats.treadDark, centerLx, 0.19, centerLz, false));
+    // Small exterior concrete threshold outside South entrance door
+    grp.add(circBox(0.9, 0.12, depth, mats.concreteStep, x1 + 0.45, 0.06, centerLz, false));
+  } else {
+    // 2F, 3F, 4F North & South Landing Decks bridging into East Wing corridor
+    const landingLen = 1.82;
+    const southLandingCx = x1 - landingLen / 2 - 0.04;
+    const northLandingCx = x0 + landingLen / 2 + 0.04;
+
+    [
+      { lx: southLandingCx, innerEdgeLx: x1 - landingLen - 0.04, endLx: x1 - 0.06 },
+      { lx: northLandingCx, innerEdgeLx: x0 + landingLen + 0.04, endLx: x0 + 0.06 },
+    ].forEach(({ lx, innerEdgeLx, endLx }) => {
+      // Concrete deck slab extending flush from Seg 2 corridor edge (z = -0.1) out to glass face
+      grp.add(circBox(landingLen, 0.22, depth + 0.1, mats.steelWhite, lx, baseY + 0.06, centerLz - 0.05));
+      grp.add(circBox(landingLen - 0.04, 0.06, depth - 0.1, mats.roofNavyTrim, lx, baseY - 0.08, centerLz, false));
+
+      // White vertical-picket guardrails along outer glass face & escalator well inner edge
+      addPicketRailing(grp, endLx, zBack + 0.12, endLx, zFront - 0.12, baseY + 0.16, 1.0, mats);
+      addPicketRailing(grp, innerEdgeLx, zBack + 0.12, innerEdgeLx, zBack + 0.65, baseY + 0.16, 1.0, mats);
+      addPicketRailing(grp, innerEdgeLx, zFront - 0.65, innerEdgeLx, zFront - 0.12, baseY + 0.16, 1.0, mats);
+
+      // Diagonal white steel structural knee braces visible under landing slabs
+      grp.add(
+        circBeam(
+          new THREE.Vector3(endLx, baseY - 1.55, zBack + 0.15),
+          new THREE.Vector3(endLx, baseY - 0.04, zFront - 0.15),
+          0.1,
+          0.1,
+          mats.steelWhite,
+          false
+        )
+      );
+      grp.add(
+        circBeam(
+          new THREE.Vector3(innerEdgeLx, baseY - 1.45, zFront - 0.08),
+          new THREE.Vector3(endLx, baseY - 0.04, zFront - 0.08),
+          0.09,
+          0.09,
+          mats.steelWhite,
+          false
+        )
+      );
+    });
+  }
+
+  // ── 3. Overhanging Dark-Blue Roof Canopy atop 4F (floorIndex === 3) ───────
+  if (floorIndex === 3) {
+    const roofY = baseY + FH;
+    // White structural roof ceiling deck overhanging curtain mullions
+    grp.add(circBox(atrLen + 0.45, 0.16, depth + 0.42, mats.steelWhite, centerLx, roofY + 0.08, centerLz + 0.04));
+    // Prominent overhanging navy/royal-blue roof fascia & sloped upper cap
+    grp.add(circBox(atrLen + 0.54, 0.18, depth + 0.5, mats.roofNavyTrim, centerLx, roofY + 0.24, centerLz + 0.04));
+    const upperCap = circBox(atrLen + 0.46, 0.12, depth + 0.44, mats.roofNavyTrim, centerLx, roofY + 0.36, centerLz);
+    upperCap.rotation.x = -0.04; // subtle pitch sloping away from East Wing
+    grp.add(upperCap);
+  }
+
+  floorGroup.add(grp);
+}
+
