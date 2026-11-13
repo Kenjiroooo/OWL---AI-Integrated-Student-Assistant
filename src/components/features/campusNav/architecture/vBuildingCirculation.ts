@@ -399,3 +399,143 @@ function landingCenterZStart(flightCenterLz: number, flightWidth: number): numbe
   return flightCenterLz - flightWidth / 2;
 }
 
+/**
+ * Adds one vertical tier (floorIndex 0..4 = 1F..5F) of V Building's slender
+ * white-framed clear glass Elevator Tower along Seg 1 at the inner corner junction.
+ */
+export function addVBuildingGlassElevatorFloor(
+  floorGroup: THREE.Group,
+  floorIndex: number,
+  seg1: VBuildingSegment,
+  mats: VBuildingCirculationMaterials
+): void {
+  const { floorHeight: FH, elevator } = V_CIRC_LAYOUT;
+  const { centerLx, width, depth, frontOffsetLz } = elevator;
+  const baseY = floorIndex * FH;
+  const midY = baseY + FH / 2;
+
+  const backLz = frontOffsetLz;
+  const frontLz = frontOffsetLz + depth;
+  const centerLz = (backLz + frontLz) / 2;
+  const halfW = width / 2;
+
+  const grp = new THREE.Group();
+  grp.position.set(seg1.cx, 0, seg1.cz);
+  grp.rotation.y = seg1.rotY;
+
+  // Ground foundation plinth vs corridor floor landing bridge slab
+  if (floorIndex === 0) {
+    grp.add(circBox(width + 0.3, 0.22, depth + 0.3, mats.concreteStep, centerLx, 0.11, centerLz));
+    // Dark charcoal elevator pit sill at ground entry
+    grp.add(circBox(width - 0.18, 0.08, depth - 0.18, mats.treadDark, centerLx, 0.24, centerLz, false));
+  } else {
+    // Structural bridge apron connecting corridor floor cleanly into elevator vestibule
+    grp.add(circBox(width, 0.2, 0.65, mats.steelWhite, centerLx, baseY + 0.1, backLz + 0.25));
+  }
+
+  // 4 corner white steel square tube posts
+  const corners: Array<[number, number]> = [
+    [centerLx - halfW, backLz],
+    [centerLx + halfW, backLz],
+    [centerLx - halfW, frontLz],
+    [centerLx + halfW, frontLz],
+  ];
+  corners.forEach(([cx, cz]) => {
+    grp.add(circBox(0.13, FH, 0.13, mats.steelWhite, cx, midY, cz));
+  });
+
+  // Intermediate vertical curtain mullions splitting front & side faces into 2 clear bays each
+  grp.add(circBox(0.08, FH, 0.08, mats.steelWhite, centerLx, midY, frontLz, false));
+  grp.add(circBox(0.08, FH, 0.08, mats.steelWhite, centerLx - halfW, midY, centerLz, false));
+  grp.add(circBox(0.08, FH, 0.08, mats.steelWhite, centerLx + halfW, midY, centerLz, false));
+
+  // Horizontal white steel transom rings (floor line + mid-floor = 2 rows per floor)
+  [baseY + 0.05, midY].forEach((ty) => {
+    grp.add(circBox(width + 0.06, 0.1, 0.1, mats.steelWhite, centerLx, ty, frontLz, false));
+    grp.add(circBox(0.1, 0.1, depth + 0.06, mats.steelWhite, centerLx - halfW, ty, centerLz, false));
+    grp.add(circBox(0.1, 0.1, depth + 0.06, mats.steelWhite, centerLx + halfW, ty, centerLz, false));
+  });
+
+  // Transparent low-iron clear curtain glazing on front, left, and right walls
+  grp.add(circBox(width - 0.12, FH - 0.14, 0.03, mats.clearGlass, centerLx, midY, frontLz - 0.01, false));
+  grp.add(circBox(0.03, FH - 0.14, depth - 0.12, mats.clearGlass, centerLx - halfW + 0.01, midY, centerLz, false));
+  grp.add(circBox(0.03, FH - 0.14, depth - 0.12, mats.clearGlass, centerLx + halfW - 0.01, midY, centerLz, false));
+
+  // Corridor-side elevator lobby portal & brushed stainless landing doors
+  grp.add(circBox(1.55, 2.35, 0.09, mats.steelSilver, centerLx, baseY + 1.25, backLz + 0.06, false));
+  grp.add(circBox(0.04, 2.2, 0.11, mats.steelDark, centerLx, baseY + 1.2, backLz + 0.06, false)); // door seam
+  grp.add(circBox(1.75, 0.18, 0.14, mats.steelWhite, centerLx, baseY + 2.48, backLz + 0.06, false));
+
+  // Visible interior elevator guide rails, structural cross-braces & hoist cables
+  [-0.86, 0.86].forEach((gx) => {
+    grp.add(circBox(0.07, FH, 0.09, mats.steelDark, centerLx + gx, midY, centerLz + 0.05, false));
+  });
+  [-0.22, -0.08, 0.08, 0.22].forEach((cx) => {
+    grp.add(
+      circRod(
+        new THREE.Vector3(centerLx + cx, baseY, centerLz - 0.45),
+        new THREE.Vector3(centerLx + cx, baseY + FH, centerLz - 0.45),
+        0.015,
+        mats.steelDark
+      )
+    );
+  });
+
+  // Rear shaft ring beams at floor level
+  grp.add(circBox(width - 0.16, 0.12, 0.14, mats.steelSilver, centerLx, baseY + 0.12, centerLz - 0.55, false));
+
+  // Prominent panoramic glass-backed Elevator Cab inside mid-shaft (3F, floorIndex === 2)
+  if (floorIndex === 2) {
+    const cabBaseY = baseY + 0.45;
+    const cabH = 2.45;
+    const cabW = 1.48;
+    const cabD = 1.48;
+    // Sling platform & top crosshead beam
+    grp.add(circBox(cabW + 0.12, 0.16, cabD + 0.1, mats.steelDark, centerLx, cabBaseY, centerLz + 0.05));
+    grp.add(circBox(cabW + 0.16, 0.18, 0.22, mats.steelSilver, centerLx, cabBaseY + cabH + 0.12, centerLz + 0.05));
+    // Illuminated warm ceiling diffuser inside cab
+    grp.add(circBox(cabW - 0.14, 0.08, cabD - 0.14, mats.cabWarmLight, centerLx, cabBaseY + cabH - 0.02, centerLz + 0.05, false));
+    // Cab corner stiles & scenic rear/side glass enclosure
+    const cabCornerOffsets = [
+      [-cabW / 2, -cabD / 2],
+      [cabW / 2, -cabD / 2],
+      [-cabW / 2, cabD / 2],
+      [cabW / 2, cabD / 2],
+    ];
+    cabCornerOffsets.forEach(([ox, oz]) => {
+      grp.add(circBox(0.08, cabH, 0.08, mats.steelSilver, centerLx + ox, cabBaseY + cabH / 2, centerLz + 0.05 + oz, false));
+    });
+    grp.add(circBox(cabW - 0.08, cabH - 0.12, 0.03, mats.skyTintGlass, centerLx, cabBaseY + cabH / 2, centerLz + 0.05 + cabD / 2, false));
+    grp.add(circBox(0.03, cabH - 0.12, cabD - 0.08, mats.skyTintGlass, centerLx - cabW / 2, cabBaseY + cabH / 2, centerLz + 0.05, false));
+    grp.add(circBox(0.03, cabH - 0.12, cabD - 0.08, mats.skyTintGlass, centerLx + cabW / 2, cabBaseY + cabH / 2, centerLz + 0.05, false));
+    // Stainless interior handrail visible through glass
+    grp.add(circBox(cabW - 0.16, 0.04, 0.04, mats.steelSilver, centerLx, cabBaseY + 1.0, centerLz + 0.05 + cabD / 2 - 0.08, false));
+  }
+
+  floorGroup.add(grp);
+}
+
+/**
+ * Adds the overhanging flat white/navy machine-room cap atop V Building's Glass Elevator Tower.
+ */
+export function addVBuildingGlassElevatorRoof(
+  roofGroup: THREE.Group,
+  bldgTopY: number,
+  seg1: VBuildingSegment,
+  mats: VBuildingCirculationMaterials
+): void {
+  const { centerLx, width, depth, frontOffsetLz } = V_CIRC_LAYOUT.elevator;
+  const centerLz = frontOffsetLz + depth / 2;
+
+  const roofGrp = new THREE.Group();
+  roofGrp.position.set(seg1.cx, 0, seg1.cz);
+  roofGrp.rotation.y = seg1.rotY;
+
+  roofGrp.add(circBox(width + 0.45, 0.24, depth + 0.45, mats.steelWhite, centerLx, bldgTopY + 0.12, centerLz));
+  roofGrp.add(circBox(width + 0.52, 0.1, depth + 0.52, mats.roofNavyTrim, centerLx, bldgTopY + 0.27, centerLz));
+  // Compact rooftop hoist motor housing
+  roofGrp.add(circBox(width - 0.65, 0.55, depth - 0.65, mats.steelSilver, centerLx, bldgTopY + 0.55, centerLz));
+
+  roofGroup.add(roofGrp);
+}
+
