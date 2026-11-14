@@ -10,6 +10,49 @@ const IDLE_TIMEOUT_MS = 40_000;           // 40 seconds of inactivity before OWL
 const TRANSPORT_IDLE_TIMEOUT_MS = 120_000; // 2 minutes on Campus Transport live map tracker
 const COUNTDOWN_SECONDS = 10;              // 10 seconds countdown before returning to StartPage (/)
 const IFRAME_REARM_MS = 2_000;             // Re-arm iframe blur detection so repeated taps reset timer
+const SLEEP_TRANSITION_MS = 2_200;         // Short OWL going-back-to-sleep transition before navigating to '/'
+
+function SleepZzz() {
+  return (
+    <div
+      className="absolute pointer-events-none select-none"
+      style={{ top: 6, right: -8 }}
+    >
+      {[
+        { size: 18, delay: 0.15, x: 0, y: 0 },
+        { size: 24, delay: 0.55, x: 18, y: -22 },
+        { size: 30, delay: 0.95, x: 38, y: -48 },
+      ].map((z, i) => (
+        <motion.span
+          key={i}
+          initial={{ opacity: 0, y: 8, scale: 0.6 }}
+          animate={{
+            opacity: [0, 0.95, 0],
+            y: [0, z.y - 16],
+            x: [0, z.x],
+            scale: [0.7, 1.1, 0.9],
+          }}
+          transition={{
+            duration: 2.2,
+            repeat: Infinity,
+            delay: z.delay,
+            ease: 'easeOut',
+          }}
+          style={{
+            position: 'absolute',
+            fontSize: z.size,
+            fontWeight: 900,
+            color: '#7dd3fc',
+            textShadow: '0 2px 12px rgba(56, 189, 248, 0.55)',
+            fontFamily: 'Inter, system-ui, sans-serif',
+          }}
+        >
+          Z
+        </motion.span>
+      ))}
+    </div>
+  );
+}
 
 /**
  * OwlIdleWatchdog — Global Kiosk Idle Timer & Sleep Prompt
@@ -18,7 +61,7 @@ const IFRAME_REARM_MS = 2_000;             // Re-arm iframe blur detection so re
  * - After 40 seconds of inactivity, OWL pops up asking:
  *   "Are you still there? If not, I'm going back to sleep!"
  * - Starts a 10-second countdown. If the user does not respond within 10 seconds,
- *   navigates back to the HomeStart page ('/').
+ *   plays a short OWL going-back-to-sleep transition animation and navigates to StartPage ('/').
  */
 export default function OwlIdleWatchdog() {
   const location = useLocation();
@@ -28,10 +71,12 @@ export default function OwlIdleWatchdog() {
   const [showPrompt, setShowPrompt] = useState(false);
   const [countdown, setCountdown] = useState(COUNTDOWN_SECONDS);
   const [isTalking, setIsTalking] = useState(false);
+  const [isGoingToSleep, setIsGoingToSleep] = useState(false);
 
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const iframeRearmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sleepTransitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showPromptRef = useRef(false);
 
   // Pages where the idle timer should NOT run (already on StartPage, mobile QR upload, or admin)
@@ -56,16 +101,25 @@ export default function OwlIdleWatchdog() {
       clearTimeout(iframeRearmTimerRef.current);
       iframeRearmTimerRef.current = null;
     }
+    if (sleepTransitionTimerRef.current) {
+      clearTimeout(sleepTransitionTimerRef.current);
+      sleepTransitionTimerRef.current = null;
+    }
   }, []);
 
   const goToSleep = useCallback(() => {
     clearTimers();
     cancelSpeech();
     setIsTalking(false);
-    showPromptRef.current = false;
-    setShowPrompt(false);
     closeDrawer();
-    navigate('/');
+    setIsGoingToSleep(true);
+
+    sleepTransitionTimerRef.current = setTimeout(() => {
+      showPromptRef.current = false;
+      setShowPrompt(false);
+      setIsGoingToSleep(false);
+      navigate('/');
+    }, SLEEP_TRANSITION_MS);
   }, [clearTimers, closeDrawer, navigate]);
 
   const startIdleTimer = useCallback(() => {
@@ -94,17 +148,18 @@ export default function OwlIdleWatchdog() {
   }, [isExcludedPath, activeIdleTimeoutMs]);
 
   const handleStayAwake = useCallback(() => {
+    if (isGoingToSleep) return;
     cancelSpeech();
     setIsTalking(false);
     showPromptRef.current = false;
     setShowPrompt(false);
     setCountdown(COUNTDOWN_SECONDS);
     startIdleTimer();
-  }, [startIdleTimer]);
+  }, [isGoingToSleep, startIdleTimer]);
 
   // Manage the 10-second countdown when the prompt is visible
   useEffect(() => {
-    if (!showPrompt) return;
+    if (!showPrompt || isGoingToSleep) return;
 
     countdownIntervalRef.current = setInterval(() => {
       setCountdown((prev) => {
@@ -126,7 +181,7 @@ export default function OwlIdleWatchdog() {
         countdownIntervalRef.current = null;
       }
     };
-  }, [showPrompt, goToSleep]);
+  }, [showPrompt, isGoingToSleep, goToSleep]);
 
   // Listen for user activity (including cross-origin iframe interactions) to reset the idle timer
   useEffect(() => {
@@ -134,6 +189,7 @@ export default function OwlIdleWatchdog() {
       clearTimers();
       showPromptRef.current = false;
       setShowPrompt(false);
+      setIsGoingToSleep(false);
       return;
     }
 
@@ -160,11 +216,7 @@ export default function OwlIdleWatchdog() {
       iframeRearmTimerRef.current = setTimeout(() => {
         if (!showPromptRef.current && document.activeElement instanceof HTMLIFrameElement) {
           document.activeElement.blur();
-          try {
-            window.focus({ preventScroll: true } as FocusOptions);
-          } catch {
-            window.focus();
-          }
+          window.focus();
         }
       }, IFRAME_REARM_MS);
     };
@@ -229,154 +281,231 @@ export default function OwlIdleWatchdog() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.25 }}
-          onClick={handleStayAwake}
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-6 select-none"
+          transition={{ duration: 0.35 }}
+          onClick={isGoingToSleep ? undefined : handleStayAwake}
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-6 select-none overflow-hidden"
           style={{
-            background: 'rgba(6, 20, 46, 0.78)',
+            background: isGoingToSleep
+              ? 'radial-gradient(ellipse at 50% 60%, #0f2140 0%, #0a1628 60%, #060e1a 100%)'
+              : 'rgba(6, 20, 46, 0.78)',
             backdropFilter: 'blur(10px)',
+            transition: 'background 0.75s ease-in-out',
           }}
         >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.85, y: 30 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ type: 'spring', stiffness: 320, damping: 26 }}
-            onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-lg rounded-3xl overflow-hidden text-center p-8 sm:p-10"
-            style={{
-              background: 'linear-gradient(165deg, #0b2244 0%, #07162c 100%)',
-              border: '2px solid rgba(96, 165, 250, 0.35)',
-              boxShadow: '0 25px 70px rgba(0, 0, 0, 0.65), 0 0 40px rgba(37, 99, 235, 0.25)',
-            }}
-          >
-            {/* Subtle top glow */}
-            <div
-              className="absolute -top-24 left-1/2 -translate-x-1/2 w-80 h-48 rounded-full pointer-events-none"
-              style={{
-                background: 'radial-gradient(circle, rgba(56,189,248,0.22) 0%, transparent 70%)',
-              }}
-            />
-
-            {/* OWL Character + Countdown Ring */}
-            <div className="relative mx-auto w-44 h-44 flex items-center justify-center mb-4">
+          <AnimatePresence mode="wait">
+            {!isGoingToSleep ? (
               <motion.div
-                animate={{ y: [0, -6, 0] }}
-                transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-                className="w-40 h-40"
-              >
-                <OwlCharacter isTalking={isTalking} className="w-full h-full" />
-              </motion.div>
-
-              {/* Floating Countdown Ring Badge */}
-              <div
-                className="absolute -top-2 -right-2 w-20 h-20 rounded-full flex items-center justify-center"
+                key="idle-prompt-card"
+                initial={{ opacity: 0, scale: 0.85, y: 30 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.92, y: 16 }}
+                transition={{ duration: 0.32, ease: 'easeInOut' }}
+                onClick={(e) => e.stopPropagation()}
+                className="relative w-full max-w-lg rounded-3xl overflow-hidden text-center p-8 sm:p-10"
                 style={{
-                  background: '#0f172a',
-                  boxShadow: '0 8px 20px rgba(0,0,0,0.45)',
+                  background: 'linear-gradient(165deg, #0b2244 0%, #07162c 100%)',
+                  border: '2px solid rgba(96, 165, 250, 0.35)',
+                  boxShadow: '0 25px 70px rgba(0, 0, 0, 0.65), 0 0 40px rgba(37, 99, 235, 0.25)',
                 }}
               >
-                <svg className="w-20 h-20 -rotate-90" viewBox="0 0 88 88">
-                  <circle
-                    cx="44"
-                    cy="44"
-                    r={circleRadius}
-                    fill="none"
-                    stroke="rgba(148, 163, 184, 0.2)"
-                    strokeWidth="6"
-                  />
-                  <circle
-                    cx="44"
-                    cy="44"
-                    r={circleRadius}
-                    fill="none"
-                    stroke={countdown <= 3 ? '#f87171' : '#38bdf8'}
-                    strokeWidth="6"
-                    strokeLinecap="round"
-                    strokeDasharray={circleCircumference}
-                    strokeDashoffset={strokeDashoffset}
-                    style={{ transition: 'stroke-dashoffset 0.9s linear, stroke 0.3s ease' }}
-                  />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span
-                    className="font-extrabold leading-none"
+                {/* Subtle top glow */}
+                <div
+                  className="absolute -top-24 left-1/2 -translate-x-1/2 w-80 h-48 rounded-full pointer-events-none"
+                  style={{
+                    background: 'radial-gradient(circle, rgba(56,189,248,0.22) 0%, transparent 70%)',
+                  }}
+                />
+
+                {/* OWL Character + Countdown Ring */}
+                <div className="relative mx-auto w-44 h-44 flex items-center justify-center mb-4">
+                  <motion.div
+                    animate={{ y: [0, -6, 0] }}
+                    transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+                    className="w-40 h-40"
+                  >
+                    <OwlCharacter isTalking={isTalking} className="w-full h-full" />
+                  </motion.div>
+
+                  {/* Floating Countdown Ring Badge */}
+                  <div
+                    className="absolute -top-2 -right-2 w-20 h-20 rounded-full flex items-center justify-center"
                     style={{
-                      fontSize: 22,
-                      color: countdown <= 3 ? '#f87171' : '#ffffff',
+                      background: '#0f172a',
+                      boxShadow: '0 8px 20px rgba(0,0,0,0.45)',
                     }}
                   >
-                    {countdown}s
-                  </span>
+                    <svg className="w-20 h-20 -rotate-90" viewBox="0 0 88 88">
+                      <circle
+                        cx="44"
+                        cy="44"
+                        r={circleRadius}
+                        fill="none"
+                        stroke="rgba(148, 163, 184, 0.2)"
+                        strokeWidth="6"
+                      />
+                      <circle
+                        cx="44"
+                        cy="44"
+                        r={circleRadius}
+                        fill="none"
+                        stroke={countdown <= 3 ? '#f87171' : '#38bdf8'}
+                        strokeWidth="6"
+                        strokeLinecap="round"
+                        strokeDasharray={circleCircumference}
+                        strokeDashoffset={strokeDashoffset}
+                        style={{ transition: 'stroke-dashoffset 0.9s linear, stroke 0.3s ease' }}
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span
+                        className="font-extrabold leading-none"
+                        style={{
+                          fontSize: 22,
+                          color: countdown <= 3 ? '#f87171' : '#ffffff',
+                        }}
+                      >
+                        {countdown}s
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Speech Bubble */}
-            <div
-              className="rounded-2xl px-6 py-4 mb-6 mx-auto"
-              style={{
-                background: 'rgba(255, 255, 255, 0.08)',
-                border: '1px solid rgba(255, 255, 255, 0.16)',
-              }}
-            >
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-2">
-                Are you still there? 🦉
-              </h2>
-              <p className="text-base sm:text-lg text-sky-100/90 font-medium leading-relaxed">
-                I haven&apos;t noticed any activity for a while. If no one is here, I&apos;m going to sleep in{' '}
-                <span className="font-extrabold text-amber-300">{countdown} second{countdown !== 1 ? 's' : ''}</span>!
-              </p>
-            </div>
+                {/* Speech Bubble */}
+                <div
+                  className="rounded-2xl px-6 py-4 mb-6 mx-auto"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    border: '1px solid rgba(255, 255, 255, 0.16)',
+                  }}
+                >
+                  <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mb-2">
+                    Are you still there? 🦉
+                  </h2>
+                  <p className="text-base sm:text-lg text-sky-100/90 font-medium leading-relaxed">
+                    I haven&apos;t noticed any activity for a while. If no one is here, I&apos;m going to sleep in{' '}
+                    <span className="font-extrabold text-amber-300">{countdown} second{countdown !== 1 ? 's' : ''}</span>!
+                  </p>
+                </div>
 
-            {/* Progress Bar */}
-            <div className="w-full h-2.5 bg-slate-800/90 rounded-full overflow-hidden mb-7">
+                {/* Progress Bar */}
+                <div className="w-full h-2.5 bg-slate-800/90 rounded-full overflow-hidden mb-7">
+                  <motion.div
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${progressFraction * 100}%`,
+                      background:
+                        countdown <= 3
+                          ? 'linear-gradient(90deg, #ef4444, #f97316)'
+                          : 'linear-gradient(90deg, #38bdf8, #3b82f6)',
+                      transition: 'width 0.95s linear',
+                    }}
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5">
+                  <button
+                    type="button"
+                    onClick={handleStayAwake}
+                    className="w-full sm:flex-1 py-4 px-6 rounded-2xl font-bold text-lg text-white flex items-center justify-center gap-2.5 shadow-lg active:scale-95 transition-all cursor-pointer"
+                    style={{
+                      background: 'linear-gradient(135deg, #2563eb 0%, #0284c7 100%)',
+                      boxShadow: '0 10px 25px rgba(37, 99, 235, 0.45)',
+                    }}
+                  >
+                    <Hand className="w-5 h-5" />
+                    Yes, I&apos;m still here!
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={goToSleep}
+                    className="w-full sm:w-auto py-4 px-5 rounded-2xl font-semibold text-base text-slate-300 hover:text-white flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.08)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                    }}
+                  >
+                    <Moon className="w-4 h-4" />
+                    Sleep Now
+                  </button>
+                </div>
+
+                <p className="mt-4 text-xs font-medium text-slate-400">
+                  Tap anywhere on the screen to stay awake
+                </p>
+              </motion.div>
+            ) : (
               <motion.div
-                className="h-full rounded-full"
-                style={{
-                  width: `${progressFraction * 100}%`,
-                  background:
-                    countdown <= 3
-                      ? 'linear-gradient(90deg, #ef4444, #f97316)'
-                      : 'linear-gradient(90deg, #38bdf8, #3b82f6)',
-                  transition: 'width 0.95s linear',
-                }}
-              />
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5">
-              <button
-                type="button"
-                onClick={handleStayAwake}
-                className="w-full sm:flex-1 py-4 px-6 rounded-2xl font-bold text-lg text-white flex items-center justify-center gap-2.5 shadow-lg active:scale-95 transition-all cursor-pointer"
-                style={{
-                  background: 'linear-gradient(135deg, #2563eb 0%, #0284c7 100%)',
-                  boxShadow: '0 10px 25px rgba(37, 99, 235, 0.45)',
-                }}
+                key="going-to-sleep-scene"
+                initial={{ opacity: 0, scale: 0.78 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                className="relative flex flex-col items-center justify-center"
               >
-                <Hand className="w-5 h-5" />
-                Yes, I&apos;m still here!
-              </button>
+                {/* Soft night-sky ambient glow matching StartPage */}
+                <div
+                  className="absolute pointer-events-none"
+                  style={{
+                    width: 480,
+                    height: 480,
+                    borderRadius: '50%',
+                    background:
+                      'radial-gradient(circle, rgba(37,99,235,0.18) 0%, rgba(14,165,233,0.06) 45%, transparent 70%)',
+                    filter: 'blur(20px)',
+                  }}
+                />
 
-              <button
-                type="button"
-                onClick={goToSleep}
-                className="w-full sm:w-auto py-4 px-5 rounded-2xl font-semibold text-base text-slate-300 hover:text-white flex items-center justify-center gap-2 active:scale-95 transition-all cursor-pointer"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                }}
-              >
-                <Moon className="w-4 h-4" />
-                Sleep Now
-              </button>
-            </div>
+                {/* OWL drifting to sleep in StartPage's 280x280 posture */}
+                <div className="relative" style={{ width: 280, height: 280 }}>
+                  <SleepZzz />
+                  <motion.div
+                    initial={{ y: -12, scale: 0.85, rotate: 0 }}
+                    animate={{
+                      y: [0, 8, 4],
+                      scale: [0.92, 1.03, 1],
+                      rotate: [0, -3, 0],
+                    }}
+                    transition={{
+                      duration: 1.8,
+                      ease: 'easeInOut',
+                    }}
+                    className="w-full h-full"
+                    style={{ filter: 'drop-shadow(0 20px 40px rgba(0,0,0,0.5))' }}
+                  >
+                    <OwlCharacter
+                      isTalking={false}
+                      isSleeping={true}
+                      className="w-full h-full"
+                    />
+                  </motion.div>
+                </div>
 
-            <p className="mt-4 text-xs font-medium text-slate-400">
-              Tap anywhere on the screen to stay awake
-            </p>
-          </motion.div>
+                {/* Sleepy status caption that fades out cleanly into StartPage */}
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: [0, 1, 1, 0], y: [12, 0, 0, -4] }}
+                  transition={{
+                    duration: 2.1,
+                    times: [0, 0.2, 0.78, 1],
+                    ease: 'easeInOut',
+                  }}
+                  className="mt-6 flex items-center gap-2.5 px-6 py-3 rounded-full"
+                  style={{
+                    background: 'rgba(15, 33, 64, 0.82)',
+                    border: '1px solid rgba(125, 211, 252, 0.28)',
+                    boxShadow: '0 12px 30px rgba(0, 0, 0, 0.45)',
+                  }}
+                >
+                  <Moon className="w-4 h-4 text-sky-300" />
+                  <span className="text-sky-100 font-semibold text-base tracking-wide">
+                    Going back to sleep... Goodnight! 😴
+                  </span>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       )}
     </AnimatePresence>

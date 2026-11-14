@@ -1,6 +1,19 @@
 import React, { useEffect, useState } from 'react';
+import { motion } from 'motion/react';
 
-export function OwlCharacter({ isTyping, isTalking, className = "relative w-64 h-64 mx-auto", hideShadow = false }: { isTyping?: boolean, isTalking?: boolean, className?: string, hideShadow?: boolean }) {
+export function OwlCharacter({
+    isTyping,
+    isTalking,
+    isSleeping = false,
+    className = "relative w-64 h-64 mx-auto",
+    hideShadow = false,
+}: {
+    isTyping?: boolean;
+    isTalking?: boolean;
+    isSleeping?: boolean;
+    className?: string;
+    hideShadow?: boolean;
+}) {
     const leftPupilX = isTyping ? 92 : 100;
     const leftPupilY = isTyping ? 120 : 115;
     const rightPupilX = isTyping ? 164 : 156;
@@ -8,9 +21,21 @@ export function OwlCharacter({ isTyping, isTalking, className = "relative w-64 h
 
     // Realistic beak flicker: rapidly toggle open state at ~120ms intervals when talking
     const [beakOpen, setBeakOpen] = useState(false);
+    // Brief sleepy yawn when transitioning into sleep
+    const [isYawning, setIsYawning] = useState(false);
 
     useEffect(() => {
-        if (!isTalking) {
+        if (!isSleeping) {
+            setIsYawning(false);
+            return;
+        }
+        setIsYawning(true);
+        const timer = setTimeout(() => setIsYawning(false), 750);
+        return () => clearTimeout(timer);
+    }, [isSleeping]);
+
+    useEffect(() => {
+        if (!isTalking || isSleeping) {
             setBeakOpen(false);
             return;
         }
@@ -23,14 +48,15 @@ export function OwlCharacter({ isTyping, isTalking, className = "relative w-64 h
         };
         flicker();
         return () => clearTimeout(timeout);
-    }, [isTalking]);
+    }, [isTalking, isSleeping]);
 
     // Beak geometry:
     // Closed: upper beak tip meets lower beak at ~y=150
     // Open: upper beak stays, lower jaw drops to y=165+
+    const showOpenBeak = isTalking || isYawning;
+    const mouthOpenDepth = isYawning ? '168' : beakOpen ? '170' : '158';
     const upperBeakPath = "M 118 138 Q 128 128 138 138 L 128 150 Z";
-    const lowerBeakClosedPath = "M 118 138 L 128 150 L 138 138 Q 128 145 118 138 Z";
-    const lowerBeakOpenPath = `M 118 142 L 128 150 L 138 142 Q 128 ${beakOpen ? '170' : '158'} 118 142 Z`;
+    const lowerBeakOpenPath = `M 118 142 L 128 150 L 138 142 Q 128 ${mouthOpenDepth} 118 142 Z`;
 
     return (
         <div className={className}>
@@ -73,24 +99,50 @@ export function OwlCharacter({ isTyping, isTalking, className = "relative w-64 h
                 <circle cx="161" cy="115" r="28" fill="#ffffff" stroke="#0a2949" strokeWidth="6" />
 
                 {/* Pupils */}
-                <circle cx={leftPupilX} cy={leftPupilY} r="18" fill="#0a2949" className="transition-all duration-300" />
-                <circle cx={rightPupilX} cy={rightPupilY} r="18" fill="#0a2949" className="transition-all duration-300" />
+                <motion.g
+                    animate={{
+                        scale: isSleeping ? 0 : 1,
+                        opacity: isSleeping ? 0 : 1,
+                    }}
+                    transition={{ duration: 0.45, ease: 'easeInOut' }}
+                    style={{ originX: '128px', originY: '115px' }}
+                >
+                    <circle cx={leftPupilX} cy={leftPupilY} r="18" fill="#0a2949" className="transition-all duration-300" />
+                    <circle cx={rightPupilX} cy={rightPupilY} r="18" fill="#0a2949" className="transition-all duration-300" />
 
-                {/* Pupil Highlights */}
-                <circle cx={leftPupilX + 6} cy={leftPupilY - 7} r="6" fill="#ffffff" className="transition-all duration-300" />
-                <circle cx={rightPupilX + 6} cy={rightPupilY - 7} r="6" fill="#ffffff" className="transition-all duration-300" />
-                <circle cx={leftPupilX - 5} cy={leftPupilY + 7} r="2.5" fill="#ffffff" className="transition-all duration-300" />
-                <circle cx={rightPupilX - 5} cy={rightPupilY + 7} r="2.5" fill="#ffffff" className="transition-all duration-300" />
+                    {/* Pupil Highlights */}
+                    <circle cx={leftPupilX + 6} cy={leftPupilY - 7} r="6" fill="#ffffff" className="transition-all duration-300" />
+                    <circle cx={rightPupilX + 6} cy={rightPupilY - 7} r="6" fill="#ffffff" className="transition-all duration-300" />
+                    <circle cx={leftPupilX - 5} cy={leftPupilY + 7} r="2.5" fill="#ffffff" className="transition-all duration-300" />
+                    <circle cx={rightPupilX - 5} cy={rightPupilY + 7} r="2.5" fill="#ffffff" className="transition-all duration-300" />
+                </motion.g>
 
-                {/* Beak — realistic open/close while talking */}
-                {isTalking ? (
+                {/* Sleeping Eyelid Covers (Blue Almonds matching StartPage) */}
+                <motion.g
+                    initial={false}
+                    animate={{ opacity: isSleeping ? 1 : 0 }}
+                    transition={{ duration: 0.45, ease: 'easeInOut' }}
+                >
+                    {/* Left Closed Eye */}
+                    <path d="M 67 115 Q 95 90 123 115" fill="#0b4c79" stroke="#0a2949" strokeWidth="4" />
+                    <path d="M 67 115 Q 95 135 123 115" fill="#0b4c79" stroke="#0a2949" strokeWidth="4" />
+                    <path d="M 72 115 Q 95 125 118 115" fill="none" stroke="#0a2949" strokeWidth="3" strokeLinecap="round" />
+
+                    {/* Right Closed Eye */}
+                    <path d="M 133 115 Q 161 90 189 115" fill="#0b4c79" stroke="#0a2949" strokeWidth="4" />
+                    <path d="M 133 115 Q 161 135 189 115" fill="#0b4c79" stroke="#0a2949" strokeWidth="4" />
+                    <path d="M 138 115 Q 161 125 184 115" fill="none" stroke="#0a2949" strokeWidth="3" strokeLinecap="round" />
+                </motion.g>
+
+                {/* Beak — realistic open/close while talking or yawning */}
+                {showOpenBeak ? (
                     <g>
                         {/* Upper beak (fixed) */}
                         <path d={upperBeakPath} fill="#f6c342" stroke="#0a2949" strokeWidth="5" strokeLinejoin="round" />
                         {/* Lower jaw (drops open) */}
                         <path d={lowerBeakOpenPath} fill="#e8a800" stroke="#0a2949" strokeWidth="5" strokeLinejoin="round" />
                         {/* Inner mouth / tongue hint when wide open */}
-                        {beakOpen && (
+                        {(beakOpen || isYawning) && (
                             <path d="M 123 150 Q 128 156 133 150" fill="none" stroke="#c06000" strokeWidth="2.5" strokeLinecap="round" />
                         )}
                     </g>
