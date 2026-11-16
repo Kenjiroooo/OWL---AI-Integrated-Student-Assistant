@@ -85,7 +85,6 @@ export default function ExamTimetable() {
     return examDate >= today;
   });
 
-  const MASTER_SCHEDULE_URL = 'https://drive.google.com/file/d/1aB-whaM-7_CRp_xqmRI6TblH5y36nXQO/view?fbclid=IwY2xjawTUbBlleHRuA2FlbQIxMQBzcnRjBmFwcF9pZBAyMjIwMzkxNzg4MjAwODkyAAEe-cEg2xeU7dRGT0BNB1gJPO-bvzNQcqlfxBGUW0ZK1z2ZH-YtQbNL3UiES7A_aem_SDlTa8NGlGp9wtLwYrYbqQ&pli=1';
   const MASTER_SCHEDULE_PREVIEW_URL = 'https://drive.google.com/file/d/1aB-whaM-7_CRp_xqmRI6TblH5y36nXQO/preview';
 
   const startOfToday = new Date();
@@ -202,21 +201,23 @@ export default function ExamTimetable() {
             </motion.button>
 
             {/* Official Master Schedule */}
-            <motion.a
+            <motion.button
               id="exam-master-schedule-card"
-              href={MASTER_SCHEDULE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
+              type="button"
+              onClick={() => {
+                setIsScheduleLoading(true);
+                setIsScheduleModalOpen(true);
+              }}
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
               whileHover={{ y: -4 }}
-              className="lg:col-span-2 relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-indigo-600 via-indigo-700 to-indigo-900 p-8 text-white shadow-xl shadow-indigo-300/40 hover:shadow-2xl hover:shadow-indigo-400/40 transition-shadow group/doc flex flex-col"
+              className="lg:col-span-2 text-left relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-indigo-600 via-indigo-700 to-indigo-900 p-8 text-white shadow-xl shadow-indigo-300/40 hover:shadow-2xl hover:shadow-indigo-400/40 transition-shadow group/doc flex flex-col"
             >
               <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
               <div className="absolute -bottom-16 -left-10 w-48 h-48 bg-violet-500/20 rounded-full blur-3xl pointer-events-none" />
 
-              <div className="relative z-10 flex items-start justify-between mb-6">
+              <div className="relative z-10 flex items-start justify-between mb-6 w-full">
                 <div>
                   <span className="inline-flex items-center gap-1.5 bg-white/15 border border-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-3">
                     <ShieldCheck className="w-3 h-3" /> Official
@@ -225,12 +226,12 @@ export default function ExamTimetable() {
                   <p className="text-indigo-200 text-sm font-medium mt-2">Complete examination timetable for all departments.</p>
                 </div>
                 <div className="w-11 h-11 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center flex-shrink-0 group-hover/doc:bg-white group-hover/doc:text-indigo-700 transition-colors">
-                  <ArrowUpRight className="w-5 h-5 group-hover/doc:rotate-45 transition-transform duration-300" />
+                  <Maximize2 className="w-5 h-5 group-hover/doc:scale-110 transition-transform duration-300" />
                 </div>
               </div>
 
               {/* Document preview */}
-              <div className="relative z-10 flex-1 flex items-center justify-center py-2">
+              <div className="relative z-10 flex-1 flex items-center justify-center py-2 w-full">
                 <div className="relative w-full max-w-[15rem]">
                   <div className="absolute inset-0 bg-white/20 rounded-2xl rotate-6 translate-x-2" />
                   <div className="absolute inset-0 bg-white/40 rounded-2xl rotate-3 translate-x-1" />
@@ -256,9 +257,9 @@ export default function ExamTimetable() {
               </div>
 
               <div className="relative z-10 mt-6 w-full bg-white text-indigo-700 font-black text-sm py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg group-hover/doc:bg-amber-300 group-hover/doc:text-indigo-950 transition-colors">
-                <ExternalLink className="w-4 h-4" /> Open Master Schedule
+                <Maximize2 className="w-4 h-4" /> Open Master Schedule
               </div>
-            </motion.a>
+            </motion.button>
           </div>
         </section>
 
