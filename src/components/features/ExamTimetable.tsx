@@ -86,6 +86,7 @@ export default function ExamTimetable() {
   });
 
   const MASTER_SCHEDULE_URL = 'https://drive.google.com/file/d/1aB-whaM-7_CRp_xqmRI6TblH5y36nXQO/view?fbclid=IwY2xjawTUbBlleHRuA2FlbQIxMQBzcnRjBmFwcF9pZBAyMjIwMzkxNzg4MjAwODkyAAEe-cEg2xeU7dRGT0BNB1gJPO-bvzNQcqlfxBGUW0ZK1z2ZH-YtQbNL3UiES7A_aem_SDlTa8NGlGp9wtLwYrYbqQ&pli=1';
+  const MASTER_SCHEDULE_PREVIEW_URL = 'https://drive.google.com/file/d/1aB-whaM-7_CRp_xqmRI6TblH5y36nXQO/preview';
 
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
