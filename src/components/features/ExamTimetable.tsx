@@ -570,6 +570,120 @@ export default function ExamTimetable() {
             </div>
           )}
         </AnimatePresence>
+
+        {/* ── Official Master Schedule In-App PDF Modal ──────────────────────────────────────── */}
+        <AnimatePresence>
+          {isScheduleModalOpen && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 md:p-8">
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                onClick={() => setIsScheduleModalOpen(false)}
+                className="absolute inset-0 bg-slate-950/85 backdrop-blur-md"
+              />
+
+              {/* Modal Content Box */}
+              <motion.div
+                initial={{ scale: 0.92, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.92, opacity: 0, y: 20 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                className="relative w-full max-w-6xl h-[90vh] bg-slate-900 rounded-[2.5rem] shadow-2xl border border-slate-700/60 flex flex-col overflow-hidden z-10"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Modal Header */}
+                <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-4 bg-slate-900/95 border-b border-slate-800 backdrop-blur-md z-20">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-indigo-500/15 border border-indigo-400/30 flex items-center justify-center flex-shrink-0">
+                      <FileText className="w-5 h-5 text-indigo-400" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="bg-indigo-500 text-white font-black text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider">
+                          Official Master Schedule
+                        </span>
+                        <span className="text-slate-400 text-xs font-semibold">2nd Sem A.Y. 2025-2026</span>
+                      </div>
+                      <h3 className="text-white font-bold text-base md:text-lg tracking-tight line-clamp-1">
+                        Midterm &amp; Final Examination Timetable (All Departments)
+                      </h3>
+                    </div>
+                  </div>
+
+                  {/* Toolbar Actions */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsScheduleModalOpen(false);
+                        setIsImageModalOpen(true);
+                      }}
+                      className="p-2.5 rounded-2xl bg-slate-800 text-slate-300 hover:text-white hover:bg-amber-500/20 hover:border-amber-400/40 transition-all border border-slate-700 flex items-center gap-1.5 text-xs font-bold"
+                      title="View Conflict & Special Exam Notice"
+                    >
+                      <Megaphone className="w-4 h-4 text-amber-400" />
+                      <span className="hidden sm:inline">Conflict Notice</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsScheduleModalOpen(false)}
+                      className="px-4 py-2.5 rounded-2xl bg-red-500/15 hover:bg-red-500 text-red-300 hover:text-white transition-all border border-red-500/30 flex items-center gap-1.5 text-xs font-black"
+                      title="Close (ESC)"
+                    >
+                      <X className="w-4 h-4" />
+                      <span>Back to Kiosk</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Embedded Document Viewer Body */}
+                <div className="relative flex-1 bg-slate-950 overflow-hidden">
+                  {isScheduleLoading && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-slate-950 z-10">
+                      <div className="w-10 h-10 rounded-full border-4 border-indigo-500/30 border-t-indigo-400 animate-spin" />
+                      <p className="text-slate-400 text-sm font-bold">Loading Master Schedule…</p>
+                    </div>
+                  )}
+                  {/* Blocks Google Drive's top-right pop-out button so kiosk users stay inside OWL */}
+                  <div
+                    className="absolute top-2 right-3 w-16 h-14 z-20 cursor-default"
+                    title="In-app Kiosk Preview"
+                  />
+                  <iframe
+                    src={MASTER_SCHEDULE_PREVIEW_URL}
+                    title="Official Master Exam Schedule — 2nd Semester A.Y. 2025-2026"
+                    sandbox="allow-scripts allow-same-origin"
+                    onLoad={() => setIsScheduleLoading(false)}
+                    className="w-full h-full border-0"
+                  />
+                </div>
+
+                {/* Modal Footer */}
+                <div className="px-6 py-3 bg-slate-900/90 border-t border-slate-800 flex flex-wrap items-center justify-between text-xs text-slate-400 gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>Official University Registrar Master Schedule · In-App Kiosk Viewer</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span>Scroll or use the viewer controls to zoom</span>
+                    <span>•</span>
+                    <button
+                      type="button"
+                      onClick={() => setIsScheduleModalOpen(false)}
+                      className="text-indigo-400 hover:underline font-bold"
+                    >
+                      Close Preview
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
   );
 }
