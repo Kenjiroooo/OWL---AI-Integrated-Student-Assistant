@@ -512,17 +512,20 @@ export default function ExamTimetable() {
                       )}
                     </div>
 
-                    {/* Open external document */}
-                    <a
-                      href="https://drive.google.com/file/d/1aB-whaM-7_CRp_xqmRI6TblH5y36nXQO/view"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    {/* Switch to Master Schedule in-app modal */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsImageModalOpen(false);
+                        setIsScheduleLoading(true);
+                        setIsScheduleModalOpen(true);
+                      }}
                       className="p-2.5 rounded-2xl bg-slate-800 text-slate-300 hover:text-white hover:bg-indigo-600 transition-all border border-slate-700 flex items-center gap-1.5 text-xs font-bold"
-                      title="Open PDF Document"
+                      title="Open Master Schedule PDF"
                     >
-                      <ExternalLink className="w-4 h-4" />
-                      <span className="hidden sm:inline">Drive File</span>
-                    </a>
+                      <FileText className="w-4 h-4" />
+                      <span className="hidden sm:inline">Master Schedule</span>
+                    </button>
 
                     {/* Close button */}
                     <button
