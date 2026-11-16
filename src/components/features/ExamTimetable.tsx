@@ -14,18 +14,21 @@ export default function ExamTimetable() {
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [isScheduleLoading, setIsScheduleLoading] = useState(true);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [usingDummyData, setUsingDummyData] = useState(false);
   const { openDrawer } = useOwlAssistant();
 
-  // Close modal on ESC key
+  // Close modals on ESC key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setIsImageModalOpen(false);
+        setIsScheduleModalOpen(false);
       }
     };
-    if (isImageModalOpen) {
+    if (isImageModalOpen || isScheduleModalOpen) {
       window.addEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'hidden';
     } else {
@@ -36,7 +39,7 @@ export default function ExamTimetable() {
       window.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'unset';
     };
-  }, [isImageModalOpen]);
+  }, [isImageModalOpen, isScheduleModalOpen]);
 
   const handleZoomIn = (e: React.MouseEvent) => {
     e.stopPropagation();
