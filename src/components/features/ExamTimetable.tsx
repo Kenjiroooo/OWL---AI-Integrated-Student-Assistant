@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { useAuth } from '../../context/AuthContext';
-import { Calendar, MapPin, User, Clock, Info, AlertTriangle, X, ZoomIn, ZoomOut, RotateCcw, ExternalLink, Maximize2, BrainCircuit, Megaphone, FileText, ArrowUpRight, Building2, ShieldCheck, CalendarClock, Hourglass } from 'lucide-react';
+import { Calendar, MapPin, User, Clock, Info, AlertTriangle, X, ZoomIn, ZoomOut, RotateCcw, Maximize2, BrainCircuit, Megaphone, FileText, ArrowUpRight, Building2, ShieldCheck, CalendarClock, Hourglass } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import conflictExamImg from '../../assets/conflict_exam_schedule.webp';
 import { DUMMY_EXAMS } from '../../data/dummyExamData';
