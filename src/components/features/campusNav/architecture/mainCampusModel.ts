@@ -3230,6 +3230,107 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
           // Transverse cross-tie connecting North & South eave beams
           g.add(box(0.06, 0.06, BR_W, archSteelMat, px, eaveY, zCenter));
         });
+
+        // 2. Main Double-Chord Curved Warren Arch Truss (X = 8.25 to 19.50)
+        const archX0 = 8.25;
+        const archX1 = 19.50;
+        const archSegs = 14;
+        const archRise = 1.86; // Rises from eaveY (baseY+1.66) to baseY+3.52 (lower) / baseY+3.94 (upper)
+        const trussDepth = 0.42;
+
+        const getArchPoint = (idx: number) => {
+          const t = idx / archSegs;
+          const u = 2 * t - 1; // -1 to +1
+          const x = archX0 + t * (archX1 - archX0);
+          // Smooth barrel-arch profile matching the high rounded curve in photo 2
+          const curve = 0.55 * (1 - u * u) + 0.45 * Math.cos(u * Math.PI * 0.5);
+          const yLow = eaveY + archRise * curve;
+          const yUp = yLow + trussDepth;
+          return { x, yLow, yUp };
+        };
+
+        const archNodes = Array.from({ length: archSegs + 1 }, (_, i) => getArchPoint(i));
+
+        // Build North and South curved Warren arch trusses + curved roof panels
+        for (let i = 0; i <= archSegs; i++) {
+          const cur = archNodes[i];
+
+          // Radial/vertical truss post at node i on both sides + transverse purlins
+          [zNorth, zSouth].forEach((pz) => {
+            g.add(
+              rod(
+                new THREE.Vector3(cur.x, cur.yLow, pz),
+                new THREE.Vector3(cur.x, cur.yUp, pz),
+                0.03,
+                archSteelMat
+              )
+            );
+          });
+
+          // Transverse roof purlin across top chords
+          g.add(box(0.06, 0.055, roofW - 0.04, archSteelMat, cur.x, cur.yUp - 0.02, zCenter));
+          // Transverse tie bar across lower chords every 2 bays
+          if (i % 2 === 0) {
+            g.add(box(0.05, 0.05, BR_W, archSteelMat, cur.x, cur.yLow, zCenter));
+          }
+
+          // Vertical hanger rods from eave beam up to lower arch chord at intermediate nodes
+          if (i === 2 || i === 5 || i === 7 || i === 9 || i === 12) {
+            [zNorth, zSouth].forEach((pz) => {
+              g.add(
+                rod(
+                  new THREE.Vector3(cur.x, eaveY, pz),
+                  new THREE.Vector3(cur.x, cur.yLow, pz),
+                  0.022,
+                  archSteelMat
+                )
+              );
+            });
+          }
+
+          if (i < archSegs) {
+            const nxt = archNodes[i + 1];
+
+            [zNorth, zSouth].forEach((pz) => {
+              const pLowA = new THREE.Vector3(cur.x, cur.yLow, pz);
+              const pLowB = new THREE.Vector3(nxt.x, nxt.yLow, pz);
+              const pUpA = new THREE.Vector3(cur.x, cur.yUp, pz);
+              const pUpB = new THREE.Vector3(nxt.x, nxt.yUp, pz);
+
+              // Upper & lower curved arch chord tubes
+              g.add(rod(pUpA, pUpB, 0.048, archSteelMat));
+              g.add(rod(pLowA, pLowB, 0.044, archSteelMat));
+
+              // Alternating Warren diagonal web struts (/ \ / \) as seen in photo 2
+              if (i % 2 === 0) {
+                g.add(rod(pLowA, pUpB, 0.032, archSteelMat));
+              } else {
+                g.add(rod(pUpA, pLowB, 0.032, archSteelMat));
+              }
+            });
+
+            // Curved metal roof panel segment spanning between node i and node i+1
+            const segDx = nxt.x - cur.x;
+            const segDy = nxt.yUp - cur.yUp;
+            const segLen = Math.hypot(segDx, segDy);
+            const segMidX = (cur.x + nxt.x) / 2;
+            const segMidY = (cur.yUp + nxt.yUp) / 2 + 0.03;
+            const segPitch = Math.atan2(segDy, segDx);
+
+            const roofSegGrp = new THREE.Group();
+            roofSegGrp.position.set(segMidX, segMidY, zCenter);
+            roofSegGrp.rotation.z = segPitch;
+
+            // Top weatherproof metal sheet + dark underside soffit
+            roofSegGrp.add(box(segLen + 0.05, 0.035, roofW, archRoofTopMat, 0, 0.018, 0));
+            roofSegGrp.add(box(segLen + 0.04, 0.02, roofW - 0.06, archRoofUnderMat, 0, -0.01, 0));
+            // Crisp white curved edge fascia trim on North & South overhangs
+            roofSegGrp.add(box(segLen + 0.05, 0.07, 0.045, archSteelMat, 0, 0, -roofW / 2 + 0.02));
+            roofSegGrp.add(box(segLen + 0.05, 0.07, 0.045, archSteelMat, 0, 0, roofW / 2 - 0.02));
+
+            g.add(roofSegGrp);
+          }
+        }
       }
 
       // Students walking along the Skybridges into the corridor
