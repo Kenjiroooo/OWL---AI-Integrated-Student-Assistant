@@ -21,7 +21,7 @@ class ShowcaseBoundary extends React.Component<
   render() {
     if (!this.state.failed) return this.props.children;
     return (
-      <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-900/90 p-6">
+      <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/90 p-6">
         <div className="bg-white rounded-2xl p-6 max-w-sm text-center shadow-2xl">
           <p className="font-bold text-slate-800 mb-1">Showcase unavailable</p>
           <p className="text-sm text-slate-500 mb-4">
@@ -49,7 +49,7 @@ export default function MainCampusInteractiveMap() {
     <ShowcaseBoundary onClose={() => navigate('..')}>
       <Suspense
         fallback={
-          <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-[#050b18] text-white/70">
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-[#050b18] text-white/70">
             <Loader2 className="w-10 h-10 animate-spin" />
           </div>
         }
