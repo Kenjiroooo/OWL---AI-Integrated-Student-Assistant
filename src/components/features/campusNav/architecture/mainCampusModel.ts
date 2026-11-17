@@ -3176,6 +3176,62 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
         });
       }
 
+      // ── 3rd Floor Skybridge Curved Arch Truss Roof (Matching Reference Photo 2) ──
+      if (f === 2) {
+        const archSteelMat = new THREE.MeshStandardMaterial({
+          color: 0xf4f7fb,
+          roughness: 0.32,
+          metalness: 0.45,
+        });
+        const archRoofTopMat = new THREE.MeshStandardMaterial({
+          color: 0xe2e8f0,
+          roughness: 0.38,
+          metalness: 0.5,
+        });
+        const archRoofUnderMat = new THREE.MeshStandardMaterial({
+          color: 0x94a3b8,
+          roughness: 0.55,
+          metalness: 0.35,
+        });
+        const skyBlueBandMat = new THREE.MeshStandardMaterial({
+          color: 0x2997e8,
+          roughness: 0.35,
+          metalness: 0.25,
+        });
+
+        const zNorth = -23.11;
+        const zSouth = -22.04;
+        const zCenter = -22.575;
+        const roofW = 1.48; // Overhangs the 1.15m walkway slightly on both sides
+        const railTopY = baseY + 1.29;
+        const eaveY = baseY + 1.66; // White horizontal tie-beam above the 3F railing
+        const flatWingY = baseY + 2.82; // Flat eave roof wing height meeting L Building on right
+
+        // Sky-blue upper handrail band along 3F balustrades (matching reference photo)
+        g.add(box(straightLen, 0.11, 0.09, skyBlueBandMat, (8.0 + 19.5) / 2, railTopY - 0.08, zNorth));
+        g.add(box(straightLen, 0.11, 0.09, skyBlueBandMat, (8.0 + 19.5) / 2, railTopY - 0.08, zSouth));
+
+        // 1. Horizontal white steel tie-beams and vertical stanchion posts along straight span
+        g.add(box(straightLen, 0.075, 0.075, archSteelMat, (8.0 + 19.5) / 2, eaveY, zNorth));
+        g.add(box(straightLen, 0.075, 0.075, archSteelMat, (8.0 + 19.5) / 2, eaveY, zSouth));
+
+        const straightPostXs = [8.08, 9.9, 11.7, 13.75, 15.8, 17.6, 19.45];
+        straightPostXs.forEach((px) => {
+          [zNorth, zSouth].forEach((pz) => {
+            g.add(
+              rod(
+                new THREE.Vector3(px, baseY + 0.24, pz),
+                new THREE.Vector3(px, eaveY, pz),
+                0.04,
+                archSteelMat
+              )
+            );
+          });
+          // Transverse cross-tie connecting North & South eave beams
+          g.add(box(0.06, 0.06, BR_W, archSteelMat, px, eaveY, zCenter));
+        });
+      }
+
       // Students walking along the Skybridges into the corridor
       if (f === 1) {
         g.add(createPedestrian(14.0, -22.575, 0, blueWall, baseY + 0.24));
