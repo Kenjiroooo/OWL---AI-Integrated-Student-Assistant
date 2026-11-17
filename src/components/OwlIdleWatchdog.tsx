@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Moon, Hand } from 'lucide-react';
@@ -251,14 +252,14 @@ export default function OwlIdleWatchdog() {
       'click',
     ];
 
-    events.forEach((evt) => window.addEventListener(evt, onUserActivity, { passive: true }));
+    events.forEach((evt) => window.addEventListener(evt, onUserActivity, { capture: true, passive: true }));
     window.addEventListener('owl-user-activity', onUserActivity);
     window.addEventListener('blur', onWindowBlur);
     document.addEventListener('mouseover', onIframeBoundary, { passive: true });
     document.addEventListener('mouseout', onIframeBoundary, { passive: true });
 
     return () => {
-      events.forEach((evt) => window.removeEventListener(evt, onUserActivity));
+      events.forEach((evt) => window.removeEventListener(evt, onUserActivity, { capture: true }));
       window.removeEventListener('owl-user-activity', onUserActivity);
       window.removeEventListener('blur', onWindowBlur);
       document.removeEventListener('mouseover', onIframeBoundary);
@@ -267,14 +268,14 @@ export default function OwlIdleWatchdog() {
     };
   }, [isExcludedPath, location.pathname, startIdleTimer, clearTimers]);
 
-  if (isExcludedPath) return null;
+  if (isExcludedPath || typeof document === 'undefined') return null;
 
   const progressFraction = countdown / COUNTDOWN_SECONDS;
   const circleRadius = 38;
   const circleCircumference = 2 * Math.PI * circleRadius;
   const strokeDashoffset = circleCircumference * (1 - progressFraction);
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {showPrompt && (
         <motion.div
@@ -283,8 +284,9 @@ export default function OwlIdleWatchdog() {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.35 }}
           onClick={isGoingToSleep ? undefined : handleStayAwake}
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-6 select-none overflow-hidden"
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-6 select-none overflow-hidden"
           style={{
+            zIndex: 99999,
             background: isGoingToSleep
               ? 'radial-gradient(ellipse at 50% 60%, #0f2140 0%, #0a1628 60%, #060e1a 100%)'
               : 'rgba(6, 20, 46, 0.78)',
@@ -508,7 +510,8 @@ export default function OwlIdleWatchdog() {
           </AnimatePresence>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
 
