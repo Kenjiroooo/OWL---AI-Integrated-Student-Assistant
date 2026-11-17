@@ -256,7 +256,7 @@ export default function CampusArchitectureShowcase({
       role="dialog"
       aria-modal="true"
       aria-labelledby="arch-showcase-title"
-      className="fixed inset-0 z-[10000] bg-[#050b18] text-white overflow-hidden select-none"
+      className="fixed inset-0 z-[1000] bg-[#050b18] text-white overflow-hidden select-none"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
