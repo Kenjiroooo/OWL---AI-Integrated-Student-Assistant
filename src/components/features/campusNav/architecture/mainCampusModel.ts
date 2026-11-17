@@ -3801,7 +3801,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
       // 2. L Building (Tower Building: Tower core, 6-storey academic block, front canopy & skybridge span)
       else if (
         (c.x >= -16.4 && c.x <= 8.5 && c.z >= -27.2 && c.z <= 4.5) ||
-        (c.x > 8.5 && c.x <= 19.5 && c.z >= -23.5 && c.z <= -21.8 && b3.min.y >= 3.4)
+        (c.x > 8.5 && c.x <= 19.5 && c.z >= -23.8 && c.z <= -21.5 && b3.min.y >= 3.4)
       ) {
         mesh.userData.buildingId = 'udd-main-tower';
         towerMeshes.push(mesh);
@@ -3811,7 +3811,7 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
         (c.z <= -50.4 && c.z > -72.0) ||
         (c.x >= 20.5 && c.z < -29.5 && c.z > -72.0) ||
         (c.x >= 14.5 && c.z <= -50.0 && c.z > -72.0) ||
-        (c.x > 19.5 && c.x <= 25.5 && c.z >= -31.5 && c.z <= -21.8 && b3.min.y >= 3.4)
+        (c.x > 19.5 && c.x <= 25.5 && c.z >= -31.8 && c.z <= -21.5 && b3.min.y >= 3.4)
       ) {
         mesh.userData.buildingId = 'udd-main-v';
         vBuildingMeshes.push(mesh);
