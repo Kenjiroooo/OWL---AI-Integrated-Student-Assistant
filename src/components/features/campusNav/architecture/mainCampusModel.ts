@@ -3331,6 +3331,39 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
             g.add(roofSegGrp);
           }
         }
+
+        // 3. Right-Side Flat Eave Canopy Extension & Angled V-Struts (X = 8.0 to 10.95, top-right of Photo 2)
+        const rightWingX0 = 8.0;
+        const rightWingX1 = 10.95;
+        const rightWingLen = rightWingX1 - rightWingX0;
+        const rightWingCx = (rightWingX0 + rightWingX1) / 2;
+        g.add(box(rightWingLen, 0.04, roofW, archRoofTopMat, rightWingCx, flatWingY + 0.03, zCenter));
+        g.add(box(rightWingLen - 0.04, 0.025, roofW - 0.08, archRoofUnderMat, rightWingCx, flatWingY, zCenter));
+        g.add(box(rightWingLen, 0.075, 0.05, archSteelMat, rightWingCx, flatWingY + 0.015, -roofW / 2 + 0.025 + zCenter));
+        g.add(box(rightWingLen, 0.075, 0.05, archSteelMat, rightWingCx, flatWingY + 0.015, roofW / 2 - 0.025 + zCenter));
+
+        [zNorth, zSouth].forEach((pz) => {
+          // Vertical column at L Building wall (x = 8.06) up to flat eave wing
+          g.add(
+            rod(
+              new THREE.Vector3(8.06, eaveY, pz),
+              new THREE.Vector3(8.06, flatWingY, pz),
+              0.042,
+              archSteelMat
+            )
+          );
+          // Signature angled diagonal knee strut from arch base [8.35, eaveY] up to flat canopy corner [9.15, flatWingY]
+          g.add(
+            rod(
+              new THREE.Vector3(8.35, eaveY, pz),
+              new THREE.Vector3(9.15, flatWingY, pz),
+              0.038,
+              archSteelMat
+            )
+          );
+        });
+        g.add(box(0.06, 0.06, roofW - 0.04, archSteelMat, 8.08, flatWingY - 0.02, zCenter));
+        g.add(box(0.06, 0.06, roofW - 0.04, archSteelMat, 9.15, flatWingY - 0.02, zCenter));
       }
 
       // Students walking along the Skybridges into the corridor
