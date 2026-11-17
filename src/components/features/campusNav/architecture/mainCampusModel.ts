@@ -3364,6 +3364,86 @@ export function buildUnifiedMainCampus3D(): Building3DResult {
         });
         g.add(box(0.06, 0.06, roofW - 0.04, archSteelMat, 8.08, flatWingY - 0.02, zCenter));
         g.add(box(0.06, 0.06, roofW - 0.04, archSteelMat, 9.15, flatWingY - 0.02, zCenter));
+
+        // 4. Covered Roof Continuation over the Turning Elbow & Angled V-Building Span
+        // Extruded flat canopy over the chamfered turning ramp polygon (matching flatWingY = baseY + 2.82)
+        const geomTurnRoofTop = new THREE.ExtrudeGeometry(shapeDeck, { depth: 0.045, bevelEnabled: false });
+        geomTurnRoofTop.rotateX(-Math.PI / 2);
+        geomTurnRoofTop.computeVertexNormals();
+        const turnRoofTopMesh = new THREE.Mesh(geomTurnRoofTop, archRoofTopMat);
+        turnRoofTopMesh.position.y = flatWingY + 0.01;
+        turnRoofTopMesh.castShadow = true;
+        turnRoofTopMesh.receiveShadow = true;
+        g.add(turnRoofTopMesh);
+
+        const geomTurnRoofFascia = new THREE.ExtrudeGeometry(shapeDeck, { depth: 0.09, bevelEnabled: false });
+        geomTurnRoofFascia.rotateX(-Math.PI / 2);
+        geomTurnRoofFascia.computeVertexNormals();
+        const turnRoofFasciaMesh = new THREE.Mesh(geomTurnRoofFascia, archSteelMat);
+        turnRoofFasciaMesh.position.y = flatWingY - 0.06;
+        turnRoofFasciaMesh.castShadow = true;
+        g.add(turnRoofFasciaMesh);
+
+        // White steel support columns at all perimeter corners of the turning ramp up to the canopy
+        bridgePolyPts.forEach(([cx, cz]) => {
+          g.add(
+            rod(
+              new THREE.Vector3(cx, baseY + 0.24, cz),
+              new THREE.Vector3(cx, flatWingY, cz),
+              0.042,
+              archSteelMat
+            )
+          );
+        });
+
+        // White steel eave & truss framing along each railing edge of the turning ramp
+        railingEdgesDeck.forEach(({ p1, p2 }) => {
+          const edx = p2[0] - p1[0];
+          const edz = p2[1] - p1[1];
+          const elen = Math.hypot(edx, edz);
+          const ecx = (p1[0] + p2[0]) / 2;
+          const ecz = (p1[1] + p2[1]) / 2;
+          const erotY = Math.atan2(-edz, edx);
+
+          const edgeRoofGrp = new THREE.Group();
+          edgeRoofGrp.position.set(ecx, baseY, ecz);
+          edgeRoofGrp.rotation.y = erotY;
+
+          // Sky-blue upper handrail band matching the straight span
+          edgeRoofGrp.add(box(elen, 0.11, 0.09, skyBlueBandMat, 0, 1.29 - 0.08, 0));
+          // Lower tie-beam at eaveY (1.66m above floor) and upper truss chord at flatWingY (2.82m)
+          edgeRoofGrp.add(box(elen, 0.065, 0.065, archSteelMat, 0, 1.66, 0));
+          edgeRoofGrp.add(box(elen, 0.075, 0.075, archSteelMat, 0, 2.78, 0));
+
+          // Intermediate vertical posts & Warren diagonal web bracing along turning/angled segments
+          const subBays = Math.max(2, Math.round(elen / 1.55));
+          const bayW = elen / subBays;
+          for (let bi = 0; bi < subBays; bi++) {
+            const xA = -elen / 2 + bi * bayW;
+            const xB = xA + bayW;
+            if (bi > 0) {
+              edgeRoofGrp.add(
+                rod(
+                  new THREE.Vector3(xA, 0.24, 0),
+                  new THREE.Vector3(xA, 2.78, 0),
+                  0.032,
+                  archSteelMat
+                )
+              );
+            }
+            const pLowA = new THREE.Vector3(xA, 1.66, 0);
+            const pLowB = new THREE.Vector3(xB, 1.66, 0);
+            const pUpA = new THREE.Vector3(xA, 2.78, 0);
+            const pUpB = new THREE.Vector3(xB, 2.78, 0);
+            if (bi % 2 === 0) {
+              edgeRoofGrp.add(rod(pLowA, pUpB, 0.028, archSteelMat));
+            } else {
+              edgeRoofGrp.add(rod(pUpA, pLowB, 0.028, archSteelMat));
+            }
+          }
+
+          g.add(edgeRoofGrp);
+        });
       }
 
       // Students walking along the Skybridges into the corridor
