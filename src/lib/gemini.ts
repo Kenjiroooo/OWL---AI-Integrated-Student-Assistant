@@ -25,7 +25,7 @@ export const CAMPUS_HIGHLIGHT_LABELS: Record<CampusHighlightId, string> = {
  * Detects which campus or building a message is asking about or referring to.
  */
 export function detectCampusHighlight(text: string): CampusHighlightId | null {
-  const q = text.toLowerCase();
+  const q = text.toLowerCase().replace(/christian\s+rey(?:\s+m\.?)?\s+de\s?vera/g, '');
   if (/\bfame\b|fame building|fame campus/.test(q)) {
     return 'fame';
   }
