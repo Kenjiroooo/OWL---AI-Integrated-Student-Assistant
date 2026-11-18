@@ -189,6 +189,15 @@ AND THEN FOREVER LOVE HER TOO
 PLACE OUR SCHOOL IN OUR HEARTS
 AND THEN FOREVER LOVE HER TOO`;
 
+const HARDCODED_OWL_DEVELOPERS = `OWL SYSTEM DEVELOPERS & CREATORS:
+Q: Who developed OWL? / Who created OWL? / Who made the OWL Kiosk System? / Who are the developers of OWL?
+A: OWL (AI-Integrated Student Assistant / OWL Kiosk System of Universidad de Dagupan) was developed by:
+• Ronald P. Gabica
+• Paula R. Biando
+• Christian Rey M. De Vera
+• Kenji D. Sakamoto
+• Rojean Carl M. Tobias`;
+
 // ── Firestore Context Fetcher ────────────────────────────────────────────────
 
 interface CampusContext {
@@ -250,7 +259,7 @@ async function fetchCampusContext(): Promise<CampusContext> {
       .filter(d => d.question && !/enrollment steps for new students|transcript of records|\btor\b/i.test(d.question))
       .map(d => `Q: ${d.question}\nA: ${d.answer}`)
       .join('\n\n');
-    const faqs = [HARDCODED_TOR_INFO, HARDCODED_ENROLLMENT_STEPS, firestoreFaqs].filter(Boolean).join('\n\n');
+    const faqs = [HARDCODED_TOR_INFO, HARDCODED_ENROLLMENT_STEPS, HARDCODED_OWL_DEVELOPERS, firestoreFaqs].filter(Boolean).join('\n\n');
 
     // Format announcements data
     const announcements = announcementsSnap.docs.map(doc => {
@@ -267,7 +276,7 @@ async function fetchCampusContext(): Promise<CampusContext> {
     return {
       buildings: '(Campus building data is currently unavailable)',
       faculty: formatLocatorFaculty(),
-      faqs: [HARDCODED_TOR_INFO, HARDCODED_ENROLLMENT_STEPS].join('\n\n'),
+      faqs: [HARDCODED_TOR_INFO, HARDCODED_ENROLLMENT_STEPS, HARDCODED_OWL_DEVELOPERS].join('\n\n'),
       announcements: '(Announcements data is currently unavailable)',
     };
   }
@@ -375,9 +384,19 @@ STRICT RULES:
     1. Engr. Sean Gabriel Macapagal (Sean Gabriel): Located at the DOST Innovation Hub at the Main Campus, Ground Floor of V Building.
     2. Engr. Roderick Cabaña (Roderick Cabana): Located at the Faculty Room of Main Campus, Second Floor of the Administration Building.
     3. Dr. Jose Jay De Vera (Dean Jose De Vera / Jose Devera): Located at the Faculty Room on the Ground Floor of the Administration Building, beside the M.I.S. Office (Main Campus).
+- OWL SYSTEM DEVELOPERS / CREATORS (STRICT RULE):
+  Whenever a user asks who developed, created, built, or made OWL (or asks who the developers, creators, or authors of the OWL Kiosk System / AI-Integrated Student Assistant are), ALWAYS answer with all five developers:
+  • Ronald P. Gabica
+  • Paula R. Biando
+  • Christian Rey M. De Vera
+  • Kenji D. Sakamoto
+  • Rojean Carl M. Tobias
 - Whenever a user asks about a campus, building, room, or location (such as Main Campus, FAME Building, E Building / Engineering Building, Administration Building, V Building, School of Health Sciences, or LCR Arzadon Gymnasium), after giving the details, ALWAYS ask them at the end: "Would you like me to direct you to Campus Navigation for detailed information on the campus?"
 
 ## INTERNAL UNIVERSITY DATABASE
+
+### 👨‍💻 OWL System Developers & Creators
+${HARDCODED_OWL_DEVELOPERS}
 
 ### 🏢 Buildings & Rooms
 ${ctx.buildings || 'No building data available at the moment.'}
