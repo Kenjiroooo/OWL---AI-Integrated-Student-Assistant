@@ -65,6 +65,13 @@ const FALLBACK_FAQS = [
       '**Kuwago Café** is a campus coffee shop and food establishment located within Universidad de Dagupan catering to students, faculty members, and university employees.\n\n**Menu Categories:**\n• Rice Meals\n• Snacks\n• Milk Tea\n• Iced Coffee\n• Hot Coffee\n• Fruit Tea\n\n**Locations:** Operates two shop locations within Universidad de Dagupan. Exact building names, room numbers, and operating hours should be confirmed with café management.\n\n**Services:** Food and beverage ordering, dine-in, takeaway, advance ordering for pickup, and order customization (subject to availability). Specific items, ingredients, sizes, and prices should be retrieved from the latest approved café menu.',
     category: 'Dining',
   },
+  {
+    id: 'faq-9',
+    question: 'Who are the developers of OWL?',
+    answer:
+      '**OWL (AI-Integrated Student Assistant / OWL Kiosk System)** of Universidad de Dagupan was developed by:\n\n• **Ronald P. Gabica**\n• **Paula R. Biando**\n• **Christian Rey M. De Vera**\n• **Kenji D. Sakamoto**\n• **Rojean Carl M. Tobias**',
+    category: 'About OWL',
+  },
 ];
 
 // ── Category badge colors ─────────────────────────────────────────────────────
@@ -77,6 +84,7 @@ const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
   'Health Services': { bg: 'rgba(244,63,94,0.1)',  text: '#e11d48' },
   Finance:         { bg: 'rgba(139,92,246,0.1)',  text: '#7c3aed' },
   Dining:          { bg: 'rgba(234,88,12,0.1)',   text: '#ea580c' },
+  'About OWL':     { bg: 'rgba(37,99,235,0.1)',   text: '#2563eb' },
 };
 
 // ── Format helper (supports paragraphs & **bold** text) ──────────────────────
