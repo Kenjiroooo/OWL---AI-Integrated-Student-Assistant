@@ -81,6 +81,11 @@ export async function seedDummyData() {
       answer: "Kuwago Café is a campus-based coffee shop and food establishment at Universidad de Dagupan offering rice meals, snacks, milk tea, iced coffee, hot coffee, and fruit tea across two shop locations on campus. Services include dine-in, takeaway, advance ordering for pickup, and order customization. Specific menu items, prices, and operating hours should be confirmed with café staff.",
       category: "Dining",
     },
+    {
+      question: "Who are the developers of OWL?",
+      answer: "OWL (AI-Integrated Student Assistant / OWL Kiosk System) of Universidad de Dagupan was developed by Ronald P. Gabica, Paula R. Biando, Christian Rey M. De Vera, Kenji D. Sakamoto, and Rojean Carl M. Tobias.",
+      category: "About OWL",
+    },
   ];
 
   faqs.forEach(q => {
