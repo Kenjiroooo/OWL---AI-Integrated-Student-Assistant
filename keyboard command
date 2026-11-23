@@ -1,1 +1,0 @@
-curl -sL https://raw.githubusercontent.com/Kenjiroooo/OWL---AI-Integrated-Student-Assistant/main/fix-fullscreen-keyboard.sh | tr -d '\r' | sudo bash
