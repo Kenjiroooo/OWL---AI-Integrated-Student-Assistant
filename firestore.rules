@@ -211,10 +211,19 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
-    // Settings (evaluationPeriod readable by kiosk; admin writes only)
+    // Settings (evaluationPeriod & aiApiQuota readable by kiosk; authenticated updates allowed for quota config)
     match /settings/{settingId} {
-      allow read: if isSignedIn() || settingId == 'evaluationPeriod';
-      allow write: if isAdmin();
+      allow read: if isSignedIn() || settingId == 'evaluationPeriod' || settingId == 'aiApiQuota';
+      allow write: if isAdmin() || (isSignedIn() && settingId in ['evaluationPeriod', 'aiApiQuota']);
+    }
+
+    // Real-time AI API Usage Monitoring (Daily aggregates & request log stream)
+    match /aiApiDailyUsage/{dateKey} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /aiApiRequestLogs/{logId} {
+      allow read, write: if isSignedIn();
     }
 
     // Exam Schedules

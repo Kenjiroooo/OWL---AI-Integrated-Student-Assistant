@@ -1,5 +1,17 @@
-import { db } from './firebase';
-import { doc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore';
+import { db, ensureKioskAuth } from './firebase';
+import {
+  doc,
+  getDoc,
+  setDoc,
+  collection,
+  getDocs,
+  deleteDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  limit,
+  runTransaction,
+} from 'firebase/firestore';
 
 export type AIEndpointType =
   | 'askOwlChat'
@@ -69,9 +81,26 @@ export const ENDPOINT_META: Record<
   },
 };
 
-const STORAGE_DAILY_KEY = 'owl_ai_api_daily_stats_v1';
-const STORAGE_LOGS_KEY = 'owl_ai_api_recent_logs_v1';
+// Legacy v1 keys held synthetic demo data; purge them so only real usage is shown.
+const LEGACY_DAILY_KEY = 'owl_ai_api_daily_stats_v1';
+const LEGACY_LOGS_KEY = 'owl_ai_api_recent_logs_v1';
+
+const STORAGE_DAILY_KEY = 'owl_ai_api_daily_stats_v2';
+const STORAGE_LOGS_KEY = 'owl_ai_api_recent_logs_v2';
 const STORAGE_QUOTA_KEY = 'owl_ai_api_quota_v1';
+
+function purgeLegacySeedStorage(): void {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem(LEGACY_DAILY_KEY);
+      localStorage.removeItem(LEGACY_LOGS_KEY);
+    }
+  } catch {
+    // ignore storage errors
+  }
+}
+
+purgeLegacySeedStorage();
 
 export function getLocalDateKey(date: Date = new Date()): string {
   const year = date.getFullYear();
@@ -99,70 +128,27 @@ export function createEmptyDailyStat(dateKey: string): AIDailyUsageStat {
   };
 }
 
-/**
- * Generates deterministic, realistic historical stats for past days
- * so the daily chart always has meaningful presentation data when first opened.
- */
-function generateSeedStatForDate(dateKey: string, daysAgo: number): AIDailyUsageStat {
-  // Deterministic hash from dateKey
-  let hash = 0;
-  for (let i = 0; i < dateKey.length; i++) {
-    hash = (hash * 31 + dateKey.charCodeAt(i)) % 100000;
-  }
-
-  const dayOfWeek = new Date(dateKey + 'T12:00:00').getDay();
-  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-
-  // Base volume: higher on weekdays (85–195 req/day), lower on weekends (25–60 req/day)
-  const baseTotal = isWeekend
-    ? 28 + (hash % 34)
-    : 92 + (hash % 105);
-
-  const askOwlChat = Math.round(baseTotal * 0.62);
-  const moderateContent = Math.round(baseTotal * 0.16);
-  const moderateImage = Math.round(baseTotal * 0.09);
-  const moderateEvaluation = Math.max(0, baseTotal - askOwlChat - moderateContent - moderateImage);
-
-  const rateLimited = hash % 5 === 0 ? 1 + (hash % 3) : 0;
-  const failed = hash % 7 === 0 ? 1 : 0;
-  const successful = Math.max(0, baseTotal - rateLimited - failed);
-
-  const avgLatency = 680 + (hash % 420); // ~680ms - 1100ms
-  const totalLatencyMs = baseTotal * avgLatency;
-  const estimatedTokens = askOwlChat * 820 + moderateContent * 240 + moderateImage * 520 + moderateEvaluation * 260;
-
-  // Realistic campus hourly distribution (peaks between 8am and 5pm)
-  const hourlyWeights = [
-    0, 0, 0, 0, 0, 1, 2, 6, 12, 16, 18, 15, 11, 17, 19, 16, 12, 8, 5, 3, 2, 1, 0, 0,
-  ];
-  const weightSum = hourlyWeights.reduce((a, b) => a + b, 0);
-  const hourly = hourlyWeights.map((w, idx) => {
-    if (daysAgo === 0 && idx > new Date().getHours()) return 0;
-    return Math.round((w / weightSum) * baseTotal);
-  });
-
-  // Adjust hourly sum to match baseTotal for past days
-  if (daysAgo > 0) {
-    const currentSum = hourly.reduce((a, b) => a + b, 0);
-    const diff = baseTotal - currentSum;
-    hourly[10] = Math.max(0, hourly[10] + diff);
-  }
-
+function normalizeDailyStat(dateKey: string, raw?: Partial<AIDailyUsageStat> | null): AIDailyUsageStat {
+  const base = createEmptyDailyStat(dateKey);
+  if (!raw) return base;
   return {
     date: dateKey,
-    totalRequests: baseTotal,
-    successfulRequests: successful,
-    failedRequests: failed,
-    rateLimitedRequests: rateLimited,
-    totalLatencyMs,
-    estimatedTokens,
+    totalRequests: Number(raw.totalRequests) || 0,
+    successfulRequests: Number(raw.successfulRequests) || 0,
+    failedRequests: Number(raw.failedRequests) || 0,
+    rateLimitedRequests: Number(raw.rateLimitedRequests) || 0,
+    totalLatencyMs: Number(raw.totalLatencyMs) || 0,
+    estimatedTokens: Number(raw.estimatedTokens) || 0,
     byEndpoint: {
-      askOwlChat,
-      moderateContent,
-      moderateImage,
-      moderateEvaluation,
+      askOwlChat: Number(raw.byEndpoint?.askOwlChat) || 0,
+      moderateContent: Number(raw.byEndpoint?.moderateContent) || 0,
+      moderateImage: Number(raw.byEndpoint?.moderateImage) || 0,
+      moderateEvaluation: Number(raw.byEndpoint?.moderateEvaluation) || 0,
     },
-    hourly,
+    hourly:
+      Array.isArray(raw.hourly) && raw.hourly.length === 24
+        ? raw.hourly.map((n) => Number(n) || 0)
+        : Array(24).fill(0),
   };
 }
 
@@ -188,7 +174,10 @@ export function loadLocalRecentLogs(): AIRequestLogEntry[] {
   try {
     const raw = localStorage.getItem(STORAGE_LOGS_KEY);
     if (!raw) return [];
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed)
+      ? parsed.filter((l: AIRequestLogEntry) => l && !String(l.id).startsWith('seed-'))
+      : [];
   } catch {
     return [];
   }
@@ -224,17 +213,41 @@ export async function saveAIQuotaConfig(config: AIQuotaConfig): Promise<void> {
   }
 
   try {
+    await ensureKioskAuth();
     await setDoc(doc(db, 'settings', 'aiApiQuota'), {
       ...config,
       updatedAt: new Date().toISOString(),
     });
   } catch {
-    // Firestore may be offline or restricted; localStorage is already updated
+    // Firestore may be offline; localStorage is already updated
   }
 }
 
+function applyIncrementToStat(
+  base: AIDailyUsageStat,
+  params: {
+    endpoint: AIEndpointType;
+    status: AIRequestStatus;
+    latency: number;
+    tokens: number;
+    hour: number;
+  }
+): AIDailyUsageStat {
+  const next = normalizeDailyStat(base.date, base);
+  next.totalRequests += 1;
+  if (params.status === 'success') next.successfulRequests += 1;
+  else if (params.status === 'rate_limited') next.rateLimitedRequests += 1;
+  else next.failedRequests += 1;
+
+  next.totalLatencyMs += params.latency;
+  next.estimatedTokens += params.tokens;
+  next.byEndpoint[params.endpoint] = (next.byEndpoint[params.endpoint] || 0) + 1;
+  next.hourly[params.hour] = (next.hourly[params.hour] || 0) + 1;
+  return next;
+}
+
 /**
- * Record an AI API request. Call this whenever an AI endpoint is invoked.
+ * Record a real AI API request. Invoked whenever an AI endpoint is called.
  */
 export async function recordAIApiRequest(params: {
   endpoint: AIEndpointType;
@@ -271,141 +284,121 @@ export async function recordAIApiRequest(params: {
     estimatedTokens: tokens,
   };
 
-  // 1. Update local daily stats
+  // 1. Update local daily stats starting strictly from 0
   const allStats = loadLocalDailyStats();
-  if (!allStats[dateKey]) {
-    // Initialize today with a realistic baseline + live increments
-    const seededToday = generateSeedStatForDate(dateKey, 0);
-    const currentHour = now.getHours();
-    const partialHourly = seededToday.hourly.map((v, h) => (h <= currentHour ? Math.max(1, Math.round(v * 0.45)) : 0));
-    const partialTotal = partialHourly.reduce((a, b) => a + b, 0);
-    const chatCount = Math.round(partialTotal * 0.62);
-    const modTextCount = Math.round(partialTotal * 0.16);
-    const modImgCount = Math.round(partialTotal * 0.1);
-    const modEvalCount = Math.max(0, partialTotal - chatCount - modTextCount - modImgCount);
-
-    allStats[dateKey] = {
-      date: dateKey,
-      totalRequests: partialTotal,
-      successfulRequests: partialTotal,
-      failedRequests: 0,
-      rateLimitedRequests: 0,
-      totalLatencyMs: partialTotal * 740,
-      estimatedTokens: partialTotal * 610,
-      byEndpoint: {
-        askOwlChat: chatCount,
-        moderateContent: modTextCount,
-        moderateImage: modImgCount,
-        moderateEvaluation: modEvalCount,
-      },
-      hourly: partialHourly,
-    };
-  }
-
-  const stat = allStats[dateKey];
-  stat.totalRequests += 1;
-  if (params.status === 'success') stat.successfulRequests += 1;
-  else if (params.status === 'rate_limited') stat.rateLimitedRequests += 1;
-  else stat.failedRequests += 1;
-
-  stat.totalLatencyMs += latency;
-  stat.estimatedTokens += tokens;
-  stat.byEndpoint[params.endpoint] = (stat.byEndpoint[params.endpoint] || 0) + 1;
-  if (!Array.isArray(stat.hourly) || stat.hourly.length !== 24) {
-    stat.hourly = Array(24).fill(0);
-  }
-  stat.hourly[hour] = (stat.hourly[hour] || 0) + 1;
-
+  const currentLocal = normalizeDailyStat(dateKey, allStats[dateKey]);
+  const updatedLocal = applyIncrementToStat(currentLocal, {
+    endpoint: params.endpoint,
+    status: params.status,
+    latency,
+    tokens,
+    hour,
+  });
+  allStats[dateKey] = updatedLocal;
   saveLocalDailyStats(allStats);
 
-  // 2. Prepend to recent request logs
+  // 2. Prepend to local recent request logs
   const logs = loadLocalRecentLogs();
   logs.unshift(logEntry);
   saveLocalRecentLogs(logs);
 
-  // Notify any open Admin Panel listeners immediately
+  // Notify any open Admin Panel listeners in the same browser immediately
   window.dispatchEvent(new CustomEvent('owl_ai_api_updated'));
 
-  // 3. Persist daily aggregate to Firestore asynchronously
+  // 3. Persist atomically to Firestore for real-time cross-device monitoring
   try {
-    await setDoc(doc(db, 'aiApiDailyUsage', dateKey), stat, { merge: true });
+    await ensureKioskAuth();
+    const dailyRef = doc(db, 'aiApiDailyUsage', dateKey);
+    const logRef = doc(db, 'aiApiRequestLogs', logEntry.id);
+
+    await Promise.all([
+      runTransaction(db, async (tx) => {
+        const snap = await tx.get(dailyRef);
+        const base = snap.exists()
+          ? normalizeDailyStat(dateKey, snap.data() as AIDailyUsageStat)
+          : createEmptyDailyStat(dateKey);
+        const next = applyIncrementToStat(base, {
+          endpoint: params.endpoint,
+          status: params.status,
+          latency,
+          tokens,
+          hour,
+        });
+        tx.set(dailyRef, next);
+      }),
+      setDoc(logRef, logEntry),
+    ]);
   } catch {
-    // Non-blocking fallback
+    // Non-blocking fallback when offline
   }
 
   return logEntry;
 }
 
-/**
- * Ensures we have initial recent log entries if none have been recorded yet in this browser.
- */
-function ensureInitialRecentLogs(): AIRequestLogEntry[] {
-  const existing = loadLocalRecentLogs();
-  if (existing.length > 0) return existing;
-
-  const now = Date.now();
-  const dateKey = getLocalDateKey(new Date(now));
-  const sampleEndpoints: AIEndpointType[] = [
-    'askOwlChat',
-    'askOwlChat',
-    'moderateContent',
-    'askOwlChat',
-    'moderateEvaluation',
-    'moderateImage',
-    'askOwlChat',
-    'askOwlChat',
-  ];
-
-  const seededLogs: AIRequestLogEntry[] = sampleEndpoints.map((ep, idx) => {
-    const ts = new Date(now - (idx + 1) * 7 * 60 * 1000);
-    const meta = ENDPOINT_META[ep];
-    const latency = ep === 'askOwlChat' ? 740 + idx * 35 : ep === 'moderateImage' ? 920 + idx * 25 : 480 + idx * 20;
-    const tokens = ep === 'askOwlChat' ? 840 : ep === 'moderateImage' ? 540 : 230;
-    return {
-      id: `seed-${idx}-${ts.getTime()}`,
-      timestamp: ts.toISOString(),
-      dateKey,
-      endpoint: ep,
-      endpointLabel: meta.label,
-      model: meta.model,
-      status: 'success',
-      statusCode: 200,
-      latencyMs: latency,
-      estimatedTokens: tokens,
-    };
-  });
-
-  saveLocalRecentLogs(seededLogs);
-  return seededLogs;
+function buildChronologicalStats(
+  days: number,
+  statsMap: Record<string, AIDailyUsageStat>
+): AIDailyUsageStat[] {
+  const now = new Date();
+  const result: AIDailyUsageStat[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(now.getDate() - i);
+    const key = getLocalDateKey(d);
+    result.push(normalizeDailyStat(key, statsMap[key]));
+  }
+  return result;
 }
 
 /**
  * Retrieve daily AI API usage stats for the last `days` days (chronological order, ending with today).
+ * Never fabricates synthetic data — days without usage return 0 across all metrics.
  */
 export async function getAIApiUsageHistory(days = 14): Promise<{
   dailyStats: AIDailyUsageStat[];
   recentLogs: AIRequestLogEntry[];
   quota: AIQuotaConfig;
 }> {
+  purgeLegacySeedStorage();
   const localStats = loadLocalDailyStats();
+  let recentLogs = loadLocalRecentLogs();
   let quota = getLocalQuotaConfig();
 
-  // Attempt to pull any remote Firestore daily stats & quota settings
   try {
-    const [usageSnap, quotaSnap] = await Promise.all([
+    await ensureKioskAuth();
+    const [usageSnap, logsSnap, quotaSnap] = await Promise.all([
       getDocs(collection(db, 'aiApiDailyUsage')),
+      getDocs(query(collection(db, 'aiApiRequestLogs'), orderBy('timestamp', 'desc'), limit(60))),
       getDoc(doc(db, 'settings', 'aiApiQuota')),
     ]);
 
     usageSnap.docs.forEach((d) => {
       const remoteData = d.data() as AIDailyUsageStat;
       if (remoteData && remoteData.date) {
+        const normalized = normalizeDailyStat(remoteData.date, remoteData);
         const local = localStats[remoteData.date];
-        if (!local || remoteData.totalRequests > local.totalRequests) {
-          localStats[remoteData.date] = remoteData;
+        if (!local || normalized.totalRequests >= (local.totalRequests || 0)) {
+          localStats[remoteData.date] = normalized;
         }
       }
     });
+
+    if (!logsSnap.empty) {
+      const remoteLogs = logsSnap.docs
+        .map((d) => d.data() as AIRequestLogEntry)
+        .filter((l) => l && !String(l.id).startsWith('seed-'));
+      // Merge remote and local logs by id, sorted newest first
+      const mergedMap = new Map<string, AIRequestLogEntry>();
+      [...remoteLogs, ...recentLogs].forEach((entry) => {
+        if (entry && entry.id && !mergedMap.has(entry.id)) {
+          mergedMap.set(entry.id, entry);
+        }
+      });
+      recentLogs = Array.from(mergedMap.values())
+        .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+        .slice(0, 60);
+      saveLocalRecentLogs(recentLogs);
+    }
 
     if (quotaSnap.exists()) {
       const qData = quotaSnap.data();
@@ -418,64 +411,158 @@ export async function getAIApiUsageHistory(days = 14): Promise<{
       }
     }
   } catch {
-    // Offline or Firestore rules restricted — use local stats seamlessly
-  }
-
-  const now = new Date();
-  const result: AIDailyUsageStat[] = [];
-
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(now);
-    d.setDate(now.getDate() - i);
-    const key = getLocalDateKey(d);
-
-    if (localStats[key]) {
-      result.push(localStats[key]);
-    } else if (i === 0) {
-      // Today: initialize partial day realistic baseline
-      const seededToday = generateSeedStatForDate(key, 0);
-      const currentHour = now.getHours();
-      const partialHourly = seededToday.hourly.map((v, h) =>
-        h <= currentHour ? Math.max(1, Math.round(v * 0.45)) : 0
-      );
-      const partialTotal = partialHourly.reduce((a, b) => a + b, 0);
-      const chatCount = Math.round(partialTotal * 0.62);
-      const modTextCount = Math.round(partialTotal * 0.16);
-      const modImgCount = Math.round(partialTotal * 0.1);
-      const modEvalCount = Math.max(0, partialTotal - chatCount - modTextCount - modImgCount);
-
-      const todayStat: AIDailyUsageStat = {
-        date: key,
-        totalRequests: partialTotal,
-        successfulRequests: partialTotal,
-        failedRequests: 0,
-        rateLimitedRequests: 0,
-        totalLatencyMs: partialTotal * 740,
-        estimatedTokens: partialTotal * 610,
-        byEndpoint: {
-          askOwlChat: chatCount,
-          moderateContent: modTextCount,
-          moderateImage: modImgCount,
-          moderateEvaluation: modEvalCount,
-        },
-        hourly: partialHourly,
-      };
-      localStats[key] = todayStat;
-      result.push(todayStat);
-    } else {
-      const seeded = generateSeedStatForDate(key, i);
-      localStats[key] = seeded;
-      result.push(seeded);
-    }
+    // Offline or Firestore rules not yet deployed — use local stats cleanly
   }
 
   saveLocalDailyStats(localStats);
-  const recentLogs = ensureInitialRecentLogs();
 
   return {
-    dailyStats: result,
+    dailyStats: buildChronologicalStats(days, localStats),
     recentLogs,
     quota,
   };
 }
 
+/**
+ * Subscribe to real-time AI API usage updates across Firestore and local tabs.
+ */
+export function subscribeToAIApiUsage(
+  days: number,
+  onUpdate: (data: {
+    dailyStats: AIDailyUsageStat[];
+    recentLogs: AIRequestLogEntry[];
+    quota: AIQuotaConfig;
+  }) => void
+): () => void {
+  let unsubDaily: (() => void) | null = null;
+  let unsubLogs: (() => void) | null = null;
+  let unsubQuota: (() => void) | null = null;
+  let cancelled = false;
+
+  const statsMap: Record<string, AIDailyUsageStat> = { ...loadLocalDailyStats() };
+  let currentLogs: AIRequestLogEntry[] = loadLocalRecentLogs();
+  let currentQuota: AIQuotaConfig = getLocalQuotaConfig();
+
+  const emit = () => {
+    if (cancelled) return;
+    onUpdate({
+      dailyStats: buildChronologicalStats(days, statsMap),
+      recentLogs: currentLogs,
+      quota: currentQuota,
+    });
+  };
+
+  // Emit initial local state immediately
+  emit();
+
+  const handleLocalEvent = () => {
+    Object.assign(statsMap, loadLocalDailyStats());
+    currentLogs = loadLocalRecentLogs();
+    currentQuota = getLocalQuotaConfig();
+    emit();
+  };
+
+  window.addEventListener('owl_ai_api_updated', handleLocalEvent);
+  window.addEventListener('storage', handleLocalEvent);
+
+  void (async () => {
+    try {
+      await ensureKioskAuth();
+      if (cancelled) return;
+
+      unsubDaily = onSnapshot(
+        collection(db, 'aiApiDailyUsage'),
+        (snap) => {
+          snap.docs.forEach((d) => {
+            const remote = d.data() as AIDailyUsageStat;
+            if (remote && remote.date) {
+              statsMap[remote.date] = normalizeDailyStat(remote.date, remote);
+            }
+          });
+          saveLocalDailyStats(statsMap);
+          emit();
+        },
+        () => {}
+      );
+
+      unsubLogs = onSnapshot(
+        query(collection(db, 'aiApiRequestLogs'), orderBy('timestamp', 'desc'), limit(60)),
+        (snap) => {
+          const remoteLogs = snap.docs
+            .map((d) => d.data() as AIRequestLogEntry)
+            .filter((l) => l && !String(l.id).startsWith('seed-'));
+          const mergedMap = new Map<string, AIRequestLogEntry>();
+          [...remoteLogs, ...loadLocalRecentLogs()].forEach((entry) => {
+            if (entry && entry.id && !mergedMap.has(entry.id)) {
+              mergedMap.set(entry.id, entry);
+            }
+          });
+          currentLogs = Array.from(mergedMap.values())
+            .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
+            .slice(0, 60);
+          saveLocalRecentLogs(currentLogs);
+          emit();
+        },
+        () => {}
+      );
+
+      unsubQuota = onSnapshot(
+        doc(db, 'settings', 'aiApiQuota'),
+        (snap) => {
+          if (snap.exists()) {
+            const qData = snap.data();
+            if (typeof qData.dailyLimit === 'number') {
+              currentQuota = {
+                dailyLimit: qData.dailyLimit,
+                warningThresholdPct: qData.warningThresholdPct ?? 80,
+              };
+              localStorage.setItem(STORAGE_QUOTA_KEY, JSON.stringify(currentQuota));
+              emit();
+            }
+          }
+        },
+        () => {}
+      );
+    } catch {
+      // Fallback to local event listeners if offline
+    }
+  })();
+
+  return () => {
+    cancelled = true;
+    window.removeEventListener('owl_ai_api_updated', handleLocalEvent);
+    window.removeEventListener('storage', handleLocalEvent);
+    unsubDaily?.();
+    unsubLogs?.();
+    unsubQuota?.();
+  };
+}
+
+/**
+ * Reset all recorded AI API usage stats and logs (both local and Firestore).
+ */
+export async function resetAIApiUsageHistory(): Promise<void> {
+  purgeLegacySeedStorage();
+  try {
+    localStorage.removeItem(STORAGE_DAILY_KEY);
+    localStorage.removeItem(STORAGE_LOGS_KEY);
+  } catch {
+    // ignore
+  }
+
+  try {
+    await ensureKioskAuth();
+    const [usageSnap, logsSnap] = await Promise.all([
+      getDocs(collection(db, 'aiApiDailyUsage')),
+      getDocs(collection(db, 'aiApiRequestLogs')),
+    ]);
+    await Promise.all([
+      ...usageSnap.docs.map((d) => deleteDoc(d.ref)),
+      ...logsSnap.docs.map((d) => deleteDoc(d.ref)),
+    ]);
+  } catch {
+    // ignore if offline
+  }
+
+  window.dispatchEvent(new CustomEvent('owl_ai_api_updated'));
+}
