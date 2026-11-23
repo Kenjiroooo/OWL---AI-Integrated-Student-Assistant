@@ -1013,17 +1013,6 @@ export default function AdminHome() {
                     <h3 className="text-xl font-black text-slate-800">Queue Management</h3>
                     <p className="text-slate-400 font-medium text-sm mt-1">Control and monitor active queues</p>
                   </div>
-                  <button
-                    onClick={async () => {
-                      const { seedDummyData } = await import('../seedData');
-                      await seedDummyData();
-                      alert('Dummy data seeded successfully!');
-                    }}
-                    className="px-6 py-3 text-white font-bold rounded-2xl shadow-lg active:scale-95 transition-all text-sm"
-                    style={{ background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 8px 20px rgba(16,185,129,0.25)' }}
-                  >
-                    Seed Initial App Data
-                  </button>
                 </div>
                 <div className="flex flex-col items-center justify-center py-24 text-slate-300" style={{ background: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.7)', borderRadius: '2rem' }}>
                   <ListOrdered className="w-20 h-20 mb-6 opacity-30" />
