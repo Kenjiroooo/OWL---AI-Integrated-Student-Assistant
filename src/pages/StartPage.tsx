@@ -457,8 +457,8 @@ export default function StartPage() {
       <motion.div
         className="absolute rounded-full pointer-events-none"
         style={{
-          width: 500,
-          height: 500,
+          width: 650,
+          height: 650,
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -55%)',
@@ -566,10 +566,10 @@ export default function StartPage() {
                   : { duration: 0.3 }
         }
       >
-        {/* OWL container */}
+        {/* OWL container (enlarged 130%: 280px -> 364px for 15.6" touchscreen) */}
         <motion.div
           className="relative cursor-pointer"
-          style={{ width: 280, height: 280 }}
+          style={{ width: 364, height: 364 }}
           onClick={handleOwlClick}
           whileHover={phase === 'sleeping' ? { scale: 1.05 } : undefined}
           whileTap={phase === 'sleeping' ? { scale: 0.97 } : undefined}
@@ -652,12 +652,13 @@ export default function StartPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0, y: 10 }}
               transition={{ duration: 0.5 }}
-              className="mt-8 flex flex-col items-center gap-3"
+              onClick={handleOwlClick}
+              className="mt-8 flex flex-col items-center gap-3 cursor-pointer"
             >
               <motion.p
-                className="text-lg font-semibold tracking-wide"
+                className="text-xl font-semibold tracking-wide"
                 style={{
-                  color: 'rgba(255,255,255,0.7)',
+                  color: 'rgba(255,255,255,0.75)',
                   fontFamily: "'Hanken Grotesk', sans-serif",
                 }}
                 animate={{ opacity: [0.5, 1, 0.5] }}
@@ -705,12 +706,13 @@ export default function StartPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="mt-8 flex flex-col items-center gap-3"
+              onClick={handleOwlClick}
+              className="mt-8 flex flex-col items-center gap-3 cursor-pointer"
             >
               <motion.p
-                className="text-lg font-semibold tracking-wide"
+                className="text-xl font-semibold tracking-wide"
                 style={{
-                  color: 'rgba(255,255,255,0.7)',
+                  color: 'rgba(255,255,255,0.75)',
                   fontFamily: "'Hanken Grotesk', sans-serif",
                 }}
                 animate={{ opacity: [0.5, 1, 0.5] }}

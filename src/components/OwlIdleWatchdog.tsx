@@ -450,8 +450,8 @@ export default function OwlIdleWatchdog() {
                 <div
                   className="absolute pointer-events-none"
                   style={{
-                    width: 480,
-                    height: 480,
+                    width: 624,
+                    height: 624,
                     borderRadius: '50%',
                     background:
                       'radial-gradient(circle, rgba(37,99,235,0.18) 0%, rgba(14,165,233,0.06) 45%, transparent 70%)',
@@ -459,8 +459,8 @@ export default function OwlIdleWatchdog() {
                   }}
                 />
 
-                {/* OWL drifting to sleep in StartPage's 280x280 posture */}
-                <div className="relative" style={{ width: 280, height: 280 }}>
+                {/* OWL drifting to sleep in StartPage's 364x364 (130%) posture */}
+                <div className="relative" style={{ width: 364, height: 364 }}>
                   <SleepZzz />
                   <motion.div
                     initial={{ y: -12, scale: 0.85, rotate: 0 }}
