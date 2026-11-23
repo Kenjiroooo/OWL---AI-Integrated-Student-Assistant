@@ -97,8 +97,9 @@ service cloud.firestore {
     match /users/{userId} {
       allow get: if isSignedIn() && (isOwner(userId) || isAdmin());
       allow list: if isAdmin();
-      allow create: if isSignedIn() && isOwner(userId) && isValidUser(incoming());
-      allow update: if isSignedIn() && isOwner(userId) && 
+      allow create: if isSignedIn() && isOwner(userId) && isValidUser(incoming()) && incoming().role == 'student';
+      allow update: if isSignedIn() && isOwner(userId) &&
+                      incoming().role == existing().role &&
                       incoming().diff(existing()).affectedKeys().hasOnly(['fullName', 'yearLevel', 'program', 'enrollmentStatus', 'balance']) &&
                       isValidUser(incoming());
     }
