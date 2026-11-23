@@ -7,7 +7,6 @@ import {
   type User,
 } from 'firebase/auth';
 import { getFirestore, doc, getDoc, setDoc, getDocFromServer } from 'firebase/firestore';
-import { getDatabase } from 'firebase/database';
 import { getAnalytics } from 'firebase/analytics';
 
 /**
@@ -40,7 +39,6 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
-export const rtdb = getDatabase(app);
 export const auth = getAuth(app);
 export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
 
