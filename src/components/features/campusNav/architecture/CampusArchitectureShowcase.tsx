@@ -472,6 +472,7 @@ export default function CampusArchitectureShowcase({
                 return (
                   <div
                     key={f.level}
+                    onClick={() => canvas3DRef.current?.focusFloor(f.level)}
                     onMouseEnter={() => setSidebarHoveredFloor(f.level)}
                     onMouseLeave={() => setSidebarHoveredFloor(null)}
                     className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl border transition-all cursor-pointer ${

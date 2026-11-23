@@ -39,6 +39,7 @@ export interface Campus3DCanvasHandle {
   orbitLeft: () => void;
   orbitRight: () => void;
   resetView: () => void;
+  focusFloor: (level: number) => void;
 }
 
 interface Props {
@@ -712,6 +713,24 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
       };
       markInteraction();
     },
+    focusFloor: (level: number) => {
+      const { camera, controls, models, activeId, isExploded } = stateRef.current;
+      if (!camera || !controls) return;
+      const model = models[activeId];
+      if (!model) return;
+      const spacing = isExploded ? (model.explodeSpacing ?? 4.5) : 0;
+      const floorY = level * 3.6 + level * spacing;
+      stateRef.current.cinematicTarget = {
+        active: true,
+        progress: 0,
+        speed: 1.35,
+        startCam: camera.position.clone(),
+        startLook: controls.target.clone(),
+        endCam: new THREE.Vector3(18, floorY + 22, 22),
+        endLook: new THREE.Vector3(2, floorY + 1.2, -12),
+      };
+      markInteraction();
+    },
   }));
 
   // Sync prop changes into stateRef and animate camera on building change
@@ -755,10 +774,35 @@ const Campus3DCanvas = forwardRef<Campus3DCanvasHandle, Props>(function Campus3D
     }
   }, [externalHoveredFloor, hoveredFloorInfo]);
 
+  const prevExplodedRef = useRef(exploded);
   useEffect(() => {
+    const changed = prevExplodedRef.current !== exploded;
+    prevExplodedRef.current = exploded;
     stateRef.current.isExploded = exploded;
     if (stateRef.current.renderer) {
       stateRef.current.renderer.shadowMap.needsUpdate = true;
+    }
+
+    // Smoothly elevate the camera to an angled overhead view when Exploded View is activated
+    // on FAME Building so the 3D interior floor plans (1F–5F) are immediately visible inside every floor.
+    if (changed && stateRef.current.activeId === 'udd-fame') {
+      const { camera, controls, models } = stateRef.current;
+      const fameModel = models['udd-fame'];
+      if (camera && controls && fameModel) {
+        stateRef.current.cinematicTarget = {
+          active: true,
+          progress: 0,
+          speed: 1.25,
+          startCam: camera.position.clone(),
+          startLook: controls.target.clone(),
+          endCam: exploded
+            ? new THREE.Vector3(28, 46, 38)
+            : fameModel.defaultCameraPos.clone(),
+          endLook: exploded
+            ? new THREE.Vector3(2, 16, -12)
+            : fameModel.targetLookAt.clone(),
+        };
+      }
     }
     markInteraction();
   }, [exploded]);
