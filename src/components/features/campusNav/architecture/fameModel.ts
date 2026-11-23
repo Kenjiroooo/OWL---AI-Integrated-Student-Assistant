@@ -213,6 +213,189 @@ function createJalousieTexture(): THREE.CanvasTexture {
   return toTexture(canvas);
 }
 
+/**
+ * Architectural floor-plan blueprint texture for each FAME Building level (1F–5F),
+ * matching the official FAME 3rd Floor Evacuation & Room Layout Plan:
+ *   • F{n}01 (front-left/center lecture room)
+ *   • FACULTY OFFICE (behind F{n}01 on left)
+ *   • CE LABORATORY (middle-left engineering lab)
+ *   • F{n}02 (center lecture room)
+ *   • F{n}03 (upper-middle left lecture room)
+ *   • ECE/ EE/CPE LAB. (rear-left laboratory)
+ *   • F{n}04 (rear-right large lecture room with central column)
+ *   • Front & Middle CRs (Comfort Rooms) and Front & Rear Stairwells
+ *   • Red emergency evacuation arrows, First Aid Kit, Fire Alarm & Fire Extinguisher symbols
+ */
+function createFameFloorPlanTexture(floorNum: number): THREE.CanvasTexture {
+  const W = 1200;
+  const H = 1800;
+  const { canvas, ctx } = makeCanvas(W, H);
+
+  // World bounds mapped to canvas: X in [-10.0, 13.7] -> [0, W], Z in [-30.0, 6.0] -> [0, H]
+  const xMin = -10.0;
+  const xMax = 13.7;
+  const zMin = -30.0;
+  const zMax = 6.0;
+  const toU = (x: number) => ((x - xMin) / (xMax - xMin)) * W;
+  const toV = (z: number) => ((z - zMin) / (zMax - zMin)) * H;
+  const rectUV = (x0: number, z0: number, x1: number, z1: number) => {
+    const u0 = toU(Math.min(x0, x1));
+    const v0 = toV(Math.min(z0, z1));
+    const u1 = toU(Math.max(x0, x1));
+    const v1 = toV(Math.max(z0, z1));
+    return { x: u0, y: v0, w: u1 - u0, h: v1 - v0 };
+  };
+
+  // Base architectural blueprint paper / light tile background
+  ctx.fillStyle = '#f8fafc';
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle architectural tile grid
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let gx = 0; gx <= W; gx += 30) {
+    ctx.moveTo(gx, 0);
+    ctx.lineTo(gx, H);
+  }
+  for (let gy = 0; gy <= H; gy += 30) {
+    ctx.moveTo(0, gy);
+    ctx.lineTo(W, gy);
+  }
+  ctx.stroke();
+
+  // Room zone fills
+  const fillZone = (x0: number, z0: number, x1: number, z1: number, color: string) => {
+    const r = rectUV(x0, z0, x1, z1);
+    ctx.fillStyle = color;
+    ctx.fillRect(r.x, r.y, r.w, r.h);
+  };
+
+  // Corridors / circulation spine (warm ivory)
+  fillZone(-10.0, -30.0, 13.7, 6.0, '#f1f5f9');
+  // Classrooms F{n}01..F{n}04 (soft sky-tinted white)
+  fillZone(-9.8, -0.5, 6.0, 5.8, '#e0f2fe');
+  fillZone(-9.8, -4.2, -6.8, -0.5, '#e0f2fe');
+  fillZone(-6.8, -16.0, 6.4, -10.2, '#e0f2fe');
+  fillZone(-9.8, -22.8, -0.2, -16.0, '#e0f2fe');
+  fillZone(-0.2, -29.8, 13.5, -22.8, '#e0f2fe');
+  // Laboratories (CE Lab & ECE/EE/CPE Lab — soft cyan-mint)
+  fillZone(-6.8, -10.2, 3.2, -4.2, '#ccfbf1');
+  fillZone(-9.8, -29.8, -3.2, -22.8, '#ccfbf1');
+  // Faculty Office (warm amber-cream)
+  fillZone(-6.8, -4.2, 1.6, -0.5, '#fef3c7');
+  // Comfort Rooms (CR — soft lavender-slate)
+  fillZone(8.6, -4.8, 13.5, 0.0, '#ede9fe');
+  fillZone(9.2, -17.6, 13.5, -15.2, '#ede9fe');
+  // Stairwells (soft slate)
+  fillZone(8.6, 0.0, 13.5, 4.4, '#e2e8f0');
+  fillZone(6.8, -22.8, 13.5, -17.6, '#e2e8f0');
+
+  // Draw stair treads in both stairwells
+  const drawStairLines = (x0: number, z0: number, x1: number, z1: number, treads: number) => {
+    const r = rectUV(x0, z0, x1, z1);
+    ctx.strokeStyle = '#64748b';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(r.x, r.y, r.w, r.h);
+    const stepW = r.w / treads;
+    for (let i = 1; i < treads; i++) {
+      ctx.beginPath();
+      ctx.moveTo(r.x + i * stepW, r.y);
+      ctx.lineTo(r.x + i * stepW, r.y + r.h);
+      ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.moveTo(r.x, r.y + r.h / 2);
+    ctx.lineTo(r.x + r.w, r.y + r.h / 2);
+    ctx.stroke();
+  };
+  drawStairLines(8.8, 0.2, 13.3, 4.2, 9);
+  drawStairLines(7.0, -22.5, 13.3, -17.8, 10);
+
+  // Draw red evacuation arrows matching the photo
+  const drawRedArrow = (xA: number, zA: number, xB: number, zB: number) => {
+    const uA = toU(xA);
+    const vA = toV(zA);
+    const uB = toU(xB);
+    const vB = toV(zB);
+    const ang = Math.atan2(vB - vA, uB - uA);
+    const headLen = 18;
+    ctx.strokeStyle = '#be123c';
+    ctx.fillStyle = '#be123c';
+    ctx.lineWidth = 4.5;
+    ctx.beginPath();
+    ctx.moveTo(uA, vA);
+    ctx.lineTo(uB, vB);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(uB, vB);
+    ctx.lineTo(uB - headLen * Math.cos(ang - 0.42), vB - headLen * Math.sin(ang - 0.42));
+    ctx.lineTo(uB - headLen * Math.cos(ang + 0.42), vB - headLen * Math.sin(ang + 0.42));
+    ctx.closePath();
+    ctx.fill();
+  };
+
+  // Evacuation arrows from rooms through corridors to Front & Rear Stairs
+  drawRedArrow(-6.6, -28.0, -6.6, -25.2);
+  drawRedArrow(-5.8, -24.8, -1.8, -24.8);
+  drawRedArrow(-1.6, -28.2, -1.6, -23.5);
+  drawRedArrow(8.0, -28.5, 3.0, -28.5);
+  drawRedArrow(2.0, -26.0, 2.0, -22.2);
+  drawRedArrow(5.5, -24.5, 2.5, -24.5);
+  drawRedArrow(1.5, -21.2, 6.2, -21.2);
+  drawRedArrow(-3.5, -17.2, 0.5, -17.2);
+  drawRedArrow(-3.5, -21.2, 0.5, -21.2);
+  drawRedArrow(3.2, -19.5, 3.2, -16.8);
+  drawRedArrow(-1.5, -13.0, 2.8, -13.0);
+  drawRedArrow(4.8, -13.5, 4.8, -15.8);
+  drawRedArrow(4.8, -12.0, 4.8, -9.8);
+  drawRedArrow(-1.0, -8.6, 3.5, -8.6);
+  drawRedArrow(4.8, -8.6, 4.8, -3.2);
+  drawRedArrow(-2.0, -2.3, 4.2, -2.3);
+  drawRedArrow(4.5, -2.3, 7.2, -2.3);
+  drawRedArrow(-5.5, 2.2, -1.5, 2.2);
+  drawRedArrow(-0.8, 3.2, -0.8, -0.2);
+  drawRedArrow(1.0, 2.2, 4.2, 2.2);
+  drawRedArrow(4.6, 3.2, 4.6, -0.2);
+  drawRedArrow(7.4, -1.5, 7.4, 2.2);
+
+  // Room text labels (sharp, high-contrast architectural typography)
+  const drawRoomLabel = (text: string, x: number, z: number, fontSize = 36, subText?: string) => {
+    const u = toU(x);
+    const v = toV(z);
+    ctx.save();
+    ctx.font = `900 ${fontSize}px Inter, Arial, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 7;
+    ctx.strokeText(text, u, v);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillText(text, u, v);
+    if (subText) {
+      ctx.font = `800 ${Math.round(fontSize * 0.62)}px Inter, Arial, sans-serif`;
+      ctx.strokeText(subText, u, v + fontSize * 0.95);
+      ctx.fillStyle = '#1e3a8a';
+      ctx.fillText(subText, u, v + fontSize * 0.95);
+    }
+    ctx.restore();
+  };
+
+  drawRoomLabel(`F${floorNum}01`, -1.8, 3.2, 46);
+  drawRoomLabel('FACULTY OFFICE', -2.4, -2.3, 25);
+  drawRoomLabel('CE', -2.2, -7.2, 30, 'LABORATORY');
+  drawRoomLabel(`F${floorNum}02`, -0.8, -13.1, 44);
+  drawRoomLabel(`F${floorNum}03`, -4.8, -19.2, 44);
+  drawRoomLabel('ECE/ EE/CPE', -6.5, -26.5, 23, 'LAB.');
+  drawRoomLabel(`F${floorNum}04`, 6.5, -26.2, 46);
+  drawRoomLabel('CR', 11.0, -2.4, 34, '2.50 × 4.09m');
+  drawRoomLabel('CR', 11.2, -16.4, 28);
+  drawRoomLabel('STAIRS', 11.0, 2.2, 24);
+  drawRoomLabel('STAIRS', 10.1, -20.2, 26);
+
+  return toTexture(canvas);
+}
+
 // ── Geometry helpers ────────────────────────────────────────────────────────
 function box(
   w: number,
@@ -289,10 +472,313 @@ export function buildFameBuilding3D(): Building3DResult {
   const leaf = new THREE.MeshStandardMaterial({ color: 0x3f7d34, roughness: 0.9 });
   const whiteLine = new THREE.MeshBasicMaterial({ color: 0xf1f5f9 });
 
-  // Face order for BoxGeometry: +x, -x, +y, -y, +z (front), -z (back)
-  const mainFloorMats = (front: THREE.Material) => [sideMat, sideMat, roofMat, roofMat, front, backMat];
+  // Interior floor-plan materials (shared across all 5 FAME floors)
+  const intWallMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.65 });
+  const intWallCapMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.45 });
+  const colMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.55 });
+  const doorWoodMat = new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.55 });
+  const deskTopMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.5 });
+  const labBenchMat = new THREE.MeshStandardMaterial({ color: 0x0f766e, roughness: 0.45 });
+  const fireRedMat = new THREE.MeshStandardMaterial({
+    color: 0xdc2626,
+    emissive: 0x991b1b,
+    emissiveIntensity: 0.25,
+    roughness: 0.35,
+  });
+  const firstAidGreenMat = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.4 });
 
-  // ── Ground floor (site, entrance, stairs, canopy, fence) ──────────────────
+  /**
+   * Builds the open-top exterior facade perimeter shell AND the full 3D interior floor plan
+   * (matching the uploaded FAME 3rd Floor architectural layout: F{n}01–F{n}04, FACULTY OFFICE,
+   * CE LABORATORY, ECE/EE/CPE LAB., Front & Middle CRs, Front & Middle-Right U-turn staircases,
+   * structural columns, classroom/lab furniture, First Aid Kits, Fire Alarms & Fire Extinguishers).
+   */
+  const addFameFloorShellAndInterior = (
+    grp: THREE.Group,
+    floorNum: number,
+    baseY: number,
+    shellH: number,
+    isCantileveredTop = false
+  ) => {
+    const wallT = 0.32;
+    const slabH = 0.24;
+    const partH = Math.min(2.35, shellH - 0.45);
+    const partY = baseY + slabH + partH / 2;
+    const capY = baseY + slabH + partH + 0.03;
+
+    // 1. Structural floor slab + high-resolution 3D floor-plan blueprint plate
+    if (isCantileveredTop) {
+      const topX0 = mainX0 - 0.3;
+      const topX1 = beigeX1 + 1.2;
+      const topFrontZ = frontZ + 0.6;
+      const topBackZ = backZ - 0.6;
+      const topW = topX1 - topX0;
+      const topD = topFrontZ - topBackZ;
+      const topCx = (topX0 + topX1) / 2;
+      const topCz = (topFrontZ + topBackZ) / 2;
+      const soffit = new THREE.MeshStandardMaterial({ color: 0x4b5158, roughness: 0.6 });
+      grp.add(box(topW, slabH, topD, [soffit, soffit, roofMat, soffit, soffit, soffit], topCx, baseY + slabH / 2, topCz));
+    } else {
+      grp.add(box(mainW, slabH, depth, roofMat, mainCx, baseY + slabH / 2, mainCz));
+      grp.add(box(beigeW, slabH, beigeD, roofMat, beigeCx, baseY + slabH / 2, beigeCz));
+    }
+
+    const planTex = createFameFloorPlanTexture(floorNum);
+    const planMat = new THREE.MeshStandardMaterial({ map: planTex, roughness: 0.55 });
+    const fullW = beigeX1 - mainX0 - 0.36; // 23.34m
+    const fullD = frontZ - backZ - 0.36; // 35.64m
+    const fullCx = (mainX0 + beigeX1) / 2;
+    const fullCz = (frontZ + backZ) / 2;
+    grp.add(box(fullW, 0.04, fullD, [roofMat, roofMat, planMat, roofMat, roofMat, roofMat], fullCx, baseY + slabH + 0.02, fullCz, false));
+
+    // 2. Open-top exterior perimeter facade walls (preserves exact exterior look while open from above)
+    if (isCantileveredTop) {
+      const topX0 = mainX0 - 0.3;
+      const topX1 = beigeX1 + 1.2;
+      const topFrontZ = frontZ + 0.6;
+      const topBackZ = backZ - 0.6;
+      const topW = topX1 - topX0;
+      const topD = topFrontZ - topBackZ;
+      const topCx = (topX0 + topX1) / 2;
+      const topCz = (topFrontZ + topBackZ) / 2;
+      const topSide = new THREE.MeshStandardMaterial({ map: createTopBoxSideTexture(), roughness: 0.35, metalness: 0.4 });
+      const topFront = new THREE.MeshStandardMaterial({ map: createTopBoxFrontTexture(), roughness: 0.35, metalness: 0.4 });
+      const topBack = new THREE.MeshStandardMaterial({ map: createSidePanelGridTexture(), roughness: 0.4, metalness: 0.35 });
+      const wCy = baseY + shellH / 2;
+
+      // Front wall (+Z)
+      grp.add(box(topW, shellH, wallT, [topSide, topSide, mats.metalSilver, roofMat, topFront, intWallMat], topCx, wCy, topFrontZ - wallT / 2));
+      // Back wall (-Z)
+      grp.add(box(topW, shellH, wallT, [topSide, topSide, mats.metalSilver, roofMat, intWallMat, topBack], topCx, wCy, topBackZ + wallT / 2));
+      // Left wall (-X)
+      grp.add(box(wallT, shellH, topD - wallT * 2, [intWallMat, topSide, mats.metalSilver, roofMat, topSide, topSide], topX0 + wallT / 2, wCy, topCz));
+      // Right wall (+X)
+      grp.add(box(wallT, shellH, topD - wallT * 2, [topSide, intWallMat, mats.metalSilver, roofMat, topSide, topSide], topX1 - wallT / 2, wCy, topCz));
+    } else {
+      const frontMat = floorNum === 1 ? groundFrontMat : meshFrontMat;
+      const wCy = baseY + shellH / 2;
+
+      // Main block front wall (+Z, X: -10..6)
+      grp.add(box(mainW, shellH, wallT, [sideMat, sideMat, roofMat, roofMat, frontMat, intWallMat], mainCx, wCy, frontZ - wallT / 2));
+      // Main block left wall (-X, Z: -30..6)
+      grp.add(box(wallT, shellH, depth - wallT * 2, [intWallMat, sideMat, roofMat, roofMat, sideMat, sideMat], mainX0 + wallT / 2, wCy, mainCz));
+      // Main block rear wall (-Z, X: -10..6)
+      grp.add(box(mainW, shellH, wallT, [sideMat, sideMat, roofMat, roofMat, intWallMat, backMat], mainCx, wCy, backZ + wallT / 2));
+      // Step-back cheek wall at X = 6 between Z = 4.5 and Z = 6.0
+      grp.add(box(wallT, shellH, frontZ - beigeFrontZ + wallT, [sideMat, intWallMat, roofMat, roofMat, sideMat, beige], mainX1 - wallT / 2, wCy, (frontZ + beigeFrontZ) / 2));
+      // Beige block front wall (+Z, X: 6..13.7)
+      grp.add(box(beigeW, shellH, wallT, [beige, beige, roofMat, roofMat, beige, intWallMat], beigeCx, wCy, beigeFrontZ - wallT / 2));
+      // Beige block right wall (+X, Z: -30..4.5)
+      grp.add(box(wallT, shellH, beigeD - wallT * 2, [beige, intWallMat, roofMat, roofMat, beige, beige], beigeX1 - wallT / 2, wCy, beigeCz));
+      // Beige block rear wall (-Z, X: 6..13.7)
+      grp.add(box(beigeW, shellH, wallT, [beige, beige, roofMat, roofMat, intWallMat, backMat], beigeCx, wCy, backZ + wallT / 2));
+    }
+
+    // 3. Helper to build an interior partition wall segment with blue blueprint top cap
+    const addPartitionX = (x0: number, x1: number, z: number, doorGapX?: number, doorW = 1.15) => {
+      const t = 0.18;
+      if (doorGapX === undefined) {
+        const len = Math.abs(x1 - x0);
+        const cx = (x0 + x1) / 2;
+        grp.add(box(len, partH, t, intWallMat, cx, partY, z));
+        grp.add(box(len, 0.06, t + 0.03, intWallCapMat, cx, capY, z, false));
+      } else {
+        const minX = Math.min(x0, x1);
+        const maxX = Math.max(x0, x1);
+        const g0 = doorGapX - doorW / 2;
+        const g1 = doorGapX + doorW / 2;
+        if (g0 > minX + 0.1) {
+          addPartitionX(minX, g0, z);
+        }
+        if (maxX > g1 + 0.1) {
+          addPartitionX(g1, maxX, z);
+        }
+        // Angled open wooden door leaf showing doorway swing
+        const doorLeaf = box(doorW * 0.85, partH * 0.86, 0.06, doorWoodMat, g0 + (doorW * 0.85) / 2, baseY + slabH + (partH * 0.86) / 2, z - 0.32);
+        doorLeaf.rotation.y = 0.55;
+        grp.add(doorLeaf);
+      }
+    };
+
+    const addPartitionZ = (x: number, z0: number, z1: number, doorGapZ?: number, doorW = 1.15) => {
+      const t = 0.18;
+      if (doorGapZ === undefined) {
+        const len = Math.abs(z1 - z0);
+        const cz = (z0 + z1) / 2;
+        grp.add(box(t, partH, len, intWallMat, x, partY, cz));
+        grp.add(box(t + 0.03, 0.06, len, intWallCapMat, x, capY, cz, false));
+      } else {
+        const minZ = Math.min(z0, z1);
+        const maxZ = Math.max(z0, z1);
+        const g0 = doorGapZ - doorW / 2;
+        const g1 = doorGapZ + doorW / 2;
+        if (g0 > minZ + 0.1) {
+          addPartitionZ(x, minZ, g0);
+        }
+        if (maxZ > g1 + 0.1) {
+          addPartitionZ(x, g1, maxZ);
+        }
+        // Angled open wooden door leaf
+        const doorLeaf = box(0.06, partH * 0.86, doorW * 0.85, doorWoodMat, x - 0.32, baseY + slabH + (partH * 0.86) / 2, g0 + (doorW * 0.85) / 2);
+        doorLeaf.rotation.y = -0.55;
+        grp.add(doorLeaf);
+      }
+    };
+
+    // ── Interior Room Partitions (Exact FAME 3rd Floor Plan Layout) ──────────
+    // A. Room F{n}01 & Left Wing (Z: -0.5 to +5.7, X: -9.7 to +6.0)
+    addPartitionX(-9.7, -6.8, -4.2, -8.25); // Left wing exit door
+    addPartitionZ(-6.8, -4.2, -0.5); // Wall between F{n}01 left pocket and Faculty Office
+    addPartitionX(-6.8, 1.6, -0.5, -0.8); // F{n}01 north wall left half (door at x=-0.8)
+    addPartitionX(1.6, 6.0, -0.5, 4.6); // F{n}01 north wall right half (door at x=4.6)
+    addPartitionZ(6.0, -0.5, 5.7); // F{n}01 east wall separating front corridor
+
+    // B. FACULTY OFFICE (X: -6.8 to +1.6, Z: -4.2 to -0.5)
+    addPartitionX(-6.8, 1.6, -4.2); // North wall shared with CE Lab
+    addPartitionZ(-3.4, -4.2, -0.5, -2.3, 0.95); // Internal sub-office partition
+    addPartitionZ(1.6, -4.2, -0.5, -2.3); // East wall with office entrance door
+
+    // C. Front Stairwell & Front Comfort Room (CR 2.50 × 4.09m) on Right (+X: 8.6..13.4)
+    addPartitionX(8.6, 13.4, 0.0); // Divider wall between Front Stairs and Front CR
+    addPartitionZ(8.6, -4.8, 0.0, -1.1); // Front CR west wall with entrance door
+    addPartitionX(8.6, 13.4, -4.8); // Front CR north wall
+    // Interior T-shaped toilet cubicles inside Front CR
+    addPartitionX(9.8, 13.4, -2.5, 11.2, 1.4);
+    addPartitionZ(11.4, -4.8, -2.5);
+
+    // D. CE LABORATORY (X: -6.8 to +3.2, Z: -10.2 to -4.2)
+    addPartitionZ(-6.8, -10.2, -4.2); // West wall
+    addPartitionX(-6.8, 3.2, -10.2); // North wall shared with F{n}02
+    addPartitionZ(3.2, -10.2, -4.2, -8.5); // East wall with lab door into inner corridor
+    addPartitionZ(6.4, -10.2, -4.2); // Inner corridor east wall
+
+    // E. Room F{n}02 (X: -6.8 to +6.4, Z: -16.0 to -10.2)
+    addPartitionZ(-6.8, -16.0, -10.2); // West wall
+    addPartitionX(3.2, 6.4, -10.2, 4.8); // South-east door into F{n}02
+    addPartitionZ(6.4, -16.0, -10.2); // East wall along main right corridor
+    addPartitionX(-6.8, 6.4, -16.0, 4.8); // North wall with pass-through door at x=4.8
+
+    // F. Room F{n}03 (X: -9.7 to -0.2, Z: -22.8 to -16.0)
+    addPartitionX(-9.7, -6.8, -16.0, -8.3); // Bottom-left balcony exit door
+    addPartitionZ(-0.2, -19.4, -16.0, -17.3); // East wall lower door
+    addPartitionZ(-0.2, -22.8, -19.4, -21.3); // East wall upper door
+    addPartitionX(-9.7, -0.2, -22.8); // North wall
+
+    // G. Middle Comfort Room (CR) & Rear/Middle Double Staircase (X: 6.8..13.4, Z: -22.8..-15.2)
+    addPartitionX(9.2, 13.4, -15.2); // Middle CR south wall
+    addPartitionZ(9.2, -17.6, -15.2, -16.4, 0.95); // Middle CR west wall with door
+    addPartitionX(6.8, 13.4, -17.6); // South wall of Rear Stairwell
+    addPartitionX(6.8, 13.4, -22.8); // North wall of Rear Stairwell
+    addPartitionZ(6.8, -21.2, -17.6); // Stairwell west half-wall
+
+    // H. ECE/ EE/CPE LAB. (Rear-Left, X: -9.7 to -3.2, Z: -29.7 to -22.8)
+    addPartitionX(-9.7, -3.2, -24.2); // Buffer vestibule divider
+    addPartitionZ(-3.2, -29.7, -22.8, -25.0); // East wall with lab entrance door
+
+    // I. Room F{n}04 (Rear-Right, X: -0.2 to +13.4, Z: -29.7 to -22.8)
+    addPartitionZ(-0.2, -29.7, -22.8, -28.6); // West wall with upper corridor door
+    addPartitionX(-0.2, 6.8, -22.8, 2.1); // South wall with lower lobby door
+
+    // 4. Square Structural Columns (matching the square column boxes in the floor plan)
+    const columnCoords: Array<[number, number]> = [
+      [-9.5, 5.5], [-4.5, 5.5], [0.5, 5.5], [5.8, 5.5],
+      [-6.8, -0.5], [-1.8, -0.5], [1.6, -0.5], [6.0, -0.5],
+      [-6.8, -4.2], [1.6, -4.2], [6.4, -4.2],
+      [-6.8, -10.2], [-1.5, -10.2], [3.2, -10.2], [6.4, -10.2],
+      [-6.8, -16.0], [-0.2, -16.0], [6.4, -16.0],
+      [-9.5, -22.8], [-3.2, -22.8], [-0.2, -22.8], [6.8, -22.8],
+      [5.5, -26.2], // Signature freestanding central column inside F{n}04!
+      [-9.5, -29.5], [-3.2, -29.5], [-0.2, -29.5], [6.5, -29.5], [13.2, -29.5],
+    ];
+    columnCoords.forEach(([cx, cz]) => {
+      grp.add(box(0.52, partH + 0.08, 0.52, colMat, cx, partY + 0.04, cz));
+    });
+
+    // 5. 3D Interior U-Turn Staircases (Front Stairwell & Middle-Right Double Stairwell)
+    const buildInteriorStairwell = (sx0: number, sx1: number, sz0: number, sz1: number) => {
+      const stepsCount = 7;
+      const flightW = (sz1 - sz0 - 0.3) / 2;
+      const landingDepth = 1.1;
+      const runLen = (sx1 - sx0 - landingDepth) / stepsCount;
+      const maxRise = partH * 0.85;
+      for (let s = 0; s < stepsCount; s++) {
+        const h1 = ((s + 1) / stepsCount) * (maxRise * 0.5);
+        const h2 = maxRise * 0.5 + ((stepsCount - s) / stepsCount) * (maxRise * 0.5);
+        const sx = sx0 + s * runLen + runLen / 2;
+        // Lower flight
+        grp.add(box(runLen - 0.03, h1, flightW, stairMat, sx, baseY + slabH + h1 / 2, sz0 + flightW / 2));
+        // Upper return flight
+        grp.add(box(runLen - 0.03, h2, flightW, stairMat, sx, baseY + slabH + h2 / 2, sz1 - flightW / 2));
+      }
+      // Mid-landing along right wall (+X)
+      const landH = maxRise * 0.52;
+      grp.add(box(landingDepth, landH, sz1 - sz0, stairMat, sx1 - landingDepth / 2, baseY + slabH + landH / 2, (sz0 + sz1) / 2));
+      // Center handrail divider
+      grp.add(box(sx1 - sx0 - landingDepth, 0.85, 0.08, fenceBlue, sx0 + (sx1 - sx0 - landingDepth) / 2, baseY + slabH + landH + 0.42, (sz0 + sz1) / 2));
+    };
+    buildInteriorStairwell(8.8, 13.3, 0.2, 4.2);
+    buildInteriorStairwell(7.0, 13.3, -22.6, -17.8);
+
+    // 6. Classroom Desks & Laboratory Workbenches (for realistic 3D floor-plan depth)
+    const addDeskGrid = (x0: number, x1: number, z0: number, z1: number, rows: number, cols: number, mat: THREE.Material) => {
+      const dx = (x1 - x0) / cols;
+      const dz = (z1 - z0) / rows;
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          grp.add(box(dx * 0.65, 0.55, dz * 0.52, mat, x0 + (c + 0.5) * dx, baseY + slabH + 0.28, z0 + (r + 0.5) * dz));
+        }
+      }
+    };
+    // F{n}01 desks
+    addDeskGrid(-5.8, 4.8, 0.6, 4.8, 2, 4, deskTopMat);
+    // CE Lab workbenches
+    addDeskGrid(-5.6, 1.8, -9.2, -5.2, 2, 2, labBenchMat);
+    // F{n}02 desks
+    addDeskGrid(-5.6, 3.2, -15.0, -11.2, 2, 3, deskTopMat);
+    // F{n}03 desks
+    addDeskGrid(-8.5, -1.6, -21.8, -17.0, 2, 3, deskTopMat);
+    // ECE/EE/CPE Lab benches
+    addDeskGrid(-8.8, -4.4, -28.8, -25.0, 2, 2, labBenchMat);
+    // F{n}04 desks
+    addDeskGrid(1.2, 11.8, -28.8, -24.0, 2, 4, deskTopMat);
+
+    // 7. 3D Safety Equipment Markers from Floor Plan Legend
+    //    (First Aid Kits = green/white cross box, Fire Alarms = red wall box, Fire Extinguishers = red cylinder)
+    const addFirstAidKit = (x: number, z: number) => {
+      const ky = baseY + slabH + 1.15;
+      grp.add(box(0.48, 0.48, 0.48, mats.whiteWall, x, ky, z));
+      grp.add(box(0.52, 0.14, 0.52, firstAidGreenMat, x, ky, z));
+      grp.add(box(0.14, 0.52, 0.52, firstAidGreenMat, x, ky, z));
+    };
+    const addFireExtinguisher = (x: number, z: number) => {
+      const cyl = new THREE.Mesh(getCachedCylinderGeometry(0.16, 0.16, 0.75, 10), fireRedMat);
+      cyl.position.set(x, baseY + slabH + 0.38, z);
+      cyl.castShadow = true;
+      grp.add(cyl);
+    };
+    const addFireAlarm = (x: number, z: number) => {
+      grp.add(box(0.45, 0.55, 0.45, fireRedMat, x, baseY + slabH + 1.35, z));
+    };
+
+    // Exact positions from the FAME 3rd Floor Evacuation Plan
+    addFirstAidKit(-3.8, -26.2); // ECE/EE/CPE Lab
+    addFirstAidKit(6.8, -23.3);  // F{n}04 bottom wall
+    addFirstAidKit(-5.2, -15.4); // F{n}02 bottom-left
+    addFirstAidKit(2.5, -6.2);   // CE Lab east wall
+    addFirstAidKit(-8.8, 5.1);   // F{n}01 bottom-left
+
+    addFireExtinguisher(-3.7, -25.4); // ECE/EE/CPE Lab
+    addFireExtinguisher(5.6, -23.3);  // F{n}04
+    addFireExtinguisher(-0.7, -19.2); // F{n}03
+    addFireExtinguisher(-1.2, -15.4); // F{n}02
+    addFireExtinguisher(2.5, -7.2);   // CE Lab
+    addFireExtinguisher(5.4, 4.8);    // F{n}01
+
+    addFireAlarm(7.9, -15.6); // Hallway beside Middle CR
+    addFireAlarm(6.4, 3.8);   // Hallway beside Front Staircase & F{n}01
+  };
+
+  // ── Ground floor (1F: site, entrance, stairs, canopy, fence + 3D Floor Plan) ─
   const ground = new THREE.Group();
   ground.name = 'FAME_Ground_Floor';
 
@@ -304,11 +790,8 @@ export function buildFameBuilding3D(): Building3DResult {
   ground.add(box(48, 0.05, 8, asphalt, 4, 0.0, 19.8, false));
   for (let x = -18; x < 26; x += 4) ground.add(box(2, 0.02, 0.18, whiteLine, x, 0.04, 19.8, false));
 
-  // Main mass ground floor
-  ground.add(box(mainW, FH, depth, mainFloorMats(groundFrontMat), mainCx, FH / 2, mainCz));
-
-  // Beige block ground floor with centered glass entrance doors & sidelights
-  ground.add(box(beigeW, FH, beigeD, beige, beigeCx, FH / 2, beigeCz));
+  // Open-top 1F perimeter facade shell + full 3D interior floor plan (F101–F104, Labs, Faculty Office, CRs, Stairs)
+  addFameFloorShellAndInterior(ground, 1, 0, FH, false);
   // Centered main entrance double doors
   ground.add(box(3.4, 2.3, 0.08, darkGlass, beigeCx, 1.4 + 1.15, beigeFrontZ + 0.05, false));
   ground.add(box(3.45, 0.08, 0.1, mats.metalDark, beigeCx, 1.4 + 2.3, beigeFrontZ + 0.06, false)); // door frame
@@ -414,15 +897,14 @@ export function buildFameBuilding3D(): Building3DResult {
   floorGroups.push(ground);
   root.add(ground);
 
-  // ── Upper floors 2F – 4F (mesh facade + beige block) ──────────────────────
+  // ── Upper floors 2F – 4F (open-top facade shell + 3D interior floor plan) ──
   for (let f = 1; f <= 3; f++) {
     const g = new THREE.Group();
     g.name = `FAME_Floor_${f + 1}`;
     const baseY = f * FH;
     const cy = baseY + FH / 2;
 
-    g.add(box(mainW, FH, depth, mainFloorMats(meshFrontMat), mainCx, cy, mainCz));
-    g.add(box(beigeW, FH, beigeD, beige, beigeCx, cy, beigeCz));
+    addFameFloorShellAndInterior(g, f + 1, baseY, FH, false);
 
     const fz = beigeFrontZ + 0.05;
     if (f === 1) {
@@ -465,39 +947,12 @@ export function buildFameBuilding3D(): Building3DResult {
     root.add(g);
   }
 
-  // ── Cantilevered top box (5F) ─────────────────────────────────────────────
+  // ── Cantilevered top box (5F: open-top cantilevered shell + 3D interior floor plan) ──
   const top = new THREE.Group();
   top.name = 'FAME_Cantilevered_Top_Box';
-  const topX0 = mainX0 - 0.3;
-  const topX1 = beigeX1 + 1.2;
   const topH = 6.6;
-  const topFrontZ = frontZ + 0.6; // 6.6
-  const topBackZ = backZ - 0.6; // -30.6
-  const topD = topFrontZ - topBackZ; // 37.2
-  const topCz = (topFrontZ + topBackZ) / 2; // -12
-  const topSide = new THREE.MeshStandardMaterial({ map: createTopBoxSideTexture(), roughness: 0.35, metalness: 0.4 });
-  const topFront = new THREE.MeshStandardMaterial({ map: createTopBoxFrontTexture(), roughness: 0.35, metalness: 0.4 });
-  const topBack = new THREE.MeshStandardMaterial({ map: createSidePanelGridTexture(), roughness: 0.4, metalness: 0.35 });
-  const soffit = new THREE.MeshStandardMaterial({ color: 0x4b5158, roughness: 0.6 });
-  top.add(
-    box(
-      topX1 - topX0,
-      topH,
-      topD,
-      [topSide, topSide, roofMat, soffit, topFront, topBack],
-      (topX0 + topX1) / 2,
-      3 * FH + FH + topH / 2,
-      topCz
-    )
-  );
-  // Rooftop parapet cap
-  top.add(box(topX1 - topX0 + 0.1, 0.2, topD + 0.1, mats.metalSilver, (topX0 + topX1) / 2, 4 * FH + topH + 0.1, topCz));
-
-  // Rooftop HVAC units along the extended 36m roof
-  [-6, -16, -24].forEach((acZ) => {
-    top.add(box(3.2, 1.4, 2.4, mats.metalSilver, 0, 4 * FH + topH + 0.9, acZ));
-    top.add(box(3.4, 0.2, 2.6, mats.metalDark, 0, 4 * FH + topH + 1.65, acZ));
-  });
+  const topBaseY = 4 * FH;
+  addFameFloorShellAndInterior(top, 5, topBaseY, topH, true);
 
   floorGroups.push(top);
   root.add(top);
@@ -507,6 +962,6 @@ export function buildFameBuilding3D(): Building3DResult {
     floorGroups,
     defaultCameraPos: new THREE.Vector3(22, 17, 44),
     targetLookAt: new THREE.Vector3(2, 9.5, -4),
-    explodeSpacing: 4.5,
+    explodeSpacing: 6.2,
   };
 }
