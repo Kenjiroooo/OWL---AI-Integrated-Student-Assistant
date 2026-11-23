@@ -14,7 +14,7 @@ import {
   ShieldCheck,
   Image as ImageIcon,
   ClipboardCheck,
-  Play,
+  Trash2,
   Calendar,
   TrendingUp,
   Layers,
@@ -23,7 +23,8 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import {
   getAIApiUsageHistory,
-  recordAIApiRequest,
+  subscribeToAIApiUsage,
+  resetAIApiUsageHistory,
   saveAIQuotaConfig,
   ENDPOINT_META,
   getLocalDateKey,
@@ -125,8 +126,6 @@ export default function AIApiMonitorPanel() {
     getLocalDateKey()
   );
   const [logFilter, setLogFilter] = useState<'all' | AIEndpointType>('all');
-  const [simulatingEndpoint, setSimulatingEndpoint] =
-    useState<AIEndpointType>('askOwlChat');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const loadData = useCallback(async () => {
@@ -143,13 +142,14 @@ export default function AIApiMonitorPanel() {
   }, []);
 
   useEffect(() => {
-    void loadData();
-    const handleUpdate = () => {
-      void loadData();
-    };
-    window.addEventListener('owl_ai_api_updated', handleUpdate);
-    return () => window.removeEventListener('owl_ai_api_updated', handleUpdate);
-  }, [loadData]);
+    const unsubscribe = subscribeToAIApiUsage(14, (data) => {
+      setDailyStats(data.dailyStats);
+      setRecentLogs(data.recentLogs);
+      setQuota(data.quota);
+      setQuotaInput(String(data.quota.dailyLimit));
+    });
+    return unsubscribe;
+  }, []);
 
   const todayKey = getLocalDateKey();
 
@@ -299,21 +299,15 @@ export default function AIApiMonitorPanel() {
     setTimeout(() => setQuotaSaved(false), 2500);
   };
 
-  const handleSimulateRequest = async () => {
-    const latency =
-      simulatingEndpoint === 'askOwlChat'
-        ? 640 + Math.floor(Math.random() * 350)
-        : simulatingEndpoint === 'moderateImage'
-        ? 850 + Math.floor(Math.random() * 300)
-        : 410 + Math.floor(Math.random() * 240);
-
-    await recordAIApiRequest({
-      endpoint: simulatingEndpoint,
-      status: 'success',
-      statusCode: 200,
-      latencyMs: latency,
-    });
-    setSelectedDateKey(todayKey);
+  const handleResetHistory = async () => {
+    setIsRefreshing(true);
+    try {
+      await resetAIApiUsageHistory();
+      await loadData();
+      setSelectedDateKey(todayKey);
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const filteredLogs = useMemo(() => {
@@ -604,33 +598,22 @@ export default function AIApiMonitorPanel() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
-            {/* Simulate Request Control for Live Demo/Testing */}
-            <div className="flex items-center bg-slate-100/90 p-1 rounded-2xl border border-slate-200/80">
-              <select
-                value={simulatingEndpoint}
-                onChange={(e) =>
-                  setSimulatingEndpoint(e.target.value as AIEndpointType)
-                }
-                className="text-xs font-bold text-slate-700 bg-transparent px-2.5 py-1.5 outline-none cursor-pointer"
-              >
-                <option value="askOwlChat">OWL AI Chat</option>
-                <option value="moderateContent">Lost & Found Text</option>
-                <option value="moderateImage">Lost & Found Vision</option>
-                <option value="moderateEvaluation">Evaluation Filter</option>
-              </select>
-              <button
-                onClick={handleSimulateRequest}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black text-white transition-all active:scale-95 cursor-pointer"
-                style={{
-                  background: 'linear-gradient(135deg, #10b981, #059669)',
-                  boxShadow: '0 2px 10px rgba(16,185,129,0.25)',
-                }}
-                title="Trigger a test AI request to verify real-time counter updates"
-              >
-                <Play className="w-3 h-3 fill-white" />
-                Test Request
-              </button>
+            {/* Live Tracking Badge & Reset History Button */}
+            <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200/80 px-3 py-1.5 rounded-2xl">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-xs font-black text-emerald-700">
+                Real-Time Tracking Active
+              </span>
             </div>
+
+            <button
+              onClick={() => void handleResetHistory()}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200/80 transition-all active:scale-95 cursor-pointer"
+              title="Clear recorded AI API usage stats and logs"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Reset Logs
+            </button>
 
             {/* 7D / 14D Range Toggle */}
             <div className="flex items-center bg-slate-100 p-1 rounded-2xl border border-slate-200/70">
@@ -1084,6 +1067,16 @@ export default function AIApiMonitorPanel() {
               </tr>
             </thead>
             <tbody>
+              {filteredLogs.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="px-6 py-10 text-center text-xs font-bold text-slate-400"
+                  >
+                    No AI API requests recorded yet. Live requests from OWL Chat, Lost &amp; Found Moderation, and Faculty Evaluations will appear here automatically.
+                  </td>
+                </tr>
+              )}
               {filteredLogs.map((log) => {
                 const style =
                   ENDPOINT_STYLES[log.endpoint] || ENDPOINT_STYLES.askOwlChat;
