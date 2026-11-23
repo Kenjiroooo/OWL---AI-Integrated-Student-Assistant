@@ -1,0 +1,40 @@
+
+#!/bin/bash
+
+# ==========================================
+# PROJECT OWL - AUTOMATIC KIOSK STARTUP
+# Raspberry Pi 5 / Google Chrome ARM64
+# ==========================================
+
+OWL_URL="https://app.owl-kiosk.workers.dev/"
+
+# Wait for the OWL website to become reachable
+echo "Waiting for OWL website..."
+
+until curl -fsS -o /dev/null "$OWL_URL"; do
+    sleep 5
+done
+
+echo "OWL website is available."
+
+# Restart Chrome if it unexpectedly exits
+while true; do
+
+    google-chrome-stable \
+        --kiosk \
+        --incognito \
+        --no-first-run \
+        --no-default-browser-check \
+        --noerrdialogs \
+        --disable-infobars \
+        --disable-session-crashed-bubble \
+        --disable-pinch \
+        --disable-translate \
+        --overscroll-history-navigation=0 \
+        --password-store=basic \
+        "$OWL_URL"
+
+    echo "OWL browser closed. Restarting..."
+    sleep 5
+
+done
